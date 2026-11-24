@@ -22,6 +22,8 @@ endif()
 # Pour "import std"
 include(cmake/std.cmake)
 include(cmake/compile_options.cmake)
+# Bibliothèque graphique Raylib (affichage 2D)
+include(cmake/raylib.cmake)
 
 # Répertoire contenant les sources des exercices
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -41,7 +43,8 @@ file(GLOB TEST_FILES CONFIGURE_DEPENDS
 )
 
 # Les tests utilisent le main fourni par Catch2
-set(TEST_SRC_FILES ${SRC_FILES} ${TEST_FILES})
+set(TEST_SRC_FILES ${SRC_FILES} ${TEST_FILES}
+        src/world.ixx)
 list(FILTER TEST_SRC_FILES EXCLUDE REGEX "(^|/)main\\.cpp$")
 
 # Exécutable principal
@@ -53,6 +56,7 @@ target_sources(${PROJECT_NAME}
         ${MODULE_FILES}
 )
 compile_options(${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME} raylib)
 
 # Exécutable et liste des fichiers sources des tests unitaires
 add_executable(tests ${TEST_SRC_FILES})
@@ -65,7 +69,7 @@ target_sources(tests
 
 # bibliothèque pour les tests unitaires
 include(cmake/catch2.cmake)
-target_link_libraries(tests PRIVATE Catch2::Catch2WithMain std-cxx-modules)
+target_link_libraries(tests PRIVATE Catch2::Catch2WithMain std-cxx-modules raylib)
 include(CTest)
 include(Catch)
 catch_discover_tests(tests)
