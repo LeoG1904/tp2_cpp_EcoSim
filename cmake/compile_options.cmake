@@ -17,7 +17,6 @@ function(compile_options TARGET_NAME )
                     /MDd
                     /Wv:18
             )
-            add_definitions(-D_DEBUG)
         else()
             target_compile_options(${TARGET_NAME} PRIVATE
                     /O2

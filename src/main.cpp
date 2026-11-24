@@ -1,7 +1,8 @@
-import exo1;
+import std;
+import ecosim;
 
 int main() {
-    // Exécution de l'application via son constructeur
-    exo1::Application{};
+    // Point d'entrée provisoire : l'application graphique Raylib arrivera à l'étape 9
+    std::println("EcoSim {} : squelette prêt", ecosim::Version());
     return 0;
 }
