@@ -34,7 +34,8 @@ export namespace ecosim {
 
     class UiController {
     public:
-        UiController(int width, int height);
+        // cellSize : côté d'une case de la carte, en pixels.
+        UiController(int width, int height, int cellSize);
 
         // Sur l'accueil, la saisie modifie directement les réglages.
         UiAction Handle(const RawInput& input, bool isHomeScreen, bool paused,
@@ -43,15 +44,21 @@ export namespace ecosim {
         bool IsShowingGraph() const;
         bool IsExitDialogOpen() const;
         const SettingEditor& Editor() const;
+        std::optional<Position> SelectedCell() const;
+        // Le panneau évite de recouvrir la case choisie.
+        bool IsCellPanelOnLeft() const;
 
     private:
         void HandleTyping(const std::vector<KeyStroke>& typed, SimulationSettings& settings);
         UiAction HandleHomeClick(PointerPosition mouse, SimulationSettings& settings);
         UiAction HandleExitDialogClick(PointerPosition mouse);
         UiAction HandleSimulationClick(PointerPosition mouse, bool paused);
+        void HandleMapClick(PointerPosition mouse);
 
         int width;
         int height;
+        int cellSize;
+        std::optional<Position> selectedCell;
         bool showingGraph{false};
         bool showingExitDialog{false};
         SettingEditor editor;

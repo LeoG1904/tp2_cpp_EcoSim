@@ -11,6 +11,7 @@ module ecosim.render;
 import std;
 import ecosim.simulation;
 import ecosim.animation;
+import ecosim.cell_info;
 
 using namespace ecosim_render_detail;
 
@@ -162,7 +163,7 @@ namespace ecosim {
         std::string status;
         if (simulation.IsFinished()) status = "Fin de la simulation : plus aucun animal";
         else if (paused) status = std::format("En pause   Vitesse x{}   (flèche droite ou haut : avancer ; Tab : vitesse)", speed);
-        else status = std::format("Vitesse x{}   (Tab ou touches 1 à 4 : x1 x2 x5 x10 ; Échap : options)", speed);
+        else status = std::format("Vitesse x{}   (Tab ou touches 1 à 4 : x1 x2 x5 x10 ; Échap : options ; clic : détails d'une case)", speed);
         const auto hud = std::format("Génération {}   Herbivores {}   Prédateurs {}",
                                      simulation.GetGeneration(), simulation.HerbivoreCount(),
                                      simulation.PredatorCount());
@@ -193,6 +194,7 @@ namespace ecosim {
         DeleteObject(buttonBrush);
         WriteText(buffer, button.x + 20, button.y + 9, "Courbes");
         WriteText(buffer, restart.x + 20, restart.y + 9, "Recommencer");
+        DrawSelection(buffer, simulation);
         if (controller.IsExitDialogOpen()) DrawExitDialog(buffer);
         BitBlt(screen, 0, 0, windowWidth, windowHeight, buffer, 0, 0, SRCCOPY);
         SelectObject(buffer, previous);

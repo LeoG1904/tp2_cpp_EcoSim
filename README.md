@@ -42,13 +42,14 @@ Les nouveau-nés gardent une énergie de 30, la reproduction coûte 30 et demand
 | Passer à la vitesse suivante | **Tab** (x1, x2, x5, x10, puis retour à x1) |
 | Mettre en pause ou reprendre | **Espace**, ou bouton **Pause** / **Reprendre** sur la carte et les courbes |
 | Avancer d'une génération | Flèche **droite** ou **haut**, ou bouton **Génération +1**, pendant la pause |
+| Voir le détail d'une case | Clic sur la case ; second clic ou bouton **X** pour fermer |
 | Afficher l'évolution des populations | Bouton **Courbes**, en haut à droite de la carte |
 | Revenir à la carte | Bouton **Retour**, sur l'écran des courbes |
 | Redémarrer avec une nouvelle carte et de nouveaux animaux | Bouton **Recommencer**, sur la carte et les courbes |
 | Revenir à l'accueil, quitter ou annuler | `Échap` pendant la simulation, puis choisir **Menu**, **Quitter** ou **Annuler** |
 | Quitter depuis l'accueil | `Échap` |
 
-L'application s'ouvre sur l'accueil ; aucune simulation ne démarre avant le clic sur **Démarrer**. La simulation continue pendant la consultation du graphique tant qu'elle n'est pas en pause. Pendant la pause, **Génération +1** fait avancer le monde et les courbes d'une seule génération. Sur la carte, les animaux glissent de leur ancienne case vers la nouvelle pendant la durée d'une génération. Seul l'affichage est animé : le moteur reste case par case. La pause fige le mouvement, et un pas manuel est animé en un quart de seconde. La courbe jaune représente les herbivores et la courbe rouge les prédateurs. L'axe horizontal indique les générations ; une ligne marque la génération actuelle.
+L'application s'ouvre sur l'accueil ; aucune simulation ne démarre avant le clic sur **Démarrer**. La simulation continue pendant la consultation du graphique tant qu'elle n'est pas en pause. Pendant la pause, **Génération +1** fait avancer le monde et les courbes d'une seule génération. Sur la carte, les animaux glissent de leur ancienne case vers la nouvelle pendant la durée d'une génération. Seul l'affichage est animé : le moteur reste case par case. La pause fige le mouvement, et un pas manuel est animé en un quart de seconde. La case choisie est encadrée. Son panneau indique le terrain, la végétation et les animaux présents (espèce, numéro, âge et énergie, sept au maximum, les autres étant comptés). Il se met à jour à chaque génération et se place du côté opposé à la case. La sélection est conservée en passant par les courbes et effacée par **Recommencer** ou le retour au menu. Pendant un déplacement, un animal est déjà compté sur sa case d'arrivée. La courbe jaune représente les herbivores et la courbe rouge les prédateurs. L'axe horizontal indique les générations ; une ligne marque la génération actuelle.
 
 La touche `Échap` fige la simulation et affiche un choix : **Menu** revient à l'accueil, **Quitter** ferme l'application, **Annuler** reprend l'affichage. Un second appui sur `Échap` annule aussi le choix.
 
@@ -83,6 +84,7 @@ Les fichiers `.ixx` exposent les modules C++ ; leurs implémentations sont dans 
 | `src/ui/application.*` | Déroulement de l'application et interfaces `InputSource` et `View`. |
 | `src/ui/controller.*` et `layout.hpp` | Navigation entre les écrans, clics et placement des éléments. |
 | `src/ui/settings_form.*` | Libellés, limites et saisie des réglages. |
+| `src/ui/cell_info.*` | Texte du panneau d'une case. |
 | `src/ui/animation.*` | Animation d'un pas manuel et des naissances. |
 | `src/render/window.*` | Fenêtre Windows et messages. |
 | `src/render/win32_input.*` | Lecture du clavier et de la souris. |

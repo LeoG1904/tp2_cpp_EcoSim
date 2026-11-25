@@ -29,6 +29,7 @@ export namespace ecosim {
         void DrawWorld(const Simulation& simulation, int speed, bool paused, double progress) const;
         void DrawGraph(const Simulation& simulation, int speed, bool paused) const;
         void DrawExitDialog(void* context) const;
+        void DrawSelection(void* context, const Simulation& simulation) const;
 
         const UiController& controller;
         int cellSize;

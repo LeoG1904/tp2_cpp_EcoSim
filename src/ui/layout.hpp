@@ -56,6 +56,13 @@ namespace ecosim_render_detail {
     inline UiRect ExitCancelButton(const int width, const int height) {
         return {width / 2 + 80, height / 2 + 45, 140, 40};
     }
+    // Panneau de la case choisie, en bas de l'écran, du côté opposé à cette case.
+    inline UiRect CellPanel(const int width, const int height, const bool onLeft) {
+        return {onLeft ? 20 : width - 400, height - 330, 380, 310};
+    }
+    inline UiRect CellPanelClose(const UiRect panel) {
+        return {panel.x + panel.width - 40, panel.y + 8, 32, 28};
+    }
     inline UiRect PopulationPlot(const int width, const int height) {
         return {90, 160, width > 151 ? width - 150 : 1, height > 251 ? height - 250 : 1};
     }

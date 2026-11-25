@@ -9,7 +9,14 @@ import std;
 using namespace ecosim_render_detail;
 
 namespace ecosim {
-    UiController::UiController(const int width, const int height) : width{width}, height{height} {}
+    UiController::UiController(const int width, const int height, const int cellSize)
+        : width{width}, height{height}, cellSize{cellSize} {}
+
+    std::optional<Position> UiController::SelectedCell() const { return selectedCell; }
+
+    bool UiController::IsCellPanelOnLeft() const {
+        return selectedCell && selectedCell->x * cellSize >= width / 2;
+    }
 
     bool UiController::IsShowingGraph() const { return showingGraph; }
     bool UiController::IsExitDialogOpen() const { return showingExitDialog; }
@@ -71,7 +78,10 @@ namespace ecosim {
         }
         // Un clic en dehors des cases valide la saisie en cours.
         editor.Commit(settings);
-        if (StartButton(width, height).Contains(mouse.x, mouse.y)) return UiAction::StartOrRestart;
+        if (StartButton(width, height).Contains(mouse.x, mouse.y)) {
+            selectedCell.reset();
+            return UiAction::StartOrRestart;
+        }
         return ResetButton(width, height).Contains(mouse.x, mouse.y)
             ? UiAction::ResetSettings : UiAction::None;
     }
@@ -80,6 +90,7 @@ namespace ecosim {
         if (ExitMenuButton(width, height).Contains(mouse.x, mouse.y)) {
             showingExitDialog = false;
             showingGraph = false;
+            selectedCell.reset();
             return UiAction::ReturnHome;
         }
         if (ExitQuitButton(width, height).Contains(mouse.x, mouse.y)) return UiAction::Quit;
@@ -93,6 +104,7 @@ namespace ecosim {
     UiAction UiController::HandleSimulationClick(const PointerPosition mouse, const bool paused) {
         if (RestartButton(width).Contains(mouse.x, mouse.y)) {
             showingGraph = false;
+            selectedCell.reset();
             return UiAction::StartOrRestart;
         }
         if (PauseButton(width, showingGraph).Contains(mouse.x, mouse.y)) return UiAction::TogglePause;
@@ -101,6 +113,25 @@ namespace ecosim {
         }
         const UiRect button = showingGraph ? BackButton() : GraphButton(width);
         if (button.Contains(mouse.x, mouse.y)) showingGraph = !showingGraph;
+        else if (!showingGraph) HandleMapClick(mouse);
         return UiAction::None;
+    }
+
+    void UiController::HandleMapClick(const PointerPosition mouse) {
+        if (selectedCell) {
+            const UiRect panel = CellPanel(width, height, IsCellPanelOnLeft());
+            if (panel.Contains(mouse.x, mouse.y)) {
+                if (CellPanelClose(panel).Contains(mouse.x, mouse.y)) selectedCell.reset();
+                return;
+            }
+        }
+        const Position cell{mouse.x / cellSize, mouse.y / cellSize};
+        // La bande restante au bord de l'écran ne contient pas de case.
+        if (mouse.x < 0 || mouse.y < 0 || cell.x >= width / cellSize || cell.y >= height / cellSize) {
+            return;
+        }
+        // Un second clic sur la case choisie ferme le panneau.
+        if (selectedCell == cell) selectedCell.reset();
+        else selectedCell = cell;
     }
 }

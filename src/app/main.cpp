@@ -11,7 +11,7 @@ int main() {
 
     // La fenêtre prend la taille de l'écran : on l'ouvre avant de dimensionner la carte
     ecosim::Win32Window window{"EcoSim"};
-    ecosim::UiController controller{window.Width(), window.Height()};
+    ecosim::UiController controller{window.Width(), window.Height(), CellSize};
     ecosim::Win32Input input{window, controller};
     ecosim::Renderer2D renderer{window, controller, CellSize};
     ecosim::Application application{input, renderer, window.Width() / CellSize,
