@@ -49,7 +49,7 @@ Les nouveau-nés gardent une énergie de 30, la reproduction coûte 30 et demand
 | Revenir à l'accueil, quitter ou annuler | `Échap` pendant la simulation, puis choisir **Menu**, **Quitter** ou **Annuler** |
 | Quitter depuis l'accueil | `Échap` |
 
-L'application s'ouvre sur l'accueil ; aucune simulation ne démarre avant le clic sur **Démarrer**. La simulation continue pendant la consultation du graphique tant qu'elle n'est pas en pause. Pendant la pause, **Génération +1** fait avancer le monde et les courbes d'une seule génération. Sur la carte, les animaux glissent de leur ancienne case vers la nouvelle pendant la durée d'une génération. Seul l'affichage est animé : le moteur reste case par case. La pause fige le mouvement, et un pas manuel est animé en un quart de seconde. La case choisie est encadrée. Son panneau indique le terrain, la végétation et les animaux présents (espèce, numéro, âge et énergie, sept au maximum, les autres étant comptés). Il se met à jour à chaque génération et se place du côté opposé à la case. La sélection est conservée en passant par les courbes et effacée par **Recommencer** ou le retour au menu. Pendant un déplacement, un animal est déjà compté sur sa case d'arrivée. La courbe jaune représente les herbivores et la courbe rouge les prédateurs. L'axe horizontal indique les générations ; une ligne marque la génération actuelle.
+L'application s'ouvre sur l'accueil ; aucune simulation ne démarre avant le clic sur **Démarrer**. La simulation continue pendant la consultation du graphique tant qu'elle n'est pas en pause. Pendant la pause, **Génération +1** fait avancer le monde et les courbes d'une seule génération. Sur la carte, les animaux glissent de leur ancienne case vers la nouvelle pendant la durée d'une génération. Seul l'affichage est animé : le moteur reste case par case. La pause fige le mouvement, et un pas manuel est animé en un quart de seconde. La case choisie est encadrée. Son panneau indique le terrain, la végétation et les animaux présents (espèce, numéro, âge et énergie, sept au maximum, les autres étant comptés). Il se met à jour à chaque génération et se place du côté opposé à la case. La sélection est conservée en passant par les courbes et effacée par **Recommencer** ou le retour au menu. Pendant un déplacement, un animal est déjà compté sur sa case d'arrivée. L'écran **Courbes** présente chaque statistique dans son propre graphique, avec sa propre échelle : effectifs, naissances, morts de faim, morts de vieillesse, herbivores mangés, énergie moyenne et végétation des prairies. Les cases du haut affichent ou masquent chaque graphique ; les cases **Herbivores** et **Prédateurs** filtrent les courbes par espèce, et le bouton **Événements** passe du total depuis le début aux valeurs de chaque génération. La légende de chaque graphique donne la valeur actuelle ; en survolant un graphique, elle donne les valeurs de la génération pointée sur tous les graphiques. Les choix sont conservés après **Recommencer** et le retour au menu. La courbe jaune représente les herbivores, la rouge les prédateurs et la verte la végétation. La courbe d'énergie s'arrête quand une espèce n'a plus d'animaux. Un animal à la fois épuisé et trop âgé est compté comme mort de faim.
 
 La touche `Échap` fige la simulation et affiche un choix : **Menu** revient à l'accueil, **Quitter** ferme l'application, **Annuler** reprend l'affichage. Un second appui sur `Échap` annule aussi le choix.
 
@@ -65,7 +65,7 @@ Le bouton **Recommencer** repart à la génération 0, réinitialise la vitesse 
 2. Les herbivores rejoignent une case accessible riche en végétation et s'y nourrissent.
 3. Les prédateurs cherchent des proies sur leur case ou sur une case voisine accessible ; chacun peut capturer au plus un herbivore.
 4. Les survivants vieillissent et perdent de l'énergie. Les individus suffisamment âgés et nourris peuvent se reproduire.
-5. Les animaux morts sont retirés ; les effectifs des deux populations sont enregistrés pour le graphique.
+5. Les animaux morts sont retirés ; les effectifs, la végétation totale et les événements de la génération sont enregistrés par `SimulationStats`.
 
 La carte et les populations initiales sont générées au démarrage d'une simulation et à chaque redémarrage. Des graines fixes peuvent être utilisées dans les tests pour reproduire un scénario.
 
@@ -78,12 +78,14 @@ Les fichiers `.ixx` exposent les modules C++ ; leurs implémentations sont dans 
 | `src/world/` | Cellules, terrains, accès à la grille et génération du monde. |
 | `src/animals/` | Classe de base `Animal`, interface `Habitat`, comportements de `Herbivore` et de `Predator`. |
 | `src/simulation/simulation/` | Module `ecosim.simulation` : classe `Simulation`, cycle des générations, végétation et historique des populations. |
+| `src/simulation/stats/` | Module `ecosim.stats` : classe `SimulationStats`, historique et événements. |
 | `src/simulation/settings/` | Module `ecosim.settings` : réglages d'une simulation et valeurs par défaut. |
 | `src/simulation/clock/` | Module `ecosim.clock` : classe `SimulationClock`, vitesses et pause. |
 | `src/core/` | Module `ecosim` : entrée publique du moteur. |
 | `src/ui/application.*` | Déroulement de l'application et interfaces `InputSource` et `View`. |
 | `src/ui/controller.*` et `layout.hpp` | Navigation entre les écrans, clics et placement des éléments. |
 | `src/ui/settings_form.*` | Libellés, limites et saisie des réglages. |
+| `src/ui/chart.*` | Choix des graphiques, séries et échelles. |
 | `src/ui/cell_info.*` | Texte du panneau d'une case. |
 | `src/ui/animation.*` | Animation d'un pas manuel et des naissances. |
 | `src/render/window.*` | Fenêtre Windows et messages. |

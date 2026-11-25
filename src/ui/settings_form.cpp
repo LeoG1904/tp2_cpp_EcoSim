@@ -66,7 +66,7 @@ namespace ecosim {
     void SettingEditor::Erase() {
         if (selected) text.clear();
         else if (!text.empty()) text.pop_back();
-        selected = false; 
+        selected = false;
     }
 
     void SettingEditor::Commit(SimulationSettings& settings) {

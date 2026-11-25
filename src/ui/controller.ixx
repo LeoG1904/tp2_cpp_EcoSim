@@ -3,6 +3,7 @@ export module ecosim.controller;
 
 import std;
 export import ecosim.settings_form;
+export import ecosim.chart;
 
 export namespace ecosim {
     enum class UiAction { None, StartOrRestart, TogglePause, NextGeneration,
@@ -30,6 +31,7 @@ export namespace ecosim {
         bool right{false};
         bool up{false};
         std::optional<PointerPosition> click;
+        std::optional<PointerPosition> pointer; // position de la souris, pour le survol
     };
 
     class UiController {
@@ -44,6 +46,8 @@ export namespace ecosim {
         bool IsShowingGraph() const;
         bool IsExitDialogOpen() const;
         const SettingEditor& Editor() const;
+        const ChartSelection& Charts() const;
+        std::optional<PointerPosition> Pointer() const;
         std::optional<Position> SelectedCell() const;
         // Le panneau évite de recouvrir la case choisie.
         bool IsCellPanelOnLeft() const;
@@ -54,11 +58,15 @@ export namespace ecosim {
         UiAction HandleExitDialogClick(PointerPosition mouse);
         UiAction HandleSimulationClick(PointerPosition mouse, bool paused);
         void HandleMapClick(PointerPosition mouse);
+        void HandleChartClick(PointerPosition mouse);
 
         int width;
         int height;
         int cellSize;
         std::optional<Position> selectedCell;
+        // Conservé d'une simulation à l'autre : c'est une préférence d'affichage.
+        ChartSelection charts;
+        std::optional<PointerPosition> pointer;
         bool showingGraph{false};
         bool showingExitDialog{false};
         SettingEditor editor;

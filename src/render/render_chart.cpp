@@ -14,179 +14,226 @@ import ecosim.simulation;
 using namespace ecosim_render_detail;
 
 namespace {
-    struct PopulationGraph {
-        // Projette l'historique sur l'écran sans modifier les données de simulation.
-        const std::vector<ecosim::PopulationSample>& history;
-        UiRect plot;
-        std::size_t scale{10};
-        int segments;
+    constexpr COLORREF HerbivoreColor{RGB(245, 210, 70)};
+    constexpr COLORREF PredatorColor{RGB(220, 85, 75)};
+    constexpr COLORREF VegetationColor{RGB(120, 200, 130)};
+    constexpr COLORREF PrimaryInk{RGB(255, 255, 255)};
+    constexpr COLORREF MutedInk{RGB(160, 175, 195)};
+    constexpr COLORREF PanelColor{RGB(31, 37, 48)};
+    constexpr COLORREF ButtonColor{RGB(55, 64, 77)};
+    constexpr COLORREF CursorColor{RGB(125, 183, 235)};
 
-        PopulationGraph(const ecosim::Simulation& simulation, const int width, const int height)
-            : history{simulation.PopulationHistory()},
-              plot{PopulationPlot(width, height)},
-              segments{static_cast<int>(std::min<std::size_t>(plot.width, history.size() - 1))} {
-            for (const auto& sample : history) {
-                scale = std::max({scale, sample.herbivores, sample.predators});
+    COLORREF ColorOf(const ecosim::SeriesSource source) {
+        if (source == ecosim::SeriesSource::Herbivores) return HerbivoreColor;
+        if (source == ecosim::SeriesSource::Predators) return PredatorColor;
+        return VegetationColor;
+    }
+
+    std::string NameOf(const ecosim::SeriesSource source) {
+        if (source == ecosim::SeriesSource::Herbivores) return "Herbivores";
+        if (source == ecosim::SeriesSource::Predators) return "Prédateurs";
+        return "Total";
+    }
+
+    void Fill(const HDC dc, const UiRect area, const COLORREF color) {
+        const RECT rect{area.x, area.y, area.x + area.width, area.y + area.height};
+        const HBRUSH brush = CreateSolidBrush(color);
+        FillRect(dc, &rect, brush);
+        DeleteObject(brush);
+    }
+
+    void Line(const HDC dc, const int x1, const int y1, const int x2, const int y2,
+              const COLORREF color) {
+        const HPEN pen = CreatePen(PS_SOLID, 1, color);
+        const HGDIOBJ previous = SelectObject(dc, pen);
+        MoveToEx(dc, x1, y1, nullptr);
+        LineTo(dc, x2, y2);
+        SelectObject(dc, previous);
+        DeleteObject(pen);
+    }
+
+    int PointX(const UiRect plot, const std::size_t index, const std::size_t count) {
+        if (count < 2) return plot.x;
+        return plot.x + static_cast<int>(static_cast<long long>(index) * plot.width
+                                         / static_cast<long long>(count - 1));
+    }
+
+    int PointY(const UiRect plot, const double value, const long long maximum) {
+        return plot.y + plot.height - static_cast<int>(value / static_cast<double>(maximum) * plot.height);
+    }
+
+    // Une valeur absente coupe la courbe au lieu de la faire tomber à zéro.
+    void DrawCurve(const HDC dc, const UiRect plot, const ecosim::ChartSeries& series,
+                   const long long maximum) {
+        const HPEN pen = CreatePen(PS_SOLID, 2, ColorOf(series.source));
+        const HGDIOBJ previous = SelectObject(dc, pen);
+        bool drawing = false;
+        for (std::size_t i = 0; i < series.values.size(); ++i) {
+            if (!series.values[i]) {
+                drawing = false;
+                continue;
             }
-            scale = (scale + 9) / 10 * 10;
+            const int x = PointX(plot, i, series.values.size());
+            const int y = PointY(plot, *series.values[i], maximum);
+            if (drawing) LineTo(dc, x, y);
+            else MoveToEx(dc, x, y, nullptr);
+            drawing = true;
         }
+        SelectObject(dc, previous);
+        DeleteObject(pen);
+    }
 
-        std::pair<int, int> Point(const int step, const bool predator) const {
-            const std::size_t index = static_cast<std::size_t>(step) * (history.size() - 1)
-                                    / static_cast<std::size_t>(segments);
-            const std::size_t count = predator ? history[index].predators : history[index].herbivores;
-            const int x = plot.x + step * plot.width / segments;
-            return {x, Y(count)};
-        }
-
-        int Y(const std::size_t count) const {
-            return plot.y + plot.height
-                 - static_cast<int>(static_cast<double>(count) * plot.height / scale);
-        }
-
-        int GenerationAt(const int tick) const {
-            return static_cast<int>(static_cast<long long>(history.back().generation) * tick / 4);
-        }
-
-        int TickX(const int tick) const { return plot.x + tick * plot.width / 4; }
-    };
-
+    void DrawPoint(const HDC dc, const int x, const int y, const COLORREF color) {
+        const HBRUSH brush = CreateSolidBrush(color);
+        const HGDIOBJ previousBrush = SelectObject(dc, brush);
+        const HGDIOBJ previousPen = SelectObject(dc, GetStockObject(NULL_PEN));
+        Ellipse(dc, x - 5, y - 5, x + 6, y + 6);
+        SelectObject(dc, previousPen);
+        SelectObject(dc, previousBrush);
+        DeleteObject(brush);
+    }
 }
 
 namespace ecosim {
     void Renderer2D::DrawGraph(const Simulation& simulation, const int speed, const bool paused) const {
-        const PopulationGraph graph{simulation, windowWidth, windowHeight};
+        const std::vector<PopulationSample>& history = simulation.PopulationHistory();
+        const ChartSelection& selection = controller.Charts();
         const auto hwnd = static_cast<HWND>(window);
         const HDC screen = GetDC(hwnd);
         const HDC buffer = CreateCompatibleDC(screen);
         const HBITMAP bitmap = CreateCompatibleBitmap(screen, windowWidth, windowHeight);
         const HGDIOBJ previous = SelectObject(buffer, bitmap);
-        const RECT bounds{0, 0, windowWidth, windowHeight};
-        const HBRUSH background = CreateSolidBrush(RGB(24, 29, 38));
-        FillRect(buffer, &bounds, background);
-        DeleteObject(background);
+        Fill(buffer, {0, 0, windowWidth, windowHeight}, RGB(24, 29, 38));
         SetBkMode(buffer, TRANSPARENT);
-        SetTextColor(buffer, RGB(255, 255, 255));
-        const HFONT headingFont = CreateFontW(30, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
-                                              DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                              CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Segoe UI");
-        const HFONT labelFont = CreateFontW(20, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-                                            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                            CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Segoe UI");
+        const auto createFont = [](const int height, const int weight) {
+            return CreateFontW(height, 0, 0, 0, weight, FALSE, FALSE, FALSE,
+                               DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                               CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Segoe UI");
+        };
+        const HFONT headingFont = createFont(30, FW_BOLD);
+        const HFONT labelFont = createFont(20, FW_NORMAL);
+        const HFONT chartFont = createFont(17, FW_NORMAL);
         const HGDIOBJ previousFont = SelectObject(buffer, labelFont);
-        const auto write = [&](const int x, const int y, const std::string& value) {
+        const auto write = [&](const int x, const int y, const std::string& value,
+                               const COLORREF color) {
+            SetTextColor(buffer, color);
             WriteText(buffer, x, y, value);
         };
-        const UiRect back = BackButton();
-        const RECT backRect{back.x, back.y, back.x + back.width, back.y + back.height};
-        const HBRUSH buttonBrush = CreateSolidBrush(RGB(55, 64, 77));
-        FillRect(buffer, &backRect, buttonBrush);
-        const UiRect restart = RestartButton(windowWidth);
-        const RECT restartRect{restart.x, restart.y, restart.x + restart.width, restart.y + restart.height};
-        FillRect(buffer, &restartRect, buttonBrush);
+        const auto button = [&](const UiRect area, const std::string& label) {
+            Fill(buffer, area, ButtonColor);
+            write(area.x + 20, area.y + 7, label, PrimaryInk);
+        };
+        // Case à cocher : pleine et de la couleur de la série quand elle est affichée.
+        const auto toggle = [&](const UiRect area, const std::string& label, const bool selected,
+                                const COLORREF color) {
+            Fill(buffer, area, selected ? ButtonColor : PanelColor);
+            const UiRect box{area.x + 10, area.y + 10, 14, 14};
+            Fill(buffer, box, selected ? color : MutedInk);
+            if (!selected) Fill(buffer, {box.x + 2, box.y + 2, 10, 10}, PanelColor);
+            write(area.x + 32, area.y + 7, label, selected ? PrimaryInk : MutedInk);
+        };
+
+        button(BackButton(), "Retour");
+        button(RestartButton(windowWidth), "Recommencer");
         if (!simulation.IsFinished()) {
-            const UiRect pause = PauseButton(windowWidth, true);
-            const RECT pauseRect{pause.x, pause.y, pause.x + pause.width, pause.y + pause.height};
-            FillRect(buffer, &pauseRect, buttonBrush);
-            write(pause.x + 20, pause.y + 9, paused ? "Reprendre" : "Pause");
-            if (paused) {
-                const UiRect next = NextButton(windowWidth, true);
-                const RECT nextRect{next.x, next.y, next.x + next.width, next.y + next.height};
-                FillRect(buffer, &nextRect, buttonBrush);
-                write(next.x + 12, next.y + 9, "Génération +1");
-            }
+            button(PauseButton(windowWidth, true), paused ? "Reprendre" : "Pause");
+            if (paused) button(NextButton(windowWidth, true), "Génération +1");
         }
-        DeleteObject(buttonBrush);
-        write(back.x + 20, back.y + 9, "Retour");
-        write(restart.x + 20, restart.y + 9, "Recommencer");
         SelectObject(buffer, headingFont);
-        write(155, 25, "Évolution des populations");
+        write(155, 25, "Statistiques", PrimaryInk);
         SelectObject(buffer, labelFont);
         std::string status;
         if (simulation.IsFinished()) status = "Fin de la simulation : plus aucun animal";
         else if (paused) status = std::format("En pause   Vitesse x{}", speed);
         else status = std::format("Vitesse x{}", speed);
-        write(90, 78, std::format("Génération {}    Herbivores {}    Prédateurs {}    {}",
-                                simulation.GetGeneration(), simulation.HerbivoreCount(),
-                                simulation.PredatorCount(), status));
-        const HBRUSH herbivoreBrush = CreateSolidBrush(RGB(245, 210, 70));
-        const HBRUSH predatorBrush = CreateSolidBrush(RGB(220, 85, 75));
-        const RECT herbivoreLegend{90, 116, 105, 131};
-        const RECT predatorLegend{270, 116, 285, 131};
-        FillRect(buffer, &herbivoreLegend, herbivoreBrush);
-        FillRect(buffer, &predatorLegend, predatorBrush);
-        write(115, 116, "Herbivores");
-        write(295, 116, "Prédateurs");
+        write(20, 78, std::format("Génération {}    Herbivores {}    Prédateurs {}    {}",
+                                  simulation.GetGeneration(), simulation.HerbivoreCount(),
+                                  simulation.PredatorCount(), status), PrimaryInk);
 
-        const HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(57, 66, 80));
-        const HGDIOBJ oldPen = SelectObject(buffer, gridPen);
-        for (int tick = 0; tick <= 4; ++tick) {
-            const int y = graph.plot.y + tick * graph.plot.height / 4;
-            MoveToEx(buffer, graph.plot.x, y, nullptr);
-            LineTo(buffer, graph.plot.x + graph.plot.width, y);
-            write(18, y - 9, std::to_string(graph.scale * (4 - tick) / 4));
+        SelectObject(buffer, chartFont);
+        for (std::size_t i = 0; i < MetricCount; ++i) {
+            toggle(MetricChip(windowWidth, static_cast<int>(i)), MetricNames()[i],
+                   selection.metrics[i], CursorColor);
         }
-        for (int tick = 0; tick <= 4; ++tick) {
-            if (tick > 0 && graph.GenerationAt(tick) == graph.GenerationAt(tick - 1)) continue;
-            const int x = graph.TickX(tick);
-            if (tick > 0 && tick < 4) {
-                MoveToEx(buffer, x, graph.plot.y, nullptr);
-                LineTo(buffer, x, graph.plot.y + graph.plot.height);
-            }
-            const std::string label = std::to_string(graph.GenerationAt(tick));
-            const TextSize extent = MeasureText(buffer, label);
-            write(std::clamp(x - static_cast<int>(extent.cx) / 2, graph.plot.x,
-                             std::max(graph.plot.x, graph.plot.x + graph.plot.width - static_cast<int>(extent.cx))),
-                  graph.plot.y + graph.plot.height + 14, label);
+        toggle(SpeciesChip(0), "Herbivores", selection.herbivores, HerbivoreColor);
+        toggle(SpeciesChip(1), "Prédateurs", selection.predators, PredatorColor);
+        button(CumulativeButton(), selection.cumulative ? "Événements : total"
+                                                        : "Événements : par génération");
+
+        const std::vector<ChartMetric> visible = selection.VisibleMetrics();
+        const int count = static_cast<int>(visible.size());
+        if (count == 0) {
+            const UiRect area = ChartArea(windowWidth, windowHeight);
+            write(area.x + 20, area.y + 40, "Aucune statistique sélectionnée : cochez-en une ci-dessus.",
+                  MutedInk);
         }
-        SelectObject(buffer, oldPen);
-        DeleteObject(gridPen);
-        const auto drawCurve = [&](const bool predator, const COLORREF color) {
-            const HPEN pen = CreatePen(PS_SOLID, 2, color);
-            const HGDIOBJ old = SelectObject(buffer, pen);
-            if (graph.segments > 0) {
-                const auto [startX, startY] = graph.Point(0, predator);
-                MoveToEx(buffer, startX, startY, nullptr);
-                for (int step = 1; step <= graph.segments; ++step) {
-                    const auto [x, y] = graph.Point(step, predator);
-                    LineTo(buffer, x, y);
+
+        // La génération survolée est la même sur tous les graphiques.
+        std::optional<std::size_t> hovered;
+        if (const auto pointer = controller.Pointer()) {
+            for (int i = 0; i < count; ++i) {
+                const UiRect plot = ChartPlot(ChartPanel(windowWidth, windowHeight, i, count));
+                if (plot.Contains(pointer->x, pointer->y)) {
+                    hovered = IndexAt(pointer->x, plot.x, plot.width, history.size());
                 }
             }
-            SelectObject(buffer, old);
-            DeleteObject(pen);
-        };
-        drawCurve(false, RGB(245, 210, 70));
-        drawCurve(true, RGB(220, 85, 75));
-        const int currentX = graph.segments > 0 ? graph.plot.x + graph.plot.width : graph.plot.x;
-        const HPEN currentPen = CreatePen(PS_SOLID, 2, RGB(125, 183, 235));
-        const HGDIOBJ previousCurrentPen = SelectObject(buffer, currentPen);
-        MoveToEx(buffer, currentX, graph.plot.y, nullptr);
-        LineTo(buffer, currentX, graph.plot.y + graph.plot.height);
-        SelectObject(buffer, previousCurrentPen);
-        DeleteObject(currentPen);
-        const auto& current = graph.history.back();
-        const auto drawCurrentPoint = [&](const std::size_t count, const HBRUSH brush) {
-            const int y = graph.Y(count);
-            const HGDIOBJ oldBrush = SelectObject(buffer, brush);
-            const HGDIOBJ oldPointPen = SelectObject(buffer, GetStockObject(NULL_PEN));
-            Ellipse(buffer, currentX - 5, y - 5, currentX + 5, y + 5);
-            SelectObject(buffer, oldPointPen);
-            SelectObject(buffer, oldBrush);
-        };
-        drawCurrentPoint(current.herbivores, herbivoreBrush);
-        drawCurrentPoint(current.predators, predatorBrush);
-        const auto currentLabel = std::format("Génération actuelle : {}", current.generation);
-        const TextSize currentExtent = MeasureText(buffer, currentLabel);
-        SetTextColor(buffer, RGB(125, 183, 235));
-        write(graph.plot.x + graph.plot.width - currentExtent.cx, graph.plot.y - 28, currentLabel);
-        SetTextColor(buffer, RGB(255, 255, 255));
-        write(graph.plot.x + graph.plot.width / 2 - 55,
-              graph.plot.y + graph.plot.height + 52, "Générations");
+        }
+        const std::size_t shown = hovered.value_or(history.size() - 1);
+        if (hovered) {
+            write(CumulativeButton().x + CumulativeButton().width + 24, CumulativeButton().y + 7,
+                  std::format("Valeurs à la génération {}", history[shown].generation), CursorColor);
+        }
+
+        for (int i = 0; i < count; ++i) {
+            const ChartMetric metric = visible[static_cast<std::size_t>(i)];
+            const UiRect panel = ChartPanel(windowWidth, windowHeight, i, count);
+            const UiRect plot = ChartPlot(panel);
+            const std::vector<ChartSeries> series = BuildSeries(history, metric, selection);
+            const long long maximum = AxisMaximum(series);
+            Fill(buffer, panel, PanelColor);
+            write(panel.x + 12, panel.y + 6, ChartTitle(metric, selection.cumulative), PrimaryInk);
+
+            // Légende avec la valeur actuelle, ou celle de la génération survolée.
+            int legendX = panel.x + 12;
+            for (const ChartSeries& one : series) {
+                Fill(buffer, {legendX, panel.y + 35, 11, 11}, ColorOf(one.source));
+                const std::string text = std::format("{} : {}", NameOf(one.source),
+                                                     FormatValue(metric, one.values[shown]));
+                write(legendX + 17, panel.y + 30, text, MutedInk);
+                legendX += 17 + MeasureText(buffer, text).cx + 22;
+            }
+            if (series.empty()) write(legendX, panel.y + 30, "Aucune espèce à afficher", MutedInk);
+
+            for (int tick = 0; tick <= 4; ++tick) {
+                const int y = plot.y + tick * plot.height / 4;
+                Line(buffer, plot.x, y, plot.x + plot.width, y, RGB(57, 66, 80));
+                // Sur un petit graphique, une graduation sur deux évite les chevauchements.
+                if (plot.height < 100 && tick % 2 != 0) continue;
+                const std::string label = std::to_string(maximum * (4 - tick) / 4);
+                write(plot.x - 8 - MeasureText(buffer, label).cx, y - 9, label, MutedInk);
+            }
+            const std::string first = std::to_string(history.front().generation);
+            const std::string last = std::format("génération {}", history.back().generation);
+            write(plot.x, plot.y + plot.height + 5, first, MutedInk);
+            write(plot.x + plot.width - MeasureText(buffer, last).cx, plot.y + plot.height + 5, last,
+                  MutedInk);
+
+            for (const ChartSeries& one : series) DrawCurve(buffer, plot, one, maximum);
+            if (hovered) {
+                const int x = PointX(plot, shown, history.size());
+                Line(buffer, x, plot.y, x, plot.y + plot.height, CursorColor);
+            }
+            for (const ChartSeries& one : series) {
+                if (!one.values[shown]) continue;
+                DrawPoint(buffer, PointX(plot, shown, history.size()),
+                          PointY(plot, *one.values[shown], maximum), ColorOf(one.source));
+            }
+        }
+
         SelectObject(buffer, previousFont);
         DeleteObject(headingFont);
         DeleteObject(labelFont);
-        DeleteObject(herbivoreBrush);
-        DeleteObject(predatorBrush);
+        DeleteObject(chartFont);
         if (controller.IsExitDialogOpen()) DrawExitDialog(buffer);
         BitBlt(screen, 0, 0, windowWidth, windowHeight, buffer, 0, 0, SRCCOPY);
         SelectObject(buffer, previous);

@@ -63,9 +63,9 @@ namespace ecosim {
         input.right = right;
         input.up = up;
         POINT mouse{};
-        if (click && GetCursorPos(&mouse)
-            && ScreenToClient(static_cast<HWND>(window.Handle()), &mouse)) {
-            input.click = PointerPosition{mouse.x, mouse.y};
+        if (GetCursorPos(&mouse) && ScreenToClient(static_cast<HWND>(window.Handle()), &mouse)) {
+            input.pointer = PointerPosition{mouse.x, mouse.y};
+            if (click) input.click = input.pointer;
         }
         return input;
     }

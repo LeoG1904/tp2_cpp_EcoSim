@@ -44,7 +44,31 @@ namespace ecosim {
     }
 
     const std::vector<PopulationSample>& Simulation::PopulationHistory() const {
-        return populationHistory;
+        return stats.History();
+    }
+
+    const SimulationStats& Simulation::Stats() const { return stats; }
+
+    PopulationSample Simulation::Measure() const {
+        PopulationSample sample{generation, 0, 0};
+        for (const auto& animal : animals) {
+            if (animal->GetKind() == AnimalKind::Herbivore) {
+                ++sample.herbivores;
+                sample.herbivoreEnergy += animal->GetEnergy();
+            } else {
+                ++sample.predators;
+                sample.predatorEnergy += animal->GetEnergy();
+            }
+        }
+        if (sample.herbivores > 0) sample.herbivoreEnergy /= static_cast<double>(sample.herbivores);
+        if (sample.predators > 0) sample.predatorEnergy /= static_cast<double>(sample.predators);
+        for (int y = 0; y < world.GetHeight(); ++y) {
+            for (int x = 0; x < world.GetWidth(); ++x) {
+                const Cell& cell = world.GetCell(Position{x, y});
+                if (cell.IsAccessible()) sample.vegetation += cell.GetVegetation();
+            }
+        }
+        return sample;
     }
 
     void Simulation::AddAnimal(const AnimalKind kind, const Position position,
@@ -56,8 +80,7 @@ namespace ecosim {
         animals.push_back(MakeAnimal(kind, nextId, position,
                                      energy.value_or(traits.startingEnergy), traits));
         ++nextId;
-        populationHistory.back().herbivores = HerbivoreCount();
-        populationHistory.back().predators = PredatorCount();
+        stats.RecordSample(Measure());
     }
 
     void Simulation::AddHerbivore(const Position position, const std::optional<int> energy) {

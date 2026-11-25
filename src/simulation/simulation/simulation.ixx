@@ -7,6 +7,7 @@ export import ecosim.world;
 export import ecosim.herbivore;
 export import ecosim.predator;
 export import ecosim.settings;
+export import ecosim.stats;
 
 export namespace ecosim {
     void GrowVegetation(World& world, int growth = 1);
@@ -21,12 +22,6 @@ export namespace ecosim {
         std::optional<std::uint64_t> parentId;
     };
 
-    struct PopulationSample {
-        int generation;
-        std::size_t herbivores;
-        std::size_t predators;
-    };
-
     class Simulation {
     public:
         Simulation(World world, std::mt19937 rng, const SimulationSettings& settings = {});
@@ -39,6 +34,7 @@ export namespace ecosim {
         bool IsFinished() const;
         std::vector<AnimalSnapshot> Animals() const;
         const std::vector<PopulationSample>& PopulationHistory() const;
+        const SimulationStats& Stats() const;
 
         // Sans énergie précisée, l'animal reçoit l'énergie de départ des réglages.
         void AddAnimal(AnimalKind kind, Position position, std::optional<int> energy = std::nullopt);
@@ -55,9 +51,12 @@ export namespace ecosim {
         std::mt19937 rng;
         std::uint64_t nextId{1};
         int generation{0};
-        std::vector<PopulationSample> populationHistory{{0, 0, 0}};
+        SimulationStats stats;
 
         void PlayPhase(TurnPhase phase);
+        // Naissances, métabolisme et morts de la génération.
+        void LiveAndReproduce();
+        PopulationSample Measure() const;
         void SeedAnimals(int count, AnimalKind kind);
     };
 }

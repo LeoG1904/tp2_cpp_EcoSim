@@ -63,7 +63,30 @@ namespace ecosim_render_detail {
     inline UiRect CellPanelClose(const UiRect panel) {
         return {panel.x + panel.width - 40, panel.y + 8, 32, 28};
     }
-    inline UiRect PopulationPlot(const int width, const int height) {
-        return {90, 160, width > 151 ? width - 150 : 1, height > 251 ? height - 250 : 1};
+    // Écran des statistiques : deux rangées de cases à cocher, puis les graphiques.
+    inline UiRect MetricChip(const int width, const int index) {
+        const int available = (width - 40) / 7;
+        const int step = available < 190 ? available : 190;
+        return {20 + index * step, 112, step - 8, 34};
+    }
+    inline UiRect SpeciesChip(const int index) { return {20 + index * 180, 154, 172, 34}; }
+    inline UiRect CumulativeButton() { return {404, 154, 280, 34}; }
+    inline UiRect ChartArea(const int width, const int height) {
+        return {20, 204, width - 40, height - 220};
+    }
+    // Grille de petits graphiques : plus il y en a, plus il y a de colonnes.
+    inline UiRect ChartPanel(const int width, const int height, const int index, const int count) {
+        const UiRect area = ChartArea(width, height);
+        const int columns = count <= 2 ? 1 : count <= 4 ? 2 : 3;
+        const int rows = (count + columns - 1) / columns;
+        constexpr int gap{12};
+        const int panelWidth = (area.width - gap * (columns - 1)) / columns;
+        const int panelHeight = (area.height - gap * (rows - 1)) / rows;
+        return {area.x + index % columns * (panelWidth + gap),
+                area.y + index / columns * (panelHeight + gap), panelWidth, panelHeight};
+    }
+    // Zone de tracé, sous le titre et la légende, à droite des graduations.
+    inline UiRect ChartPlot(const UiRect panel) {
+        return {panel.x + 70, panel.y + 64, panel.width - 88, panel.height - 92};
     }
 }

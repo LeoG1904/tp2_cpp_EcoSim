@@ -13,6 +13,8 @@ namespace ecosim {
         : width{width}, height{height}, cellSize{cellSize} {}
 
     std::optional<Position> UiController::SelectedCell() const { return selectedCell; }
+    const ChartSelection& UiController::Charts() const { return charts; }
+    std::optional<PointerPosition> UiController::Pointer() const { return pointer; }
 
     bool UiController::IsCellPanelOnLeft() const {
         return selectedCell && selectedCell->x * cellSize >= width / 2;
@@ -24,6 +26,7 @@ namespace ecosim {
 
     UiAction UiController::Handle(const RawInput& input, const bool isHomeScreen, const bool paused,
                                   SimulationSettings& settings) {
+        pointer = input.pointer;
         if (isHomeScreen) HandleTyping(input.typed, settings);
         if (input.escape) {
             if (isHomeScreen) {
@@ -113,8 +116,20 @@ namespace ecosim {
         }
         const UiRect button = showingGraph ? BackButton() : GraphButton(width);
         if (button.Contains(mouse.x, mouse.y)) showingGraph = !showingGraph;
-        else if (!showingGraph) HandleMapClick(mouse);
+        else if (showingGraph) HandleChartClick(mouse);
+        else HandleMapClick(mouse);
         return UiAction::None;
+    }
+
+    void UiController::HandleChartClick(const PointerPosition mouse) {
+        for (std::size_t i = 0; i < MetricCount; ++i) {
+            if (MetricChip(width, static_cast<int>(i)).Contains(mouse.x, mouse.y)) {
+                charts.metrics[i] = !charts.metrics[i];
+            }
+        }
+        if (SpeciesChip(0).Contains(mouse.x, mouse.y)) charts.herbivores = !charts.herbivores;
+        if (SpeciesChip(1).Contains(mouse.x, mouse.y)) charts.predators = !charts.predators;
+        if (CumulativeButton().Contains(mouse.x, mouse.y)) charts.cumulative = !charts.cumulative;
     }
 
     void UiController::HandleMapClick(const PointerPosition mouse) {
