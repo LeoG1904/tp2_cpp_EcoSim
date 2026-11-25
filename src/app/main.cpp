@@ -38,6 +38,7 @@ int main() {
             clock = ecosim::SimulationClock{};
         } else if (simulation && !simulation->IsFinished()) {
             if (action == ecosim::UiAction::TogglePause) clock.SetPaused(!clock.IsPaused());
+            if (action == ecosim::UiAction::CycleSpeed) clock.CycleSpeed();
             if (action == ecosim::UiAction::NextGeneration && clock.IsPaused()) simulation->Step();
         }
         const double elapsed = renderer.FrameTime();

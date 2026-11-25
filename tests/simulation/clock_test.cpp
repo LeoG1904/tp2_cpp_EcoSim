@@ -55,3 +55,11 @@ TEST_CASE("La pause ignore le temps ecoule sans perdre la fraction deja accumule
     REQUIRE(clock.Advance(0.25) == 1);
     REQUIRE(clock.Advance(0.25) == 0);
 }
+
+TEST_CASE("Tab parcourt les vitesses puis revient a x1", "[clock]") {
+    SimulationClock clock;
+    for (const int expected : {2, 5, 10, 1}) {
+        clock.CycleSpeed();
+        REQUIRE(clock.GetSpeed() == expected);
+    }
+}

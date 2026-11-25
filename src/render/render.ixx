@@ -6,6 +6,7 @@ import ecosim.simulation;
 
 export namespace ecosim {
     enum class UiAction { None, StartOrRestart, TogglePause, NextGeneration,
+                          CycleSpeed,
                           CancelExit, ReturnHome, Quit };
 
     class Renderer2D {
@@ -40,6 +41,9 @@ export namespace ecosim {
         bool leftMouseDown{false};
         bool spaceWasDown{false};
         bool escapeWasDown{false};
+        bool tabWasDown{false};
+        bool rightWasDown{false};
+        bool upWasDown{false};
         mutable bool closed{false};
         mutable std::chrono::steady_clock::time_point lastFrame{};
     };

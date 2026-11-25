@@ -92,7 +92,7 @@ namespace ecosim {
         writeCentered(L"Démarrer", start.y + 11);
         SelectObject(buffer, bodyFont);
         SetTextColor(buffer, RGB(177, 203, 198));
-        writeCentered(L"Vitesse : touches 1 à 4   •   Courbes en jeu", centerY + 152);
+        writeCentered(L"Vitesse : Tab ou touches 1 à 4   •   Courbes en jeu", centerY + 152);
         writeCentered(L"Échap : quitter", windowHeight - 37);
 
         SelectObject(buffer, previousFont);

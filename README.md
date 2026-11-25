@@ -26,8 +26,9 @@ L'application fonctionne sous Windows et utilise Win32/GDI pour l'affichage. La 
 | --- | --- |
 | Lancer une simulation depuis l'accueil | Bouton **Démarrer** |
 | Vitesse x1, x2, x5 ou x10 | Touches `1`, `2`, `3` ou `4` |
+| Passer à la vitesse suivante | **Tab** (x1, x2, x5, x10, puis retour à x1) |
 | Mettre en pause ou reprendre | **Espace**, ou bouton **Pause** / **Reprendre** sur la carte et les courbes |
-| Avancer d'une génération | Bouton **Génération +1**, visible pendant la pause |
+| Avancer d'une génération | Flèche **droite** ou **haut**, ou bouton **Génération +1**, pendant la pause |
 | Afficher l'évolution des populations | Bouton **Courbes**, en haut à droite de la carte |
 | Revenir à la carte | Bouton **Retour**, sur l'écran des courbes |
 | Redémarrer avec une nouvelle carte et de nouveaux animaux | Bouton **Recommencer**, sur la carte et les courbes |

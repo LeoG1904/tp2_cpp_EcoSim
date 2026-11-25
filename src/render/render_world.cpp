@@ -99,8 +99,8 @@ namespace ecosim {
 
         std::wstring status;
         if (simulation.IsFinished()) status = L"Fin de la simulation : plus aucun animal";
-        else if (paused) status = std::format(L"En pause   Vitesse x{}", speed);
-        else status = std::format(L"Vitesse x{}   (touches 1 à 4 : x1 x2 x5 x10 ; Échap : options)", speed);
+        else if (paused) status = std::format(L"En pause   Vitesse x{}   (flèche droite ou haut : avancer ; Tab : vitesse)", speed);
+        else status = std::format(L"Vitesse x{}   (Tab ou touches 1 à 4 : x1 x2 x5 x10 ; Échap : options)", speed);
         const auto hud = std::format(L"Génération {}   Herbivores {}   Prédateurs {}",
                                      simulation.GetGeneration(), simulation.HerbivoreCount(),
                                      simulation.PredatorCount());

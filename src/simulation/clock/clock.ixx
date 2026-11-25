@@ -11,6 +11,7 @@ export namespace ecosim {
 
         void SetSpeed(int multiplier);
         int GetSpeed() const;
+        void CycleSpeed();
         void SetPaused(bool value);
         bool IsPaused() const;
         int Advance(double realSeconds);

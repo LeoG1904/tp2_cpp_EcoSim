@@ -88,6 +88,16 @@ namespace ecosim {
         const bool spaceDown = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
         const bool spacePressed = spaceDown && !spaceWasDown;
         spaceWasDown = spaceDown;
+        // Un appui ne compte qu'une fois, même si la touche reste enfoncée.
+        const auto justPressed = [](const int key, bool& wasDown) {
+            const bool down = (GetAsyncKeyState(key) & 0x8000) != 0;
+            const bool result = down && !wasDown;
+            wasDown = down;
+            return result;
+        };
+        const bool tabPressed = justPressed(VK_TAB, tabWasDown);
+        const bool rightPressed = justPressed(VK_RIGHT, rightWasDown);
+        const bool upPressed = justPressed(VK_UP, upWasDown);
         const bool pressed = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
         const bool wasPressed = leftMouseDown;
         leftMouseDown = pressed;
@@ -99,6 +109,11 @@ namespace ecosim {
         }
         if (spacePressed && !isHomeScreen && !showingExitDialog && focused) {
             return UiAction::TogglePause;
+        }
+        if (!isHomeScreen && !showingExitDialog && focused) {
+            // Alt+Tab sert à changer de fenêtre, pas de vitesse.
+            if (tabPressed && (GetAsyncKeyState(VK_MENU) & 0x8000) == 0) return UiAction::CycleSpeed;
+            if (paused && (rightPressed || upPressed)) return UiAction::NextGeneration;
         }
         if (!pressed || wasPressed || !focused) return UiAction::None;
         POINT mouse{};

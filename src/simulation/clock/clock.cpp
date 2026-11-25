@@ -12,6 +12,11 @@ namespace ecosim {
 
     int SimulationClock::GetSpeed() const { return speed; }
 
+    void SimulationClock::CycleSpeed() {
+        auto next = std::ranges::find(Speeds, speed) + 1;
+        speed = next == Speeds.end() ? Speeds.front() : *next;
+    }
+
     void SimulationClock::SetPaused(const bool value) { paused = value; }
     bool SimulationClock::IsPaused() const { return paused; }
 
