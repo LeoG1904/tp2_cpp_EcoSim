@@ -67,9 +67,11 @@ namespace ecosim {
         DrawRectangle(back.x, back.y, back.width, back.height, Color{55, 64, 77, 255});
         DrawText("Retour", back.x + 20, back.y + 8, 20, RAYWHITE);
         DrawText("Evolution des populations", 155, 25, 28, RAYWHITE);
-        const std::string summary = std::format("Generation {}    Herbivores {}    Predateurs {}    Vitesse x{}",
+        const std::string status = simulation.IsFinished()
+            ? "Fin de la simulation : plus aucun animal" : std::format("Vitesse x{}", speed);
+        const std::string summary = std::format("Generation {}    Herbivores {}    Predateurs {}    {}",
                                                 simulation.GetGeneration(), simulation.HerbivoreCount(),
-                                                simulation.PredatorCount(), speed);
+                                                simulation.PredatorCount(), status);
         DrawText(summary.c_str(), 90, 78, 20, RAYWHITE);
         DrawRectangle(90, 116, 15, 15, Color{245, 210, 70, 255});
         DrawText("Herbivores", 115, 114, 20, RAYWHITE);
@@ -153,9 +155,11 @@ namespace ecosim {
         SelectObject(buffer, headingFont);
         write(155, 25, L"Évolution des populations");
         SelectObject(buffer, labelFont);
-        write(90, 78, std::format(L"Génération {}    Herbivores {}    Prédateurs {}    Vitesse x{}",
+        const std::wstring status = simulation.IsFinished()
+            ? L"Fin de la simulation : plus aucun animal" : std::format(L"Vitesse x{}", speed);
+        write(90, 78, std::format(L"Génération {}    Herbivores {}    Prédateurs {}    {}",
                                 simulation.GetGeneration(), simulation.HerbivoreCount(),
-                                simulation.PredatorCount(), speed));
+                                simulation.PredatorCount(), status));
         const HBRUSH herbivoreBrush = CreateSolidBrush(RGB(245, 210, 70));
         const HBRUSH predatorBrush = CreateSolidBrush(RGB(220, 85, 75));
         const RECT herbivoreLegend{90, 116, 105, 131};

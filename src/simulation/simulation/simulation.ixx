@@ -32,6 +32,7 @@ export namespace ecosim {
         int GetGeneration() const;
         std::size_t HerbivoreCount() const;
         std::size_t PredatorCount() const;
+        bool IsFinished() const;
         std::vector<AnimalSnapshot> Animals() const;
         const std::vector<PopulationSample>& PopulationHistory() const;
 

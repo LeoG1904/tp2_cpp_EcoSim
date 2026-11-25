@@ -18,6 +18,8 @@ namespace ecosim {
         }));
     }
 
+    bool Simulation::IsFinished() const { return animals.empty(); }
+
     std::vector<AnimalSnapshot> Simulation::Animals() const {
         std::vector<AnimalSnapshot> result;
         result.reserve(animals.size());

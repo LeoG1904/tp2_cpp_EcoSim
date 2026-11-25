@@ -26,9 +26,11 @@ int main() {
             clock.SetSpeed(*speed);
         }
         // La simulation continue pendant la consultation des courbes.
-        const int steps = clock.Advance(renderer.FrameTime());
+        const double elapsed = renderer.FrameTime();
+        const int steps = simulation.IsFinished() ? 0 : clock.Advance(elapsed);
         for (int i = 0; i < steps; ++i) {
             simulation.Step();
+            if (simulation.IsFinished()) break;
         }
 
         renderer.Draw(simulation, clock.GetSpeed());

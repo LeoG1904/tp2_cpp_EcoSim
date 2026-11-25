@@ -82,9 +82,12 @@ namespace ecosim {
                            Color{220, 85, 75, 255});
             }
         }
-        const std::string hud = std::format(
-            "Génération {}   Herbivores {}   Prédateurs {}   Vitesse x{}   (touches 1 à 4 : x1 x2 x5 x10)",
-            simulation.GetGeneration(), simulation.HerbivoreCount(), simulation.PredatorCount(), speed);
+        const std::string status = simulation.IsFinished()
+            ? "Fin de la simulation : plus aucun animal"
+            : std::format("Vitesse x{}   (touches 1 à 4 : x1 x2 x5 x10)", speed);
+        const std::string hud = std::format("Génération {}   Herbivores {}   Prédateurs {}   {}",
+                                            simulation.GetGeneration(), simulation.HerbivoreCount(),
+                                            simulation.PredatorCount(), status);
         DrawText(hud.c_str(), 10, 10, 20, RAYWHITE);
         const UiRect button = GraphButton(windowWidth);
         DrawRectangle(button.x, button.y, button.width, button.height, Color{55, 64, 77, 255});
@@ -151,8 +154,12 @@ namespace ecosim {
         DeleteObject(animalBrush);
         DeleteObject(predatorBrush);
 
-        const auto hud = std::format(L"Génération {}   Herbivores {}   Prédateurs {}   Vitesse x{}   (touches 1 à 4 : x1 x2 x5 x10 ; Échap : quitter)",
-                                     simulation.GetGeneration(), simulation.HerbivoreCount(), simulation.PredatorCount(), speed);
+        const std::wstring status = simulation.IsFinished()
+            ? L"Fin de la simulation : plus aucun animal"
+            : std::format(L"Vitesse x{}   (touches 1 à 4 : x1 x2 x5 x10 ; Échap : quitter)", speed);
+        const auto hud = std::format(L"Génération {}   Herbivores {}   Prédateurs {}   {}",
+                                     simulation.GetGeneration(), simulation.HerbivoreCount(),
+                                     simulation.PredatorCount(), status);
         SetTextColor(buffer, RGB(255, 255, 255));
         TextOutW(buffer, 10, 10, hud.c_str(), static_cast<int>(hud.size()));
         const UiRect button = GraphButton(windowWidth);

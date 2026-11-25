@@ -31,6 +31,8 @@ Sur Windows, le rendu utilise Win32/GDI par défaut. Sur les autres plateformes,
 
 La simulation continue pendant la consultation du graphique. La courbe jaune représente les herbivores et la courbe rouge les prédateurs. L'axe horizontal indique les générations ; une ligne marque la génération actuelle.
 
+Quand il ne reste plus aucun animal, la simulation s'arrête à la dernière génération. La carte et les courbes restent accessibles pour consulter le résultat final.
+
 ## Règles de la simulation
 
 À chaque génération :

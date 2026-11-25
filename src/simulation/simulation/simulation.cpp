@@ -50,6 +50,7 @@ namespace ecosim {
     }
 
     void Simulation::Step() {
+        if (IsFinished()) return;
         GrowVegetation(world);
         // Les herbivores se déplacent et mangent avant la chasse.
         for (auto& animal : animals) {
