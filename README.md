@@ -18,7 +18,7 @@ Le premier lancement de CMake avec les tests activés récupère **Catch2** depu
 
 Si `cmake-build-debug` est déjà configuré, la commande `cmake --build cmake-build-debug --parallel` suffit pour reconstruire l'application dans **le même répertoire**.
 
-Sur Windows, le rendu utilise Win32/GDI par défaut. Sur les autres plateformes, CMake active Raylib 5.5 et le télécharge lors de la configuration. L'option `-DECOSIM_USE_RAYLIB=ON` permet aussi de choisir Raylib sur Windows. La compilation et les tests ont été vérifiés avec le rendu Win32/GDI.
+L'application fonctionne sous Windows et utilise Win32/GDI pour l'affichage. La compilation et les tests ont été vérifiés avec ce rendu.
 
 ## Utilisation
 
@@ -27,11 +27,14 @@ Sur Windows, le rendu utilise Win32/GDI par défaut. Sur les autres plateformes,
 | Vitesse x1, x2, x5 ou x10 | Touches `1`, `2`, `3` ou `4` |
 | Afficher l'évolution des populations | Bouton **Courbes**, en haut à droite de la carte |
 | Revenir à la carte | Bouton **Retour**, sur l'écran des courbes |
+| Redémarrer avec une nouvelle carte et de nouveaux animaux | Bouton **Recommencer**, sur la carte et les courbes |
 | Quitter | `Échap` |
 
 La simulation continue pendant la consultation du graphique. La courbe jaune représente les herbivores et la courbe rouge les prédateurs. L'axe horizontal indique les générations ; une ligne marque la génération actuelle.
 
 Quand il ne reste plus aucun animal, la simulation s'arrête à la dernière génération. La carte et les courbes restent accessibles pour consulter le résultat final.
+
+Le bouton **Recommencer** repart à la génération 0, réinitialise la vitesse à x1 et affiche la nouvelle carte.
 
 ## Règles de la simulation
 

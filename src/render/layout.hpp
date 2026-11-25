@@ -13,7 +13,8 @@ namespace ecosim_render_detail {
         }
     };
 
-    inline UiRect GraphButton(const int windowWidth) { return {windowWidth - 230, 8, 210, 36}; }
+    inline UiRect GraphButton(const int windowWidth) { return {windowWidth - 230, 54, 210, 36}; }
+    inline UiRect RestartButton(const int windowWidth) { return {windowWidth - 230, 8, 210, 36}; }
     inline UiRect BackButton() { return {20, 20, 110, 36}; }
     inline UiRect PopulationPlot(const int width, const int height) {
         return {90, 160, width > 151 ? width - 150 : 1, height > 251 ? height - 250 : 1};

@@ -1,12 +1,8 @@
 module;
 
-#ifdef ECOSIM_USE_RAYLIB
-#include <raylib.h>
-#else
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
-#endif
 
 #include "layout.hpp"
 
@@ -60,71 +56,6 @@ namespace {
 namespace ecosim {
     void Renderer2D::DrawGraph(const Simulation& simulation, const int speed) const {
         const PopulationGraph graph{simulation, windowWidth, windowHeight};
-#ifdef ECOSIM_USE_RAYLIB
-        BeginDrawing();
-        ClearBackground(Color{24, 29, 38, 255});
-        const UiRect back = BackButton();
-        DrawRectangle(back.x, back.y, back.width, back.height, Color{55, 64, 77, 255});
-        DrawText("Retour", back.x + 20, back.y + 8, 20, RAYWHITE);
-        DrawText("Evolution des populations", 155, 25, 28, RAYWHITE);
-        const std::string status = simulation.IsFinished()
-            ? "Fin de la simulation : plus aucun animal" : std::format("Vitesse x{}", speed);
-        const std::string summary = std::format("Generation {}    Herbivores {}    Predateurs {}    {}",
-                                                simulation.GetGeneration(), simulation.HerbivoreCount(),
-                                                simulation.PredatorCount(), status);
-        DrawText(summary.c_str(), 90, 78, 20, RAYWHITE);
-        DrawRectangle(90, 116, 15, 15, Color{245, 210, 70, 255});
-        DrawText("Herbivores", 115, 114, 20, RAYWHITE);
-        DrawRectangle(270, 116, 15, 15, Color{220, 85, 75, 255});
-        DrawText("Predateurs", 295, 114, 20, RAYWHITE);
-
-        for (int tick = 0; tick <= 4; ++tick) {
-            const int y = graph.plot.y + tick * graph.plot.height / 4;
-            DrawLine(graph.plot.x, y, graph.plot.x + graph.plot.width, y,
-                     Color{57, 66, 80, 255});
-            const std::string label = std::to_string(graph.scale * (4 - tick) / 4);
-            DrawText(label.c_str(), 18, y - 9, 18, RAYWHITE);
-        }
-        for (int tick = 0; tick <= 4; ++tick) {
-            if (tick > 0 && graph.GenerationAt(tick) == graph.GenerationAt(tick - 1)) continue;
-            const int x = graph.TickX(tick);
-            if (tick > 0 && tick < 4) {
-                DrawLine(x, graph.plot.y, x, graph.plot.y + graph.plot.height,
-                         Color{57, 66, 80, 255});
-            }
-            const std::string label = std::to_string(graph.GenerationAt(tick));
-            const int labelWidth = MeasureText(label.c_str(), 18);
-            const int labelX = std::clamp(x - labelWidth / 2, graph.plot.x,
-                                          std::max(graph.plot.x, graph.plot.x + graph.plot.width - labelWidth));
-            DrawText(label.c_str(), labelX, graph.plot.y + graph.plot.height + 14, 18, RAYWHITE);
-        }
-        DrawLine(graph.plot.x, graph.plot.y, graph.plot.x,
-                 graph.plot.y + graph.plot.height, RAYWHITE);
-        for (int step = 1; step <= graph.segments; ++step) {
-            const auto [hx1, hy1] = graph.Point(step - 1, false);
-            const auto [hx2, hy2] = graph.Point(step, false);
-            const auto [px1, py1] = graph.Point(step - 1, true);
-            const auto [px2, py2] = graph.Point(step, true);
-            DrawLineEx(Vector2{static_cast<float>(hx1), static_cast<float>(hy1)},
-                       Vector2{static_cast<float>(hx2), static_cast<float>(hy2)},
-                       2.5F, Color{245, 210, 70, 255});
-            DrawLineEx(Vector2{static_cast<float>(px1), static_cast<float>(py1)},
-                       Vector2{static_cast<float>(px2), static_cast<float>(py2)},
-                       2.5F, Color{220, 85, 75, 255});
-        }
-        const int currentX = graph.segments > 0 ? graph.plot.x + graph.plot.width : graph.plot.x;
-        DrawLine(currentX, graph.plot.y, currentX, graph.plot.y + graph.plot.height,
-                 Color{125, 183, 235, 255});
-        const auto& current = graph.history.back();
-        DrawCircle(currentX, graph.Y(current.herbivores), 5, Color{245, 210, 70, 255});
-        DrawCircle(currentX, graph.Y(current.predators), 4, Color{220, 85, 75, 255});
-        const std::string currentLabel = std::format("Generation actuelle : {}", current.generation);
-        DrawText(currentLabel.c_str(), graph.plot.x + graph.plot.width - MeasureText(currentLabel.c_str(), 20),
-                 graph.plot.y - 28, 20, Color{125, 183, 235, 255});
-        DrawText("Generations", graph.plot.x + graph.plot.width / 2 - 60,
-                 graph.plot.y + graph.plot.height + 52, 18, RAYWHITE);
-        EndDrawing();
-#else
         const auto hwnd = static_cast<HWND>(window);
         const HDC screen = GetDC(hwnd);
         const HDC buffer = CreateCompatibleDC(screen);
@@ -150,8 +81,12 @@ namespace ecosim {
         const RECT backRect{back.x, back.y, back.x + back.width, back.y + back.height};
         const HBRUSH buttonBrush = CreateSolidBrush(RGB(55, 64, 77));
         FillRect(buffer, &backRect, buttonBrush);
+        const UiRect restart = RestartButton(windowWidth);
+        const RECT restartRect{restart.x, restart.y, restart.x + restart.width, restart.y + restart.height};
+        FillRect(buffer, &restartRect, buttonBrush);
         DeleteObject(buttonBrush);
         write(back.x + 20, back.y + 9, L"Retour");
+        write(restart.x + 20, restart.y + 9, L"Recommencer");
         SelectObject(buffer, headingFont);
         write(155, 25, L"Évolution des populations");
         SelectObject(buffer, labelFont);
@@ -246,6 +181,5 @@ namespace ecosim {
         DeleteDC(buffer);
         ReleaseDC(hwnd, screen);
         Sleep(16);
-#endif
     }
 }

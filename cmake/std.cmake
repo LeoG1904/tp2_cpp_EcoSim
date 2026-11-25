@@ -75,7 +75,7 @@ if(NOT EXISTS ${STD_BASE_DIR}/std.${STD_EXTENSION})
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-	# Seulement pour le C++ : les fichiers C de Raylib refusent cette option
+	# Le projet utilise libc++ avec Clang pour les modules C++23.
 	add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-stdlib=libc++>)
 	add_link_options(-stdlib=libc++)
     if(CMAKE_SYSTEM_NAME STREQUAL "Linux")

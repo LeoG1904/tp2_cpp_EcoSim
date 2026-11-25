@@ -18,7 +18,7 @@ export namespace ecosim {
         bool ShouldClose() const;
         double FrameTime() const;
         std::optional<int> SpeedKeyPressed() const;
-        void HandleInput();
+        bool HandleInput();
         void Draw(const Simulation& simulation, int speed) const;
 
     private:
