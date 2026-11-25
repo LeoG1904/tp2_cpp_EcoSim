@@ -22,6 +22,7 @@ namespace ecosim {
         ++age;
         energy = std::max(0, energy - 2);
     }
+    void Animal::Die() { energy = 0; }
 
     bool Animal::CanReproduce() const { return IsAlive() && age >= 5 && energy >= 80; }
     void Animal::PayReproductionCost() { energy -= 30; }

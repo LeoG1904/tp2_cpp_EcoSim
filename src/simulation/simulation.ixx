@@ -4,6 +4,7 @@ export module ecosim.simulation;
 import std;
 export import ecosim.world;
 export import ecosim.herbivore;
+export import ecosim.predator;
 
 export namespace ecosim {
     class SimulationClock {
@@ -37,10 +38,13 @@ export namespace ecosim {
         const World& GetWorld() const;
         int GetGeneration() const;
         std::size_t HerbivoreCount() const;
+        std::size_t PredatorCount() const;
         std::vector<AnimalSnapshot> Animals() const;
 
         void AddHerbivore(Position position, int energy = Herbivore::StartingEnergy);
         void SeedHerbivores(int count);
+        void AddPredator(Position position, int energy = Predator::StartingEnergy);
+        void SeedPredators(int count);
         void Step();
 
     private:
@@ -51,5 +55,7 @@ export namespace ecosim {
         int generation{0};
 
         Position ChooseDestination(Position origin);
+        Position ChoosePredatorDestination(Position origin, const std::vector<int>& preyCounts);
+        void SeedAnimals(int count, AnimalKind kind);
     };
 }

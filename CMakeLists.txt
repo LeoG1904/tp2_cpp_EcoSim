@@ -86,6 +86,11 @@ if(ECOSIM_BUILD_TESTS)
     endif()
     include(CTest)
     include(Catch)
-    catch_discover_tests(tests)
+    if(WIN32)
+        # Sous Windows, la découverte Catch2 corrompt les noms accentués lors du filtrage CTest.
+        add_test(NAME EcoSimSuite COMMAND tests)
+    else()
+        catch_discover_tests(tests)
+    endif()
 endif()
 

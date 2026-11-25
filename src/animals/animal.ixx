@@ -5,7 +5,7 @@ import std;
 export import ecosim.world;
 
 export namespace ecosim {
-    enum class AnimalKind { Herbivore };
+    enum class AnimalKind { Herbivore, Predator };
 
     class Animal {
     public:
@@ -24,11 +24,12 @@ export namespace ecosim {
 
         void MoveTo(Position destination);
         void SpendGeneration();
+        void Die();
         bool CanReproduce() const;
         void PayReproductionCost();
 
         virtual AnimalKind GetKind() const = 0;
-        virtual void Feed(World& world) = 0;
+        virtual void Feed(World& world, std::span<const std::unique_ptr<Animal>> animals) = 0;
         virtual std::unique_ptr<Animal> CreateOffspring(std::uint64_t id) const = 0;
 
     protected:

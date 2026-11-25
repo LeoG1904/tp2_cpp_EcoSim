@@ -15,6 +15,7 @@ int main() {
     ecosim::Simulation simulation{ecosim::GenerateRandomWorld(cellsWide, cellsHigh, rng),
                                   std::mt19937{rng()}};
     simulation.SeedHerbivores(std::max(12, cellsWide * cellsHigh / 15));
+    simulation.SeedPredators(std::max(3, cellsWide * cellsHigh / 150));
 
     // Temps de la simulation : le nombre de générations écoulées suit la vitesse choisie
     ecosim::SimulationClock clock;

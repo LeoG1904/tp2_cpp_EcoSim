@@ -43,6 +43,12 @@ namespace ecosim {
         }));
     }
 
+    std::size_t Simulation::PredatorCount() const {
+        return static_cast<std::size_t>(std::ranges::count_if(animals, [](const auto& animal) {
+            return animal->GetKind() == AnimalKind::Predator;
+        }));
+    }
+
     std::vector<AnimalSnapshot> Simulation::Animals() const {
         std::vector<AnimalSnapshot> result;
         result.reserve(animals.size());
@@ -62,6 +68,22 @@ namespace ecosim {
     }
 
     void Simulation::SeedHerbivores(const int count) {
+        SeedAnimals(count, AnimalKind::Herbivore);
+    }
+
+    void Simulation::AddPredator(const Position position, const int energy) {
+        if (!world.IsInside(position) || !world.GetCell(position).IsAccessible()) {
+            throw std::invalid_argument{"Un prédateur doit naître sur une prairie"};
+        }
+        animals.push_back(std::make_unique<Predator>(nextId, position, energy));
+        ++nextId;
+    }
+
+    void Simulation::SeedPredators(const int count) {
+        SeedAnimals(count, AnimalKind::Predator);
+    }
+
+    void Simulation::SeedAnimals(const int count, const AnimalKind kind) {
         if (count < 0) throw std::invalid_argument{"Population initiale négative"};
         if (count == 0) return;
 
@@ -72,10 +94,14 @@ namespace ecosim {
                 if (world.GetCell(position).IsAccessible()) accessible.push_back(position);
             }
         }
-        if (accessible.empty()) throw std::runtime_error{"Aucune prairie pour les herbivores"};
+        if (accessible.empty()) throw std::runtime_error{"Aucune prairie pour les animaux"};
 
         std::uniform_int_distribution<std::size_t> pick{0, accessible.size() - 1};
-        for (int i = 0; i < count; ++i) AddHerbivore(accessible[pick(rng)]);
+        for (int i = 0; i < count; ++i) {
+            const Position position = accessible[pick(rng)];
+            if (kind == AnimalKind::Herbivore) AddHerbivore(position);
+            else AddPredator(position);
+        }
     }
 
     Position Simulation::ChooseDestination(const Position origin) {
@@ -97,13 +123,57 @@ namespace ecosim {
         return best;
     }
 
+    Position Simulation::ChoosePredatorDestination(const Position origin,
+                                                   const std::vector<int>& preyCounts) {
+        Position best = origin;
+        int bestCount = -1;
+        int ties = 0;
+        const auto consider = [&](const Position position) {
+            if (!world.GetCell(position).IsAccessible()) return;
+            const auto index = static_cast<std::size_t>(position.y) * world.GetWidth()
+                             + static_cast<std::size_t>(position.x);
+            const int count = preyCounts[index];
+            if (count > bestCount) {
+                bestCount = count;
+                best = position;
+                ties = 1;
+            } else if (count == bestCount) {
+                std::uniform_int_distribution<int> pick{1, ++ties};
+                if (pick(rng) == 1) best = position;
+            }
+        };
+        consider(origin);
+        for (const Position neighbor : world.Neighbors(origin)) consider(neighbor);
+        return best;
+    }
+
     void Simulation::Step() {
         GrowVegetation(world);
+        // Les herbivores se déplacent et mangent avant la chasse.
+        for (auto& animal : animals) {
+            if (animal->GetKind() != AnimalKind::Herbivore) continue;
+            animal->MoveTo(ChooseDestination(animal->GetPosition()));
+            animal->Feed(world, std::span<const std::unique_ptr<Animal>>{animals});
+        }
+
+        std::vector<int> preyCounts(static_cast<std::size_t>(world.GetWidth()) * world.GetHeight());
+        for (const auto& animal : animals) {
+            if (animal->GetKind() != AnimalKind::Herbivore) continue;
+            const Position position = animal->GetPosition();
+            ++preyCounts[static_cast<std::size_t>(position.y) * world.GetWidth() + position.x];
+        }
+
+        // Chaque prédateur vise une case avec des proies et ne chasse qu'une fois.
+        for (auto& animal : animals) {
+            if (animal->GetKind() != AnimalKind::Predator) continue;
+            animal->MoveTo(ChoosePredatorDestination(animal->GetPosition(), preyCounts));
+            animal->Feed(world, std::span<const std::unique_ptr<Animal>>{animals});
+        }
+
         std::vector<std::unique_ptr<Animal>> newborns;
         std::bernoulli_distribution birth{0.2};
         for (auto& animal : animals) {
-            animal->MoveTo(ChooseDestination(animal->GetPosition()));
-            animal->Feed(world);
+            if (!animal->IsAlive()) continue;
             animal->SpendGeneration();
             if (animal->CanReproduce() && birth(rng)) {
                 newborns.push_back(animal->CreateOffspring(nextId++));
