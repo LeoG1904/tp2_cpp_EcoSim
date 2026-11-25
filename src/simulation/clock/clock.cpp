@@ -12,7 +12,11 @@ namespace ecosim {
 
     int SimulationClock::GetSpeed() const { return speed; }
 
+    void SimulationClock::SetPaused(const bool value) { paused = value; }
+    bool SimulationClock::IsPaused() const { return paused; }
+
     int SimulationClock::Advance(const double realSeconds) {
+        if (paused) return 0;
         accumulator += realSeconds * speed * BaseGenerationsPerSecond;
         const int steps = static_cast<int>(accumulator);
         accumulator -= steps;

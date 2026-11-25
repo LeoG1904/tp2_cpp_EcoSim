@@ -40,3 +40,18 @@ TEST_CASE("Vitesse non supportée refusée", "[clock]") {
     REQUIRE_THROWS_AS(clock.SetSpeed(3), std::invalid_argument);
     REQUIRE(clock.GetSpeed() == 1);
 }
+
+TEST_CASE("La pause ignore le temps ecoule sans perdre la fraction deja accumulee", "[clock]") {
+    SimulationClock clock;
+    clock.SetSpeed(2);
+    REQUIRE(clock.Advance(0.25) == 0);
+
+    clock.SetPaused(true);
+    REQUIRE(clock.IsPaused());
+    REQUIRE(clock.Advance(30.0) == 0);
+
+    clock.SetPaused(false);
+    REQUIRE_FALSE(clock.IsPaused());
+    REQUIRE(clock.Advance(0.25) == 1);
+    REQUIRE(clock.Advance(0.25) == 0);
+}

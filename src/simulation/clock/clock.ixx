@@ -11,10 +11,13 @@ export namespace ecosim {
 
         void SetSpeed(int multiplier);
         int GetSpeed() const;
+        void SetPaused(bool value);
+        bool IsPaused() const;
         int Advance(double realSeconds);
 
     private:
         int speed{1};
+        bool paused{false};
         double accumulator{0.0};
     };
 }

@@ -61,8 +61,10 @@ namespace ecosim {
             TranslateMessage(&message);
             DispatchMessageW(&message);
         }
-        return closed || (GetAsyncKeyState(VK_ESCAPE) & 0x8000) != 0;
+        return closed;
     }
+
+    bool Renderer2D::IsExitDialogOpen() const { return showingExitDialog; }
 
     double Renderer2D::FrameTime() const {
         const auto now = std::chrono::steady_clock::now();
@@ -79,26 +81,62 @@ namespace ecosim {
         return std::nullopt;
     }
 
-    bool Renderer2D::HandleInput() {
+    UiAction Renderer2D::HandleInput(const bool isHomeScreen, const bool paused) {
+        const bool escapeDown = (GetAsyncKeyState(VK_ESCAPE) & 0x8000) != 0;
+        const bool escapePressed = escapeDown && !escapeWasDown;
+        escapeWasDown = escapeDown;
+        const bool spaceDown = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
+        const bool spacePressed = spaceDown && !spaceWasDown;
+        spaceWasDown = spaceDown;
         const bool pressed = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
         const bool wasPressed = leftMouseDown;
         leftMouseDown = pressed;
-        if (!pressed || wasPressed || GetForegroundWindow() != static_cast<HWND>(window)) return false;
+        const bool focused = GetForegroundWindow() == static_cast<HWND>(window);
+        if (escapePressed && focused) {
+            if (isHomeScreen) return UiAction::Quit;
+            showingExitDialog = !showingExitDialog;
+            return showingExitDialog ? UiAction::None : UiAction::CancelExit;
+        }
+        if (spacePressed && !isHomeScreen && !showingExitDialog && focused) {
+            return UiAction::TogglePause;
+        }
+        if (!pressed || wasPressed || !focused) return UiAction::None;
         POINT mouse{};
-        if (!GetCursorPos(&mouse) || !ScreenToClient(static_cast<HWND>(window), &mouse)) return false;
+        if (!GetCursorPos(&mouse) || !ScreenToClient(static_cast<HWND>(window), &mouse)) return UiAction::None;
         const int mouseX = mouse.x;
         const int mouseY = mouse.y;
+        if (showingExitDialog) {
+            if (ExitMenuButton(windowWidth, windowHeight).Contains(mouseX, mouseY)) {
+                showingExitDialog = false;
+                showingGraph = false;
+                return UiAction::ReturnHome;
+            }
+            if (ExitQuitButton(windowWidth, windowHeight).Contains(mouseX, mouseY)) return UiAction::Quit;
+            if (ExitCancelButton(windowWidth, windowHeight).Contains(mouseX, mouseY)) {
+                showingExitDialog = false;
+                return UiAction::CancelExit;
+            }
+            return UiAction::None;
+        }
+        if (isHomeScreen) {
+            return StartButton(windowWidth, windowHeight).Contains(mouseX, mouseY)
+                ? UiAction::StartOrRestart : UiAction::None;
+        }
         if (RestartButton(windowWidth).Contains(mouseX, mouseY)) {
             showingGraph = false;
-            return true;
+            return UiAction::StartOrRestart;
+        }
+        if (PauseButton(windowWidth, showingGraph).Contains(mouseX, mouseY)) return UiAction::TogglePause;
+        if (paused && NextButton(windowWidth, showingGraph).Contains(mouseX, mouseY)) {
+            return UiAction::NextGeneration;
         }
         const UiRect button = showingGraph ? BackButton() : GraphButton(windowWidth);
         if (button.Contains(mouseX, mouseY)) showingGraph = !showingGraph;
-        return false;
+        return UiAction::None;
     }
 
-    void Renderer2D::Draw(const Simulation& simulation, const int speed) const {
-        if (showingGraph) DrawGraph(simulation, speed);
-        else DrawWorld(simulation, speed);
+    void Renderer2D::Draw(const Simulation& simulation, const int speed, const bool paused) const {
+        if (showingGraph) DrawGraph(simulation, speed, paused);
+        else DrawWorld(simulation, speed, paused);
     }
 }

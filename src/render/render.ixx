@@ -5,6 +5,9 @@ import std;
 import ecosim.simulation;
 
 export namespace ecosim {
+    enum class UiAction { None, StartOrRestart, TogglePause, NextGeneration,
+                          CancelExit, ReturnHome, Quit };
+
     class Renderer2D {
     public:
         Renderer2D(int cellSize, const char* title);
@@ -16,21 +19,27 @@ export namespace ecosim {
         int GetWidth() const;
         int GetHeight() const;
         bool ShouldClose() const;
+        bool IsExitDialogOpen() const;
         double FrameTime() const;
         std::optional<int> SpeedKeyPressed() const;
-        bool HandleInput();
-        void Draw(const Simulation& simulation, int speed) const;
+        UiAction HandleInput(bool isHomeScreen, bool paused);
+        void DrawHome() const;
+        void Draw(const Simulation& simulation, int speed, bool paused) const;
 
     private:
-        void DrawWorld(const Simulation& simulation, int speed) const;
-        void DrawGraph(const Simulation& simulation, int speed) const;
+        void DrawWorld(const Simulation& simulation, int speed, bool paused) const;
+        void DrawGraph(const Simulation& simulation, int speed, bool paused) const;
+        void DrawExitDialog(void* context) const;
 
         int cellSize;
         int windowWidth{0};
         int windowHeight{0};
         void* window{};
         bool showingGraph{false};
+        bool showingExitDialog{false};
         bool leftMouseDown{false};
+        bool spaceWasDown{false};
+        bool escapeWasDown{false};
         mutable bool closed{false};
         mutable std::chrono::steady_clock::time_point lastFrame{};
     };

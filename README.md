@@ -24,13 +24,19 @@ L'application fonctionne sous Windows et utilise Win32/GDI pour l'affichage. La 
 
 | Action | Commande |
 | --- | --- |
+| Lancer une simulation depuis l'accueil | Bouton **Démarrer** |
 | Vitesse x1, x2, x5 ou x10 | Touches `1`, `2`, `3` ou `4` |
+| Mettre en pause ou reprendre | **Espace**, ou bouton **Pause** / **Reprendre** sur la carte et les courbes |
+| Avancer d'une génération | Bouton **Génération +1**, visible pendant la pause |
 | Afficher l'évolution des populations | Bouton **Courbes**, en haut à droite de la carte |
 | Revenir à la carte | Bouton **Retour**, sur l'écran des courbes |
 | Redémarrer avec une nouvelle carte et de nouveaux animaux | Bouton **Recommencer**, sur la carte et les courbes |
-| Quitter | `Échap` |
+| Revenir à l'accueil, quitter ou annuler | `Échap` pendant la simulation, puis choisir **Menu**, **Quitter** ou **Annuler** |
+| Quitter depuis l'accueil | `Échap` |
 
-La simulation continue pendant la consultation du graphique. La courbe jaune représente les herbivores et la courbe rouge les prédateurs. L'axe horizontal indique les générations ; une ligne marque la génération actuelle.
+L'application s'ouvre sur l'accueil ; aucune simulation ne démarre avant le clic sur **Démarrer**. La simulation continue pendant la consultation du graphique tant qu'elle n'est pas en pause. Pendant la pause, **Génération +1** fait avancer le monde et les courbes d'une seule génération. La courbe jaune représente les herbivores et la courbe rouge les prédateurs. L'axe horizontal indique les générations ; une ligne marque la génération actuelle.
+
+La touche `Échap` fige la simulation et affiche un choix : **Menu** revient à l'accueil, **Quitter** ferme l'application, **Annuler** reprend l'affichage. Un second appui sur `Échap` annule aussi le choix.
 
 Quand il ne reste plus aucun animal, la simulation s'arrête à la dernière génération. La carte et les courbes restent accessibles pour consulter le résultat final.
 
@@ -46,7 +52,7 @@ Le bouton **Recommencer** repart à la génération 0, réinitialise la vitesse 
 4. Les survivants vieillissent et perdent de l'énergie. Les individus suffisamment âgés et nourris peuvent se reproduire.
 5. Les animaux morts sont retirés ; les effectifs des deux populations sont enregistrés pour le graphique.
 
-La carte et les populations initiales sont générées à chaque lancement. Des graines fixes peuvent être utilisées dans les tests pour reproduire un scénario.
+La carte et les populations initiales sont générées au démarrage d'une simulation et à chaque redémarrage. Des graines fixes peuvent être utilisées dans les tests pour reproduire un scénario.
 
 ## Organisation du code
 
@@ -56,9 +62,11 @@ Les fichiers `.ixx` exposent les modules C++ ; leurs implémentations sont dans 
 | --- | --- |
 | `src/world/` | Cellules, terrains, accès à la grille et génération du monde. |
 | `src/animals/` | Classe de base `Animal`, comportements de `Herbivore` et de `Predator`. |
-| `src/simulation/clock/` | Module `ecosim.clock` : classe `SimulationClock` et vitesses. |
+| `src/simulation/clock/` | Module `ecosim.clock` : classe `SimulationClock`, vitesses et pause. |
 | `src/simulation/simulation/` | Module `ecosim.simulation` : classe `Simulation`, cycle des générations, végétation et historique des populations. |
 | `src/render/render.ixx` et `render.cpp` | Interface graphique, fenêtre, entrées et choix de l'écran. |
+| `src/render/render_home.cpp` | Affichage de l'écran d'accueil. |
+| `src/render/render_exit_dialog.cpp` | Confirmation pour revenir au menu ou quitter. |
 | `src/render/render_world.cpp` | Affichage de la carte et des animaux. |
 | `src/render/render_chart.cpp` et `layout.hpp` | Graphique des populations et placement des éléments. |
 | `src/app/main.cpp` | Initialisation du monde et boucle de l'application. |

@@ -27,7 +27,7 @@ namespace {
 }
 
 namespace ecosim {
-    void Renderer2D::DrawWorld(const Simulation& simulation, const int speed) const {
+    void Renderer2D::DrawWorld(const Simulation& simulation, const int speed, const bool paused) const {
         const World& world = simulation.GetWorld();
         std::vector<int> herbivores(static_cast<std::size_t>(world.GetWidth()) * world.GetHeight());
         std::vector<int> predators(herbivores.size());
@@ -97,9 +97,10 @@ namespace ecosim {
         DeleteObject(animalBrush);
         DeleteObject(predatorBrush);
 
-        const std::wstring status = simulation.IsFinished()
-            ? L"Fin de la simulation : plus aucun animal"
-            : std::format(L"Vitesse x{}   (touches 1 à 4 : x1 x2 x5 x10 ; Échap : quitter)", speed);
+        std::wstring status;
+        if (simulation.IsFinished()) status = L"Fin de la simulation : plus aucun animal";
+        else if (paused) status = std::format(L"En pause   Vitesse x{}", speed);
+        else status = std::format(L"Vitesse x{}   (touches 1 à 4 : x1 x2 x5 x10 ; Échap : options)", speed);
         const auto hud = std::format(L"Génération {}   Herbivores {}   Prédateurs {}",
                                      simulation.GetGeneration(), simulation.HerbivoreCount(),
                                      simulation.PredatorCount());
@@ -113,9 +114,25 @@ namespace ecosim {
         const UiRect restart = RestartButton(windowWidth);
         const RECT restartRect{restart.x, restart.y, restart.x + restart.width, restart.y + restart.height};
         FillRect(buffer, &restartRect, buttonBrush);
+        if (!simulation.IsFinished()) {
+            const UiRect pause = PauseButton(windowWidth, false);
+            const RECT pauseRect{pause.x, pause.y, pause.x + pause.width, pause.y + pause.height};
+            FillRect(buffer, &pauseRect, buttonBrush);
+            const std::wstring label = paused ? L"Reprendre" : L"Pause";
+            TextOutW(buffer, pause.x + 20, pause.y + 9, label.c_str(), static_cast<int>(label.size()));
+            if (paused) {
+                const UiRect next = NextButton(windowWidth, false);
+                const RECT nextRect{next.x, next.y, next.x + next.width, next.y + next.height};
+                FillRect(buffer, &nextRect, buttonBrush);
+                const std::wstring nextLabel = L"Génération +1";
+                TextOutW(buffer, next.x + 20, next.y + 9, nextLabel.c_str(),
+                         static_cast<int>(nextLabel.size()));
+            }
+        }
         DeleteObject(buttonBrush);
         TextOutW(buffer, button.x + 20, button.y + 9, L"Courbes", 7);
         TextOutW(buffer, restart.x + 20, restart.y + 9, L"Recommencer", 11);
+        if (showingExitDialog) DrawExitDialog(buffer);
         BitBlt(screen, 0, 0, windowWidth, windowHeight, buffer, 0, 0, SRCCOPY);
         SelectObject(buffer, previous);
         DeleteObject(bitmap);

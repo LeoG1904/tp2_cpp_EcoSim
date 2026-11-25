@@ -54,7 +54,7 @@ namespace {
 }
 
 namespace ecosim {
-    void Renderer2D::DrawGraph(const Simulation& simulation, const int speed) const {
+    void Renderer2D::DrawGraph(const Simulation& simulation, const int speed, const bool paused) const {
         const PopulationGraph graph{simulation, windowWidth, windowHeight};
         const auto hwnd = static_cast<HWND>(window);
         const HDC screen = GetDC(hwnd);
@@ -84,14 +84,28 @@ namespace ecosim {
         const UiRect restart = RestartButton(windowWidth);
         const RECT restartRect{restart.x, restart.y, restart.x + restart.width, restart.y + restart.height};
         FillRect(buffer, &restartRect, buttonBrush);
+        if (!simulation.IsFinished()) {
+            const UiRect pause = PauseButton(windowWidth, true);
+            const RECT pauseRect{pause.x, pause.y, pause.x + pause.width, pause.y + pause.height};
+            FillRect(buffer, &pauseRect, buttonBrush);
+            write(pause.x + 20, pause.y + 9, paused ? L"Reprendre" : L"Pause");
+            if (paused) {
+                const UiRect next = NextButton(windowWidth, true);
+                const RECT nextRect{next.x, next.y, next.x + next.width, next.y + next.height};
+                FillRect(buffer, &nextRect, buttonBrush);
+                write(next.x + 12, next.y + 9, L"Génération +1");
+            }
+        }
         DeleteObject(buttonBrush);
         write(back.x + 20, back.y + 9, L"Retour");
         write(restart.x + 20, restart.y + 9, L"Recommencer");
         SelectObject(buffer, headingFont);
         write(155, 25, L"Évolution des populations");
         SelectObject(buffer, labelFont);
-        const std::wstring status = simulation.IsFinished()
-            ? L"Fin de la simulation : plus aucun animal" : std::format(L"Vitesse x{}", speed);
+        std::wstring status;
+        if (simulation.IsFinished()) status = L"Fin de la simulation : plus aucun animal";
+        else if (paused) status = std::format(L"En pause   Vitesse x{}", speed);
+        else status = std::format(L"Vitesse x{}", speed);
         write(90, 78, std::format(L"Génération {}    Herbivores {}    Prédateurs {}    {}",
                                 simulation.GetGeneration(), simulation.HerbivoreCount(),
                                 simulation.PredatorCount(), status));
@@ -175,6 +189,7 @@ namespace ecosim {
         DeleteObject(labelFont);
         DeleteObject(herbivoreBrush);
         DeleteObject(predatorBrush);
+        if (showingExitDialog) DrawExitDialog(buffer);
         BitBlt(screen, 0, 0, windowWidth, windowHeight, buffer, 0, 0, SRCCOPY);
         SelectObject(buffer, previous);
         DeleteObject(bitmap);
