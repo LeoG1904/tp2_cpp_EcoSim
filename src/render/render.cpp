@@ -14,7 +14,14 @@ import ecosim.simulation;
 using namespace ecosim_render_detail;
 
 namespace {
+    // Touches reçues par la fenêtre depuis la dernière lecture des entrées.
+    std::vector<int> pendingKeys;
+
     LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wp, LPARAM lp) {
+        if (message == WM_KEYDOWN) {
+            pendingKeys.push_back(static_cast<int>(wp));
+            return 0;
+        }
         if (message == WM_CLOSE) {
             DestroyWindow(hwnd);
             return 0;
@@ -81,7 +88,44 @@ namespace ecosim {
         return std::nullopt;
     }
 
-    UiAction Renderer2D::HandleInput(const bool isHomeScreen, const bool paused) {
+    void Renderer2D::HandleSettingsKeys(const std::span<const int> keys, SimulationSettings& settings) {
+        for (const int key : keys) {
+            const auto field = settingEditor.Field();
+            if (!field) return;
+            // Les codes de touche évitent d'avoir à maintenir Maj sur un clavier AZERTY.
+            if (key >= '0' && key <= '9') settingEditor.Type(key - '0');
+            else if (key >= VK_NUMPAD0 && key <= VK_NUMPAD9) settingEditor.Type(key - VK_NUMPAD0);
+            else if (key == VK_BACK || key == VK_DELETE) settingEditor.Erase();
+            else if (key == VK_RETURN) settingEditor.Commit(settings);
+            else if (key == VK_TAB) {
+                settingEditor.Commit(settings);
+                settingEditor.Begin((*field + 1) % SettingFields().size(), settings);
+            }
+        }
+    }
+
+    void Renderer2D::HandleSettingsClick(const int mouseX, const int mouseY,
+                                         SimulationSettings& settings) {
+        const auto fields = SettingFields();
+        std::array<int, 3> rows{};
+        for (std::size_t i = 0; i < fields.size(); ++i) {
+            const int column = static_cast<int>(fields[i].group);
+            const int row = rows[column]++;
+            if (!ValueBox(windowWidth, windowHeight, column, row).Contains(mouseX, mouseY)) continue;
+            if (settingEditor.Field() != i) {
+                settingEditor.Commit(settings);
+                settingEditor.Begin(i, settings);
+            }
+            return;
+        }
+        // Un clic en dehors des cases valide la saisie en cours.
+        settingEditor.Commit(settings);
+    }
+
+    UiAction Renderer2D::HandleInput(const bool isHomeScreen, const bool paused,
+                                     SimulationSettings& settings) {
+        const std::vector<int> keys = std::exchange(pendingKeys, {});
+        if (isHomeScreen) HandleSettingsKeys(keys, settings);
         const bool escapeDown = (GetAsyncKeyState(VK_ESCAPE) & 0x8000) != 0;
         const bool escapePressed = escapeDown && !escapeWasDown;
         escapeWasDown = escapeDown;
@@ -103,7 +147,12 @@ namespace ecosim {
         leftMouseDown = pressed;
         const bool focused = GetForegroundWindow() == static_cast<HWND>(window);
         if (escapePressed && focused) {
-            if (isHomeScreen) return UiAction::Quit;
+            if (isHomeScreen) {
+                // Pendant une saisie, Échap annule au lieu de quitter.
+                if (!settingEditor.Field()) return UiAction::Quit;
+                settingEditor.Cancel();
+                return UiAction::None;
+            }
             showingExitDialog = !showingExitDialog;
             return showingExitDialog ? UiAction::None : UiAction::CancelExit;
         }
@@ -134,8 +183,12 @@ namespace ecosim {
             return UiAction::None;
         }
         if (isHomeScreen) {
-            return StartButton(windowWidth, windowHeight).Contains(mouseX, mouseY)
-                ? UiAction::StartOrRestart : UiAction::None;
+            HandleSettingsClick(mouseX, mouseY, settings);
+            if (StartButton(windowWidth, windowHeight).Contains(mouseX, mouseY)) {
+                return UiAction::StartOrRestart;
+            }
+            return ResetButton(windowWidth, windowHeight).Contains(mouseX, mouseY)
+                ? UiAction::ResetSettings : UiAction::None;
         }
         if (RestartButton(windowWidth).Contains(mouseX, mouseY)) {
             showingGraph = false;

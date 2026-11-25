@@ -50,5 +50,6 @@ export namespace ecosim {
     };
 
     // Le générateur appartient au monde ; la graine reste choisie par l'appelant.
-    World GenerateRandomWorld(int width, int height, std::mt19937& rng);
+    World GenerateRandomWorld(int width, int height, std::mt19937& rng,
+                              int waterPercent = 10, int obstaclePercent = 10);
 }

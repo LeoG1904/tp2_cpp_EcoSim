@@ -9,7 +9,8 @@ export namespace ecosim {
     public:
         static constexpr int StartingEnergy{50};
 
-        Herbivore(std::uint64_t id, Position position, int energy = StartingEnergy);
+        Herbivore(std::uint64_t id, Position position, int energy = StartingEnergy,
+                  const AnimalTraits& traits = {});
         AnimalKind GetKind() const override;
         void Feed(World& world);
         std::unique_ptr<Animal> CreateOffspring(std::uint64_t id) const override;

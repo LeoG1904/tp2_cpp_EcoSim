@@ -7,10 +7,19 @@ export import ecosim.world;
 export namespace ecosim {
     enum class AnimalKind { Herbivore, Predator };
 
+    // Statistiques réglables d'une espèce. Les valeurs initiales sont celles des herbivores.
+    struct AnimalTraits {
+        int startingEnergy{50};
+        int energyLoss{2};            // énergie perdue à chaque génération
+        int maxAge{80};
+        int foodEnergy{10};           // végétation mangée au maximum, ou énergie par proie
+        int reproductionEnergy{80};   // énergie minimale pour se reproduire
+        int reproductionPercent{20};  // chance de naissance quand les conditions sont réunies
+    };
+
     class Animal {
     public:
         static constexpr int MaxEnergy{100};
-        static constexpr int MaxAge{80};
 
         virtual ~Animal() = default;
         Animal(const Animal&) = delete;
@@ -20,6 +29,7 @@ export namespace ecosim {
         Position GetPosition() const;
         int GetAge() const;
         int GetEnergy() const;
+        const AnimalTraits& GetTraits() const;
         bool IsAlive() const;
 
         void MoveTo(Position destination);
@@ -32,7 +42,7 @@ export namespace ecosim {
         virtual std::unique_ptr<Animal> CreateOffspring(std::uint64_t id) const = 0;
 
     protected:
-        Animal(std::uint64_t id, Position position, int energy);
+        Animal(std::uint64_t id, Position position, int energy, const AnimalTraits& traits);
         void GainEnergy(int amount);
 
     private:
@@ -40,5 +50,6 @@ export namespace ecosim {
         Position position;
         int age{0};
         int energy;
+        AnimalTraits traits;
     };
 }

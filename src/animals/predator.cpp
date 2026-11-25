@@ -3,8 +3,9 @@ module ecosim.predator;
 import std;
 
 namespace ecosim {
-    Predator::Predator(const std::uint64_t id, const Position position, const int energy)
-        : Animal{id, position, energy} {}
+    Predator::Predator(const std::uint64_t id, const Position position, const int energy,
+                       const AnimalTraits& traits)
+        : Animal{id, position, energy, traits} {}
 
     AnimalKind Predator::GetKind() const { return AnimalKind::Predator; }
 
@@ -13,13 +14,13 @@ namespace ecosim {
             if (prey->GetKind() == AnimalKind::Herbivore && prey->IsAlive()
                 && prey->GetPosition() == GetPosition()) {
                 prey->Die();
-                GainEnergy(EnergyFromPrey);
+                GainEnergy(GetTraits().foodEnergy);
                 return;
             }
         }
     }
 
     std::unique_ptr<Animal> Predator::CreateOffspring(const std::uint64_t id) const {
-        return std::make_unique<Predator>(id, GetPosition(), 30);
+        return std::make_unique<Predator>(id, GetPosition(), 30, GetTraits());
     }
 }

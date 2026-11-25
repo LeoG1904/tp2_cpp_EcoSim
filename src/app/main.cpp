@@ -2,12 +2,14 @@ import std;
 import ecosim;
 
 namespace {
-    ecosim::Simulation CreateSimulation(const int width, const int height) {
+    ecosim::Simulation CreateSimulation(const int width, const int height,
+                                        const ecosim::SimulationSettings& settings) {
         std::mt19937 rng{std::random_device{}()};
-        ecosim::Simulation simulation{ecosim::GenerateRandomWorld(width, height, rng),
-                                      std::mt19937{rng()}};
-        simulation.SeedHerbivores(std::max(12, width * height / 15));
-        simulation.SeedPredators(std::max(3, width * height / 150));
+        ecosim::World world = ecosim::GenerateRandomWorld(width, height, rng,
+            settings.waterPercent, settings.obstaclePercent);
+        ecosim::Simulation simulation{std::move(world), std::mt19937{rng()}, settings};
+        simulation.SeedHerbivores(settings.initialHerbivores);
+        simulation.SeedPredators(settings.initialPredators);
         return simulation;
     }
 }
@@ -21,6 +23,9 @@ int main() {
     const int cellsWide = renderer.GetWidth() / CellSize;
     const int cellsHigh = renderer.GetHeight() / CellSize;
 
+    // Choisis sur l'accueil, conservés au retour au menu et par Recommencer.
+    ecosim::SimulationSettings settings = ecosim::DefaultSettings(cellsWide, cellsHigh);
+
     // La simulation n'existe qu'après le clic sur Démarrer.
     std::optional<ecosim::Simulation> simulation;
 
@@ -28,13 +33,16 @@ int main() {
     ecosim::SimulationClock clock;
 
     while (!renderer.ShouldClose()) {
-        const ecosim::UiAction action = renderer.HandleInput(!simulation.has_value(), clock.IsPaused());
+        const ecosim::UiAction action = renderer.HandleInput(
+            !simulation.has_value(), clock.IsPaused(), settings);
         if (action == ecosim::UiAction::Quit) break;
-        if (action == ecosim::UiAction::ReturnHome) {
+        if (action == ecosim::UiAction::ResetSettings) {
+            settings = ecosim::DefaultSettings(cellsWide, cellsHigh);
+        } else if (action == ecosim::UiAction::ReturnHome) {
             simulation.reset();
             clock = ecosim::SimulationClock{};
         } else if (action == ecosim::UiAction::StartOrRestart) {
-            simulation = CreateSimulation(cellsWide, cellsHigh);
+            simulation = CreateSimulation(cellsWide, cellsHigh, settings);
             clock = ecosim::SimulationClock{};
         } else if (simulation && !simulation->IsFinished()) {
             if (action == ecosim::UiAction::TogglePause) clock.SetPaused(!clock.IsPaused());
@@ -45,7 +53,7 @@ int main() {
         // Lue à chaque image pour oublier les appuis faits sur l'accueil ou la confirmation.
         const auto speed = renderer.SpeedKeyPressed();
         if (!simulation) {
-            renderer.DrawHome();
+            renderer.DrawHome(settings);
             continue;
         }
         if (speed && !renderer.IsExitDialogOpen()) clock.SetSpeed(*speed);

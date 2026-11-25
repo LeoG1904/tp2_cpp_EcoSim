@@ -6,7 +6,7 @@ import ecosim.simulation;
 
 export namespace ecosim {
     enum class UiAction { None, StartOrRestart, TogglePause, NextGeneration,
-                          CycleSpeed,
+                          CycleSpeed, ResetSettings,
                           CancelExit, ReturnHome, Quit };
 
     class Renderer2D {
@@ -23,11 +23,14 @@ export namespace ecosim {
         bool IsExitDialogOpen() const;
         double FrameTime() const;
         std::optional<int> SpeedKeyPressed() const;
-        UiAction HandleInput(bool isHomeScreen, bool paused);
-        void DrawHome() const;
+        // Sur l'accueil, la saisie au clavier modifie directement les réglages.
+        UiAction HandleInput(bool isHomeScreen, bool paused, SimulationSettings& settings);
+        void DrawHome(SimulationSettings settings) const;
         void Draw(const Simulation& simulation, int speed, bool paused) const;
 
     private:
+        void HandleSettingsKeys(std::span<const int> keys, SimulationSettings& settings);
+        void HandleSettingsClick(int mouseX, int mouseY, SimulationSettings& settings);
         void DrawWorld(const Simulation& simulation, int speed, bool paused) const;
         void DrawGraph(const Simulation& simulation, int speed, bool paused) const;
         void DrawExitDialog(void* context) const;
@@ -44,6 +47,7 @@ export namespace ecosim {
         bool tabWasDown{false};
         bool rightWasDown{false};
         bool upWasDown{false};
+        SettingEditor settingEditor;
         mutable bool closed{false};
         mutable std::chrono::steady_clock::time_point lastFrame{};
     };

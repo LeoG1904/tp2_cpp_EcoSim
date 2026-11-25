@@ -47,7 +47,11 @@ namespace ecosim {
              + static_cast<std::size_t>(position.x);
     }
 
-    World GenerateRandomWorld(const int width, const int height, std::mt19937& rng) {
+    World GenerateRandomWorld(const int width, const int height, std::mt19937& rng,
+                              const int waterPercent, const int obstaclePercent) {
+        if (waterPercent < 0 || obstaclePercent < 0 || waterPercent + obstaclePercent > 100) {
+            throw std::invalid_argument{"Proportions de terrain invalides"};
+        }
         World world{width, height};
         std::uniform_int_distribution<int> percent{1, 100};
         std::uniform_int_distribution<int> vegetation{0, Cell::MaxVegetation};
@@ -56,8 +60,8 @@ namespace ecosim {
             for (int x = 0; x < width; ++x) {
                 const int roll = percent(rng);
                 Terrain terrain{Terrain::Prairie};
-                if (roll <= 10) terrain = Terrain::Eau;
-                else if (roll <= 20) terrain = Terrain::Obstacle;
+                if (roll <= waterPercent) terrain = Terrain::Eau;
+                else if (roll <= waterPercent + obstaclePercent) terrain = Terrain::Obstacle;
                 world.GetCell(Position{x, y}) = Cell{terrain, vegetation(rng)};
             }
         }

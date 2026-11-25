@@ -6,9 +6,10 @@ export import ecosim.clock;
 export import ecosim.world;
 export import ecosim.herbivore;
 export import ecosim.predator;
+export import ecosim.settings;
 
 export namespace ecosim {
-    void GrowVegetation(World& world);
+    void GrowVegetation(World& world, int growth = 1);
 
     struct AnimalSnapshot {
         std::uint64_t id;
@@ -26,7 +27,7 @@ export namespace ecosim {
 
     class Simulation {
     public:
-        Simulation(World world, std::mt19937 rng);
+        Simulation(World world, std::mt19937 rng, const SimulationSettings& settings = {});
 
         const World& GetWorld() const;
         int GetGeneration() const;
@@ -36,14 +37,16 @@ export namespace ecosim {
         std::vector<AnimalSnapshot> Animals() const;
         const std::vector<PopulationSample>& PopulationHistory() const;
 
-        void AddHerbivore(Position position, int energy = Herbivore::StartingEnergy);
+        // Sans énergie précisée, l'animal reçoit l'énergie de départ des réglages.
+        void AddHerbivore(Position position, std::optional<int> energy = std::nullopt);
         void SeedHerbivores(int count);
-        void AddPredator(Position position, int energy = Predator::StartingEnergy);
+        void AddPredator(Position position, std::optional<int> energy = std::nullopt);
         void SeedPredators(int count);
         void Step();
 
     private:
         World world;
+        SimulationSettings settings;
         std::vector<std::unique_ptr<Animal>> animals;
         std::mt19937 rng;
         std::uint64_t nextId{1};

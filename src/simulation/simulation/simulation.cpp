@@ -3,8 +3,8 @@ module ecosim.simulation;
 import std;
 
 namespace ecosim {
-    Simulation::Simulation(World world, std::mt19937 rng)
-        : world{std::move(world)}, rng{std::move(rng)} {}
+    Simulation::Simulation(World world, std::mt19937 rng, const SimulationSettings& settings)
+        : world{std::move(world)}, settings{settings}, rng{std::move(rng)} {}
 
     Position Simulation::ChooseDestination(const Position origin) {
         Position best = origin;
@@ -51,7 +51,7 @@ namespace ecosim {
 
     void Simulation::Step() {
         if (IsFinished()) return;
-        GrowVegetation(world);
+        GrowVegetation(world, settings.vegetationGrowth);
         // Les herbivores se déplacent et mangent avant la chasse.
         for (auto& animal : animals) {
             auto* herbivore = dynamic_cast<Herbivore*>(animal.get());
@@ -76,10 +76,10 @@ namespace ecosim {
         }
 
         std::vector<std::unique_ptr<Animal>> newborns;
-        std::bernoulli_distribution birth{0.2};
         for (auto& animal : animals) {
             if (!animal->IsAlive()) continue;
             animal->SpendGeneration();
+            std::bernoulli_distribution birth{animal->GetTraits().reproductionPercent / 100.0};
             if (animal->CanReproduce() && birth(rng)) {
                 newborns.push_back(animal->CreateOffspring(nextId++));
                 animal->PayReproductionCost();

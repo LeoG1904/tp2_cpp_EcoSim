@@ -34,11 +34,12 @@ namespace ecosim {
         return populationHistory;
     }
 
-    void Simulation::AddHerbivore(const Position position, const int energy) {
+    void Simulation::AddHerbivore(const Position position, const std::optional<int> energy) {
         if (!world.IsInside(position) || !world.GetCell(position).IsAccessible()) {
             throw std::invalid_argument{"Un herbivore doit naître sur une prairie"};
         }
-        animals.push_back(std::make_unique<Herbivore>(nextId, position, energy));
+        animals.push_back(std::make_unique<Herbivore>(nextId, position,
+            energy.value_or(settings.herbivore.startingEnergy), settings.herbivore));
         ++nextId;
         ++populationHistory.back().herbivores;
     }
@@ -47,11 +48,12 @@ namespace ecosim {
         SeedAnimals(count, AnimalKind::Herbivore);
     }
 
-    void Simulation::AddPredator(const Position position, const int energy) {
+    void Simulation::AddPredator(const Position position, const std::optional<int> energy) {
         if (!world.IsInside(position) || !world.GetCell(position).IsAccessible()) {
             throw std::invalid_argument{"Un prédateur doit naître sur une prairie"};
         }
-        animals.push_back(std::make_unique<Predator>(nextId, position, energy));
+        animals.push_back(std::make_unique<Predator>(nextId, position,
+            energy.value_or(settings.predator.startingEnergy), settings.predator));
         ++nextId;
         ++populationHistory.back().predators;
     }

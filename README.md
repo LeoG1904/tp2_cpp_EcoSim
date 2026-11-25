@@ -20,6 +20,19 @@ Si `cmake-build-debug` est déjà configuré, la commande `cmake --build cmake-b
 
 L'application fonctionne sous Windows et utilise Win32/GDI pour l'affichage. La compilation et les tests ont été vérifiés avec ce rendu.
 
+## Réglages de l'accueil
+
+Avant de démarrer, cliquez sur une case et tapez la nouvelle valeur : le premier chiffre remplace l'ancienne. **Entrée** ou un clic ailleurs valide, **Tab** valide et passe à la case suivante, **Échap** annule la saisie. Une valeur hors limites est ramenée à la limite la plus proche ; une case laissée vide garde l'ancienne valeur. Les limites de la case active sont affichées en bas de l'écran. **Valeurs par défaut** réinitialise tous les réglages. Les réglages sont conservés au retour au menu et avec **Recommencer**, mais pas après la fermeture de l'application.
+
+| Colonne | Réglages |
+| --- | --- |
+| Terrain | Pourcentage d'eau (0 à 50) et d'obstacles (0 à 40), repousse de la végétation par génération (0 à 20) |
+| Herbivores et prédateurs | Nombre au départ, énergie de départ, énergie perdue par génération, âge maximum, seuil d'énergie et chance de reproduction |
+| Herbivores | Végétation mangée au maximum par génération |
+| Prédateurs | Énergie gagnée par proie |
+
+Les nouveau-nés gardent une énergie de 30, la reproduction coûte 30 et demande un âge d'au moins 5 générations. Le nombre d'animaux au départ dépend par défaut de la taille de l'écran. Les bornes sont définies dans `src/simulation/settings/`.
+
 ## Utilisation
 
 | Action | Commande |
@@ -63,6 +76,7 @@ Les fichiers `.ixx` exposent les modules C++ ; leurs implémentations sont dans 
 | --- | --- |
 | `src/world/` | Cellules, terrains, accès à la grille et génération du monde. |
 | `src/animals/` | Classe de base `Animal`, comportements de `Herbivore` et de `Predator`. |
+| `src/simulation/settings/` | Module `ecosim.settings` : réglages d'une simulation, valeurs par défaut et bornes. |
 | `src/simulation/clock/` | Module `ecosim.clock` : classe `SimulationClock`, vitesses et pause. |
 | `src/simulation/simulation/` | Module `ecosim.simulation` : classe `Simulation`, cycle des générations, végétation et historique des populations. |
 | `src/render/render.ixx` et `render.cpp` | Interface graphique, fenêtre, entrées et choix de l'écran. |
