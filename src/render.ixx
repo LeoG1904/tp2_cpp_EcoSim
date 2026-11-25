@@ -43,8 +43,20 @@ export namespace ecosim {
 
         bool ShouldClose() const { return WindowShouldClose(); }
 
-        // Dessine une image complète de la carte
-        void Draw(const World& world) const {
+        // Temps réel écoulé depuis la dernière image, en secondes
+        double FrameTime() const { return GetFrameTime(); }
+
+        // Vitesse demandée par les touches 1 à 4 (x1, x2, x5, x10), si l'une vient d'être pressée
+        std::optional<int> SpeedKeyPressed() const {
+            if (IsKeyPressed(KEY_ONE)) return 1;
+            if (IsKeyPressed(KEY_TWO)) return 2;
+            if (IsKeyPressed(KEY_THREE)) return 5;
+            if (IsKeyPressed(KEY_FOUR)) return 10;
+            return std::nullopt;
+        }
+
+        // Dessine une image complète : la carte, puis le numéro de génération et la vitesse
+        void Draw(const World& world, const int generation, const int speed) const {
             BeginDrawing();
             ClearBackground(BackgroundColor());
 
@@ -55,6 +67,10 @@ export namespace ecosim {
                     DrawRectangle(x * cellSize, y * cellSize, cellSize - 1, cellSize - 1, ColorOf(cell));
                 }
             }
+
+            const std::string hud = std::format(
+                "Génération {}   Vitesse x{}   (touches 1 à 4 : x1 x2 x5 x10)", generation, speed);
+            DrawText(hud.c_str(), 10, 10, 20, RAYWHITE);
 
             EndDrawing();
         }
