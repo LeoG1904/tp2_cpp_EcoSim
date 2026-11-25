@@ -49,6 +49,24 @@ namespace {
 namespace ecosim {
     const std::vector<SettingField>& SettingFields() { return Fields; }
 
+    std::string PresetName(const Preset preset) {
+        switch (preset) {
+            case Preset::Balance: return "Équilibre";
+            case Preset::Famine: return "Famine";
+            case Preset::Invasion: return "Invasion";
+        }
+        return {};
+    }
+
+    std::string PresetDescription(const Preset preset) {
+        switch (preset) {
+            case Preset::Balance: return "Les deux espèces coexistent longtemps.";
+            case Preset::Famine: return "La végétation ne repousse plus : les herbivores meurent de faim.";
+            case Preset::Invasion: return "Une arrivée massive de prédateurs décime les herbivores.";
+        }
+        return {};
+    }
+
     void SettingEditor::Begin(const std::size_t index, SimulationSettings& settings) {
         text = std::to_string(SettingFields()[index].value(settings));
         field = index;

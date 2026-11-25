@@ -114,6 +114,20 @@ namespace ecosim {
                        value);
         }
 
+        // Le préréglage reste surligné tant qu'aucune valeur n'a été modifiée.
+        std::string description = "Préréglages : choisissez un scénario, puis ajustez-le si besoin.";
+        for (std::size_t i = 0; i < Presets.size(); ++i) {
+            const bool active = current == PresetSettings(Presets[i], windowWidth / cellSize,
+                                                          windowHeight / cellSize);
+            if (active) description = PresetDescription(Presets[i]);
+            drawButton(PresetButton(windowWidth, windowHeight, static_cast<int>(i)),
+                       active ? RGB(52, 96, 140) : RGB(55, 64, 77), PresetName(Presets[i]));
+        }
+        SetTextColor(buffer, RGB(177, 203, 198));
+        const UiRect firstPreset = PresetButton(windowWidth, windowHeight, 0);
+        writeCentered(description, centerX, firstPreset.y + firstPreset.height + 10);
+        SetTextColor(buffer, RGB(239, 246, 242));
+
         SelectObject(buffer, buttonFont);
         drawButton(ResetButton(windowWidth, windowHeight), RGB(55, 64, 77), "Valeurs par défaut");
         drawButton(StartButton(windowWidth, windowHeight), RGB(62, 148, 105), "Démarrer");

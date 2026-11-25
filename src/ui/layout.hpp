@@ -35,11 +35,15 @@ namespace ecosim_render_detail {
         return {SettingColumnX(width, column) + SettingColumnWidth(width) - 108,
                 SettingsTop(height) + row * SettingRowHeight, 92, 32};
     }
+    inline UiRect PresetButton(const int width, const int height, const int index) {
+        return {width / 2 - 316 + index * 216, SettingsTop(height) + SettingRows * SettingRowHeight + 16,
+                200, 38};
+    }
     inline UiRect StartButton(const int width, const int height) {
-        return {width / 2 - 10, SettingsTop(height) + SettingRows * SettingRowHeight + 30, 300, 54};
+        return {width / 2 - 10, SettingsTop(height) + SettingRows * SettingRowHeight + 96, 300, 54};
     }
     inline UiRect ResetButton(const int width, const int height) {
-        return {width / 2 - 290, SettingsTop(height) + SettingRows * SettingRowHeight + 30, 260, 54};
+        return {width / 2 - 290, SettingsTop(height) + SettingRows * SettingRowHeight + 96, 260, 54};
     }
     inline UiRect PauseButton(const int width, const bool graph) {
         return graph ? UiRect{width - 350, 54, 150, 36} : UiRect{width - 230, 100, 210, 36};

@@ -162,3 +162,31 @@ TEST_CASE("La selection suit les courbes mais disparait au redemarrage", "[contr
     controller.Handle(Click(RestartButton(Width)), false, false, settings);
     REQUIRE_FALSE(controller.SelectedCell().has_value());
 }
+
+TEST_CASE("Un prereglage remplace les reglages, y compris une saisie en cours", "[controller]") {
+    UiController controller{Width, Height, CellSize};
+    SimulationSettings settings;
+    controller.Handle(Click(ValueBox(Width, Height, 0, 0)), true, false, settings);
+    RawInput typing;
+    typing.typed = {{KeyStroke::Kind::Digit, 3}};
+    controller.Handle(typing, true, false, settings);
+
+    for (std::size_t i = 0; i < Presets.size(); ++i) {
+        const UiRect button = PresetButton(Width, Height, static_cast<int>(i));
+        REQUIRE(controller.Handle(Click(button), true, false, settings) == UiAction::None);
+        REQUIRE(settings == PresetSettings(Presets[i], Width / CellSize, Height / CellSize));
+        REQUIRE_FALSE(controller.Editor().Field().has_value());
+    }
+}
+
+TEST_CASE("Les prereglages respectent les limites du formulaire", "[controller]") {
+    for (const auto& [width, height] : {std::pair{16, 10}, std::pair{42, 26}, std::pair{96, 54}}) {
+        for (const Preset preset : Presets) {
+            SimulationSettings settings = PresetSettings(preset, width, height);
+            for (const SettingField& field : SettingFields()) {
+                REQUIRE(field.value(settings) >= field.minimum);
+                REQUIRE(field.value(settings) <= field.maximum);
+            }
+        }
+    }
+}

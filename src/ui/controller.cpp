@@ -81,6 +81,12 @@ namespace ecosim {
         }
         // Un clic en dehors des cases valide la saisie en cours.
         editor.Commit(settings);
+        for (std::size_t i = 0; i < Presets.size(); ++i) {
+            if (PresetButton(width, height, static_cast<int>(i)).Contains(mouse.x, mouse.y)) {
+                settings = PresetSettings(Presets[i], width / cellSize, height / cellSize);
+                return UiAction::None;
+            }
+        }
         if (StartButton(width, height).Contains(mouse.x, mouse.y)) {
             selectedCell.reset();
             return UiAction::StartOrRestart;

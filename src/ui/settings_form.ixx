@@ -16,6 +16,8 @@ export namespace ecosim {
     };
 
     const std::vector<SettingField>& SettingFields();
+    std::string PresetName(Preset preset);
+    std::string PresetDescription(Preset preset);
 
     // Saisie d'une valeur au clavier. Elle n'est appliquée qu'à la validation.
     class SettingEditor {

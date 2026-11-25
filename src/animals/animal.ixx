@@ -19,6 +19,8 @@ export namespace ecosim {
         int foodEnergy{10};           // végétation mangée au maximum, ou énergie par proie
         int reproductionEnergy{80};   // énergie minimale pour se reproduire
         int reproductionPercent{20};  // chance de naissance quand les conditions sont réunies
+
+        bool operator==(const AnimalTraits&) const = default;
     };
 
     // Ce qu'un animal peut percevoir et modifier pendant son tour, sans connaître la simulation.

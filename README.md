@@ -24,6 +24,18 @@ L'application fonctionne sous Windows et utilise Win32/GDI pour l'affichage. La 
 
 Avant de démarrer, cliquez sur une case et tapez la nouvelle valeur : le premier chiffre remplace l'ancienne. **Entrée** ou un clic ailleurs valide, **Tab** valide et passe à la case suivante, **Échap** annule la saisie. Une valeur hors limites est ramenée à la limite la plus proche ; une case laissée vide garde l'ancienne valeur. Les limites de la case active sont affichées en bas de l'écran. **Valeurs par défaut** réinitialise tous les réglages. Les réglages sont conservés au retour au menu et avec **Recommencer**, mais pas après la fermeture de l'application.
 
+### Préréglages
+
+Les boutons situés sous les colonnes remplacent tous les réglages. Chaque valeur reste modifiable ensuite, et le bouton choisi n'est plus surligné dès qu'une valeur change. **Valeurs par défaut** revient aux réglages d'origine.
+
+| Préréglage | Ce qui change par rapport aux valeurs par défaut | Comportement observé (carte 42 × 26) |
+| --- | --- | --- |
+| **Équilibre** | Herbivores : âge maximum 120, seuil de reproduction 70, chance 40 %. Prédateurs : perte 3, âge maximum 60, énergie par proie 15, seuil 70, chance 5 % | Les deux espèces sont encore présentes à 1000 générations sur 20 graines sur 20 (18 sur 20 en 32 × 18) |
+| **Famine** | Aucune repousse, perte des herbivores 3, trois fois moins de prédateurs au départ | Herbivores éteints vers la génération 70, avec bien plus de morts de faim que de captures |
+| **Invasion** | Beaucoup plus de prédateurs au départ (une case sur sept, 200 au maximum) | Herbivores mangés vers la génération 30 |
+
+Ces résultats sont des tendances : la carte et les animaux restent tirés au hasard.
+
 | Colonne | Réglages |
 | --- | --- |
 | Terrain | Pourcentage d'eau (0 à 50) et d'obstacles (0 à 40), repousse de la végétation par génération (0 à 20) |
