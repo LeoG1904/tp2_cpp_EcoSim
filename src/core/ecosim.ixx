@@ -1,0 +1,11 @@
+// Entrée publique : réexporte les domaines du projet.
+export module ecosim;
+
+import std;
+export import ecosim.world;
+export import ecosim.simulation;
+export import ecosim.render;
+
+export namespace ecosim {
+    constexpr std::string_view Version() { return "0.1.0"; }
+}

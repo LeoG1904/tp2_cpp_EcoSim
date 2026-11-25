@@ -2,7 +2,7 @@
 
 // Le main des tests est fourni par Catch2WithMain (voir CMakeLists.txt)
 import std;
-import ecosim.clock;
+import ecosim.simulation;
 
 using namespace ecosim;
 

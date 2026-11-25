@@ -22,8 +22,18 @@ endif()
 # Pour "import std"
 include(cmake/std.cmake)
 include(cmake/compile_options.cmake)
-# Bibliothèque graphique Raylib (affichage 2D)
-include(cmake/raylib.cmake)
+if(WIN32)
+    set(ECOSIM_DEFAULT_RAYLIB OFF)
+else()
+    set(ECOSIM_DEFAULT_RAYLIB ON)
+endif()
+option(ECOSIM_USE_RAYLIB "Use Raylib for the 2D renderer" ${ECOSIM_DEFAULT_RAYLIB})
+option(ECOSIM_BUILD_TESTS "Build Catch2 tests (downloads Catch2)" OFF)
+if(ECOSIM_USE_RAYLIB)
+    include(cmake/raylib.cmake)
+elseif(NOT WIN32)
+    message(FATAL_ERROR "The built-in renderer requires Windows; enable ECOSIM_USE_RAYLIB on this platform")
+endif()
 
 # Répertoire contenant les sources des exercices
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -31,21 +41,20 @@ set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
 # Découvrir les sources et relancer CMake lors de leur ajout ou suppression
-# Note : en cas d'ajout de sous répertoire, mettre ci-dessous
-file(GLOB SRC_FILES CONFIGURE_DEPENDS
+# Note : la recherche est récursive, les sous-répertoires sont pris en compte
+file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
         "${SRC_DIR}/*.cpp"
 )
-file(GLOB MODULE_FILES CONFIGURE_DEPENDS
+file(GLOB_RECURSE MODULE_FILES CONFIGURE_DEPENDS
         "${SRC_DIR}/*.ixx"
 )
-file(GLOB TEST_FILES CONFIGURE_DEPENDS
+file(GLOB_RECURSE TEST_FILES CONFIGURE_DEPENDS
         "${TESTS_DIR}/*.cpp"
 )
 
 # Les tests utilisent le main fourni par Catch2
-set(TEST_SRC_FILES ${SRC_FILES} ${TEST_FILES}
-        src/world.ixx)
-list(FILTER TEST_SRC_FILES EXCLUDE REGEX "(^|/)main\\.cpp$")
+set(TEST_SRC_FILES ${SRC_FILES} ${TEST_FILES})
+list(FILTER TEST_SRC_FILES EXCLUDE REGEX "(^|[/\\\\])main\\.cpp$")
 
 # Exécutable principal
 add_executable(${PROJECT_NAME} ${SRC_FILES})
@@ -56,21 +65,27 @@ target_sources(${PROJECT_NAME}
         ${MODULE_FILES}
 )
 compile_options(${PROJECT_NAME})
-target_link_libraries(${PROJECT_NAME} raylib)
+if(ECOSIM_USE_RAYLIB)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ECOSIM_USE_RAYLIB)
+    target_link_libraries(${PROJECT_NAME} raylib)
+else()
+    target_link_libraries(${PROJECT_NAME} user32 gdi32)
+endif()
 
 # Exécutable et liste des fichiers sources des tests unitaires
-add_executable(tests ${TEST_SRC_FILES})
-target_sources(tests
-        PUBLIC
-        FILE_SET CXX_MODULES
-        FILES
-        ${MODULE_FILES}
-)
-
-# bibliothèque pour les tests unitaires
-include(cmake/catch2.cmake)
-target_link_libraries(tests PRIVATE Catch2::Catch2WithMain std-cxx-modules raylib)
-include(CTest)
-include(Catch)
-catch_discover_tests(tests)
+if(ECOSIM_BUILD_TESTS)
+    include(cmake/catch2.cmake)
+    add_executable(tests ${TEST_SRC_FILES})
+    target_sources(tests PUBLIC FILE_SET CXX_MODULES FILES ${MODULE_FILES})
+    target_link_libraries(tests PRIVATE Catch2::Catch2WithMain std-cxx-modules)
+    if(ECOSIM_USE_RAYLIB)
+        target_compile_definitions(tests PRIVATE ECOSIM_USE_RAYLIB)
+        target_link_libraries(tests PRIVATE raylib)
+    else()
+        target_link_libraries(tests PRIVATE user32 gdi32)
+    endif()
+    include(CTest)
+    include(Catch)
+    catch_discover_tests(tests)
+endif()
 

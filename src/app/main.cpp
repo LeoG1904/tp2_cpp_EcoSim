@@ -1,8 +1,5 @@
 import std;
-import ecosim.clock;
-import ecosim.generation;
-import ecosim.growth;
-import ecosim.render;
+import ecosim;
 
 int main() {
     // Taille d'une case en pixels ; la carte s'adapte à la taille de l'écran

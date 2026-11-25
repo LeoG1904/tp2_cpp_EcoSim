@@ -2,7 +2,7 @@
 
 // Le main des tests est fourni par Catch2WithMain (voir CMakeLists.txt)
 import ecosim.world;
-import ecosim.growth;
+import ecosim.simulation;
 
 using namespace ecosim;
 

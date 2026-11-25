@@ -3,7 +3,6 @@
 // Le main des tests est fourni par Catch2WithMain (voir CMakeLists.txt)
 import std;
 import ecosim.world;
-import ecosim.generation;
 
 using namespace ecosim;
 
