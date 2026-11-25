@@ -3,6 +3,8 @@ export module ecosim;
 
 import std;
 export import ecosim.world;
+export import ecosim.animal;
+export import ecosim.herbivore;
 export import ecosim.simulation;
 export import ecosim.render;
 

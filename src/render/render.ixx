@@ -2,7 +2,7 @@
 export module ecosim.render;
 
 import std;
-import ecosim.world;
+import ecosim.simulation;
 
 export namespace ecosim {
     class Renderer2D {
@@ -18,7 +18,7 @@ export namespace ecosim {
         bool ShouldClose() const;
         double FrameTime() const;
         std::optional<int> SpeedKeyPressed() const;
-        void Draw(const World& world, int generation, int speed) const;
+        void Draw(const Simulation& simulation, int speed) const;
 
     private:
         int cellSize;

@@ -12,24 +12,24 @@ int main() {
 
     // Une graine aléatoire différente à chaque lancement : une carte différente à chaque fois
     std::mt19937 rng{std::random_device{}()};
-    auto world = ecosim::GenerateRandomWorld(cellsWide, cellsHigh, rng);
+    ecosim::Simulation simulation{ecosim::GenerateRandomWorld(cellsWide, cellsHigh, rng),
+                                  std::mt19937{rng()}};
+    simulation.SeedHerbivores(std::max(12, cellsWide * cellsHigh / 15));
 
     // Temps de la simulation : le nombre de générations écoulées suit la vitesse choisie
     ecosim::SimulationClock clock;
-    int generation = 0;
 
     while (!renderer.ShouldClose()) {
         if (const auto speed = renderer.SpeedKeyPressed()) {
             clock.SetSpeed(*speed);
         }
-        // Chaque génération jouée fait repousser la végétation
+        // Chaque génération fait évoluer la végétation et les herbivores.
         const int steps = clock.Advance(renderer.FrameTime());
         for (int i = 0; i < steps; ++i) {
-            ecosim::GrowVegetation(world);
-            ++generation;
+            simulation.Step();
         }
 
-        renderer.Draw(world, generation, clock.GetSpeed());
+        renderer.Draw(simulation, clock.GetSpeed());
     }
     return 0;
 }
