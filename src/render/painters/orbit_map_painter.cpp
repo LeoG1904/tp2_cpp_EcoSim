@@ -32,11 +32,11 @@ namespace ecosim {
         const HGDIOBJ previousPen = SelectObject(buffer, GetStockObject(NULL_PEN));
         for (const Face& face : faces) {
             SetDCBrushColor(buffer, RGB(face.color.red, face.color.green, face.color.blue));
-            std::array<POINT, 4> points{};
-            for (std::size_t i = 0; i < points.size(); ++i) {
+            std::array<POINT, MaxFacePoints> points{};
+            for (std::size_t i = 0; i < face.pointCount; ++i) {
                 points[i] = {face.points[i].x, face.points[i].y};
             }
-            Polygon(buffer, points.data(), static_cast<int>(points.size()));
+            Polygon(buffer, points.data(), static_cast<int>(face.pointCount));
         }
         SelectObject(buffer, previousPen);
         SelectObject(buffer, previousBrush);

@@ -55,10 +55,43 @@ TEST_CASE("Un animal glisse entre deux cases en 3D", "[scene3d]") {
         for (const Face& face : BuildScene(world, animals, progress, OrbitCamera{8, 3}, Screen,
                                            std::nullopt)) {
             if (face.kind != FaceKind::Animal) continue;
-            for (const ScreenPoint& point : face.points) edge = std::min(edge, point.x);
+            for (std::size_t i = 0; i < face.pointCount; ++i) edge = std::min(edge, face.points[i].x);
         }
         return edge;
     };
     REQUIRE(leftEdge(0.0) < leftEdge(0.5));
     REQUIRE(leftEdge(0.5) < leftEdge(1.0));
+}
+
+TEST_CASE("L'herbe grandit et s'epaissit avec la vegetation", "[scene3d]") {
+    REQUIRE(GrassTuftCount(0) == 0);
+    REQUIRE(GrassHeight(0) == 0.0);
+    for (int vegetation = 1; vegetation <= Cell::MaxVegetation; ++vegetation) {
+        REQUIRE(GrassHeight(vegetation) >= GrassHeight(vegetation - 1));
+        REQUIRE(GrassTuftCount(vegetation) >= GrassTuftCount(vegetation - 1));
+    }
+    REQUIRE(GrassTuftCount(Cell::MaxVegetation) == MaxGrassTufts);
+    REQUIRE(GrassHeight(Cell::MaxVegetation) == Catch::Approx(MaxGrassHeight));
+}
+
+TEST_CASE("L'herbe ne pousse en 3D que sur les prairies, et suit la repousse", "[scene3d]") {
+    const auto tufts = [](const World& world) {
+        return CountFaces(BuildScene(world, {}, 1.0, OrbitCamera{3, 3}, Screen, std::nullopt),
+                          FaceKind::Grass);
+    };
+    World world{3, 3};
+    world.GetCell({0, 0}) = Cell{Terrain::Eau, 100};
+    world.GetCell({1, 0}) = Cell{Terrain::Obstacle, 100};
+    REQUIRE(tufts(world) == 0);
+
+    world.GetCell({1, 1}).SetVegetation(30);
+    const auto young = tufts(world);
+    REQUIRE(young > 0);
+    world.GetCell({1, 1}).SetVegetation(Cell::MaxVegetation);
+    REQUIRE(tufts(world) == MaxGrassTufts);
+    REQUIRE(tufts(world) > young);
+
+    // Un herbivore qui broute la case la rase de nouveau.
+    world.GetCell({1, 1}).SetVegetation(0);
+    REQUIRE(tufts(world) == 0);
 }

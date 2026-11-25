@@ -80,7 +80,7 @@ Sur la carte, le bouton **Vue 3D** change l'affichage sans toucher à la simulat
 | Revenir à la vue d'ensemble | Bouton **Recentrer** |
 | Voir le détail d'une case | **Clic gauche** sur le sol de la case |
 
-Les obstacles sont des blocs, les herbivores de petits modèles jaunes et les prédateurs des modèles rouges plus hauts, la tête tournée dans le sens du déplacement. La couleur des prairies suit la végétation. La vue choisie et la position de la caméra sont conservées après **Recommencer** et le retour au menu.
+Les obstacles sont des blocs, les herbivores de petits modèles jaunes et les prédateurs des modèles rouges plus hauts, la tête tournée dans le sens du déplacement. La couleur des prairies suit la végétation. Des touffes d'herbe y poussent : une case rase (végétation inférieure à 5) n'en a pas, puis leur nombre (jusqu'à cinq) et leur hauteur augmentent avec la végétation. Elles raccourcissent quand un herbivore broute et repoussent au fil des générations. Avec la repousse par défaut de 1 par génération, la croissance est progressive ; le réglage **Repousse végétation** l'accélère. La vue choisie et la position de la caméra sont conservées après **Recommencer** et le retour au menu.
 
 Limites de cette première version : le rendu est calculé par le processeur et dessiné avec Win32/GDI, sans carte graphique, textures ni éclairage dynamique. Au plus quatre modèles par espèce sont dessinés sur une même case ; le panneau donne les effectifs réels. La caméra vise toujours le centre de la carte. La sélection vise le sol : cliquer sur le haut d'un obstacle peut choisir la case située derrière.
 
