@@ -1,21 +1,25 @@
 #include <catch2/catch_all.hpp>
 
-#include "../../src/ui/layout.hpp"
-
 import std;
+import ecosim.layout;
 import ecosim.chart;
 import ecosim.controller;
 
 using namespace ecosim;
-using namespace ecosim_render_detail;
 
 namespace {
     std::vector<PopulationSample> History() {
-        std::vector<PopulationSample> history{{0, 10, 2}, {1, 12, 2}, {2, 0, 1}};
-        history[0].herbivoreEnergy = 50.0;
-        history[1].herbivoreEnergy = 55.5;
-        history[1].herbivoreEvents.births = 3;
-        history[2].herbivoreEvents.births = 4;
+        std::vector<PopulationSample> history{{0}, {1}, {2}};
+        const std::array<std::size_t, 3> herbivores{10, 12, 0};
+        const std::array<std::size_t, 3> predators{2, 2, 1};
+        for (std::size_t i = 0; i < history.size(); ++i) {
+            history[i].species[AnimalKind::Herbivore].population = herbivores[i];
+            history[i].species[AnimalKind::Predator].population = predators[i];
+        }
+        history[0].species[AnimalKind::Herbivore].energy = 50.0;
+        history[1].species[AnimalKind::Herbivore].energy = 55.5;
+        history[1].species[AnimalKind::Herbivore].events.births = 3;
+        history[2].species[AnimalKind::Herbivore].events.births = 4;
         history[2].vegetation = 900;
         return history;
     }
@@ -47,13 +51,13 @@ TEST_CASE("Le filtre d'espece, les mangés et la vegetation", "[chart]") {
     ChartSelection selection;
     REQUIRE(BuildSeries(History(), ChartMetric::Eaten, selection).size() == 1);
 
-    selection.herbivores = false;
+    selection.hidden[AnimalKind::Herbivore] = true;
     const auto population = BuildSeries(History(), ChartMetric::Population, selection);
     REQUIRE(population.size() == 1);
-    REQUIRE(population[0].source == SeriesSource::Predators);
+    REQUIRE(population[0].species == AnimalKind::Predator);
     REQUIRE(BuildSeries(History(), ChartMetric::Eaten, selection).empty());
 
-    selection.predators = false;
+    selection.hidden[AnimalKind::Predator] = true;
     const auto vegetation = BuildSeries(History(), ChartMetric::Vegetation, selection);
     REQUIRE(vegetation.size() == 1);
     REQUIRE(vegetation[0].values.back() == 900.0);
@@ -69,7 +73,7 @@ TEST_CASE("Sans animal, l'energie moyenne n'a pas de valeur", "[chart]") {
 
 TEST_CASE("L'axe monte jusqu'a un nombre rond", "[chart]") {
     const auto maximum = [](const double value) {
-        return AxisMaximum({{SeriesSource::Herbivores, {value}}});
+        return AxisMaximum({{AnimalKind::Herbivore, {value}}});
     };
     REQUIRE(maximum(0.0) == 4);
     REQUIRE(maximum(5.0) == 8);
@@ -91,21 +95,21 @@ TEST_CASE("Les cases a cocher choisissent les graphiques", "[chart]") {
     SimulationSettings settings;
     // Sur la carte, ces positions ne changent rien.
     controller.Handle(Click(MetricChip(1920, 1)), false, false, settings);
-    REQUIRE(controller.Charts().VisibleMetrics().size() == MetricCount);
+    REQUIRE(controller.Stats().Selection().VisibleMetrics().size() == MetricCount);
 
     controller.Handle(Click(GraphButton(1920)), false, false, settings);
     controller.Handle(Click(MetricChip(1920, 1)), false, false, settings);
-    REQUIRE(controller.Charts().VisibleMetrics().size() == MetricCount - 1);
-    REQUIRE_FALSE(controller.Charts().metrics[1]);
+    REQUIRE(controller.Stats().Selection().VisibleMetrics().size() == MetricCount - 1);
+    REQUIRE_FALSE(controller.Stats().Selection().metrics[1]);
 
     controller.Handle(Click(SpeciesChip(1)), false, false, settings);
     controller.Handle(Click(CumulativeButton()), false, false, settings);
-    REQUIRE_FALSE(controller.Charts().predators);
-    REQUIRE_FALSE(controller.Charts().cumulative);
+    REQUIRE(controller.Stats().Selection().hidden[AnimalKind::Predator]);
+    REQUIRE_FALSE(controller.Stats().Selection().cumulative);
 
     // Le choix est conserve apres un redemarrage.
     controller.Handle(Click(RestartButton(1920)), false, false, settings);
-    REQUIRE_FALSE(controller.Charts().metrics[1]);
+    REQUIRE_FALSE(controller.Stats().Selection().metrics[1]);
 }
 
 TEST_CASE("Les graphiques restent dans l'ecran sans se chevaucher", "[chart]") {

@@ -4,8 +4,7 @@ export module ecosim.simulation;
 import std;
 export import ecosim.clock;
 export import ecosim.world;
-export import ecosim.herbivore;
-export import ecosim.predator;
+export import ecosim.species;
 export import ecosim.settings;
 export import ecosim.stats;
 
@@ -29,8 +28,6 @@ export namespace ecosim {
         const World& GetWorld() const;
         int GetGeneration() const;
         std::size_t Count(AnimalKind kind) const;
-        std::size_t HerbivoreCount() const;
-        std::size_t PredatorCount() const;
         bool IsFinished() const;
         std::vector<AnimalSnapshot> Animals() const;
         const std::vector<PopulationSample>& PopulationHistory() const;
@@ -38,10 +35,8 @@ export namespace ecosim {
 
         // Sans énergie précisée, l'animal reçoit l'énergie de départ des réglages.
         void AddAnimal(AnimalKind kind, Position position, std::optional<int> energy = std::nullopt);
-        void AddHerbivore(Position position, std::optional<int> energy = std::nullopt);
-        void SeedHerbivores(int count);
-        void AddPredator(Position position, std::optional<int> energy = std::nullopt);
-        void SeedPredators(int count);
+        // Place des animaux au hasard sur les prairies.
+        void Seed(AnimalKind kind, int count);
         void Step();
 
     private:
@@ -57,6 +52,9 @@ export namespace ecosim {
         // Naissances, métabolisme et morts de la génération.
         void LiveAndReproduce();
         PopulationSample Measure() const;
-        void SeedAnimals(int count, AnimalKind kind);
     };
+
+    // Carte aléatoire et populations de départ ; la même graine redonne la même simulation.
+    Simulation CreateRandomSimulation(int width, int height, const SimulationSettings& settings,
+                                      std::uint32_t seed);
 }

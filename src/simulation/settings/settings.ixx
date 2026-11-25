@@ -2,17 +2,24 @@
 export module ecosim.settings;
 
 import std;
-export import ecosim.predator;
+export import ecosim.species;
 
 export namespace ecosim {
+    struct SpeciesSettings {
+        int initialCount{0};
+        AnimalTraits traits{};
+
+        bool operator==(const SpeciesSettings&) const = default;
+    };
+
+    // Valeurs d'origine de chaque espèce, d'après le catalogue.
+    PerSpecies<SpeciesSettings> DefaultSpeciesSettings();
+
     struct SimulationSettings {
         int waterPercent{10};
         int obstaclePercent{10};
         int vegetationGrowth{1};
-        int initialHerbivores{12};
-        int initialPredators{3};
-        AnimalTraits herbivore{};
-        AnimalTraits predator{Predator::DefaultTraits};
+        PerSpecies<SpeciesSettings> species{DefaultSpeciesSettings()};
 
         bool operator==(const SimulationSettings&) const = default;
     };
@@ -21,7 +28,6 @@ export namespace ecosim {
     enum class Preset { Balance, Famine, Invasion };
     inline constexpr std::array<Preset, 3> Presets{Preset::Balance, Preset::Famine, Preset::Invasion};
 
-    const AnimalTraits& TraitsOf(const SimulationSettings& settings, AnimalKind kind);
     // Les populations de départ suivent la taille de la carte.
     SimulationSettings DefaultSettings(int width, int height);
     // Réglages d'un scénario pour une carte de cette taille.

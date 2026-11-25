@@ -10,27 +10,27 @@ TEST_CASE("L'historique des populations suit les générations et les ajouts", "
     REQUIRE(simulation.PopulationHistory().size() == 1);
     REQUIRE(simulation.PopulationHistory().front().generation == 0);
 
-    simulation.AddHerbivore({0, 0});
-    simulation.AddHerbivore({0, 0});
-    simulation.AddPredator({0, 0});
-    REQUIRE(simulation.PopulationHistory().front().herbivores == 2);
-    REQUIRE(simulation.PopulationHistory().front().predators == 1);
+    simulation.AddAnimal(AnimalKind::Herbivore, {0, 0});
+    simulation.AddAnimal(AnimalKind::Herbivore, {0, 0});
+    simulation.AddAnimal(AnimalKind::Predator, {0, 0});
+    REQUIRE(simulation.PopulationHistory().front().species[AnimalKind::Herbivore].population == 2);
+    REQUIRE(simulation.PopulationHistory().front().species[AnimalKind::Predator].population == 1);
 
     simulation.Step();
     REQUIRE(simulation.PopulationHistory().size() == 2);
     REQUIRE(simulation.PopulationHistory().back().generation == 1);
-    REQUIRE(simulation.PopulationHistory().back().herbivores == simulation.HerbivoreCount());
-    REQUIRE(simulation.PopulationHistory().back().predators == simulation.PredatorCount());
+    REQUIRE(simulation.PopulationHistory().back().species[AnimalKind::Herbivore].population == simulation.Count(AnimalKind::Herbivore));
+    REQUIRE(simulation.PopulationHistory().back().species[AnimalKind::Predator].population == simulation.Count(AnimalKind::Predator));
 
-    simulation.AddPredator({0, 0});
-    REQUIRE(simulation.PopulationHistory().back().predators == 2);
-    REQUIRE(simulation.PopulationHistory().front().predators == 1);
+    simulation.AddAnimal(AnimalKind::Predator, {0, 0});
+    REQUIRE(simulation.PopulationHistory().back().species[AnimalKind::Predator].population == 2);
+    REQUIRE(simulation.PopulationHistory().front().species[AnimalKind::Predator].population == 1);
 
     simulation.Step();
     REQUIRE(simulation.PopulationHistory().size() == 3);
     REQUIRE(simulation.PopulationHistory().back().generation == 2);
-    REQUIRE(simulation.PopulationHistory().back().herbivores == simulation.HerbivoreCount());
-    REQUIRE(simulation.PopulationHistory().back().predators == simulation.PredatorCount());
+    REQUIRE(simulation.PopulationHistory().back().species[AnimalKind::Herbivore].population == simulation.Count(AnimalKind::Herbivore));
+    REQUIRE(simulation.PopulationHistory().back().species[AnimalKind::Predator].population == simulation.Count(AnimalKind::Predator));
 
     for (int i = 0; i < 8; ++i) simulation.Step();
     const auto& history = simulation.PopulationHistory();

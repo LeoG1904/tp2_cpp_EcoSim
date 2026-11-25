@@ -1,12 +1,10 @@
 #include <catch2/catch_all.hpp>
 
-#include "../../src/ui/layout.hpp"
-
 import std;
+import ecosim.layout;
 import ecosim.controller;
 
 using namespace ecosim;
-using namespace ecosim_render_detail;
 
 namespace {
     constexpr int Width{1920};
@@ -28,14 +26,14 @@ TEST_CASE("Echap ouvre puis ferme la confirmation, et quitte depuis l'accueil", 
 
     REQUIRE(controller.Handle(escape, true, false, settings) == UiAction::Quit);
     REQUIRE(controller.Handle(escape, false, false, settings) == UiAction::None);
-    REQUIRE(controller.IsExitDialogOpen());
+    REQUIRE(controller.Dialog().IsOpen());
 
     RawInput space;
     space.space = true;
     REQUIRE(controller.Handle(space, false, false, settings) == UiAction::None);
 
     REQUIRE(controller.Handle(escape, false, false, settings) == UiAction::CancelExit);
-    REQUIRE_FALSE(controller.IsExitDialogOpen());
+    REQUIRE_FALSE(controller.Dialog().IsOpen());
 }
 
 TEST_CASE("Les boutons de la confirmation", "[controller]") {
@@ -72,21 +70,21 @@ TEST_CASE("Les courbes s'ouvrent, se ferment et se reinitialisent au redemarrage
     UiController controller{Width, Height, CellSize};
     SimulationSettings settings;
     controller.Handle(Click(GraphButton(Width)), false, false, settings);
-    REQUIRE(controller.IsShowingGraph());
+    REQUIRE(controller.Stats().IsOpen());
     controller.Handle(Click(BackButton()), false, false, settings);
-    REQUIRE_FALSE(controller.IsShowingGraph());
+    REQUIRE_FALSE(controller.Stats().IsOpen());
 
     controller.Handle(Click(GraphButton(Width)), false, false, settings);
     REQUIRE(controller.Handle(Click(RestartButton(Width)), false, false, settings)
             == UiAction::StartOrRestart);
-    REQUIRE_FALSE(controller.IsShowingGraph());
+    REQUIRE_FALSE(controller.Stats().IsOpen());
 }
 
 TEST_CASE("Cliquer une case, taper puis demarrer applique la valeur", "[controller]") {
     UiController controller{Width, Height, CellSize};
     SimulationSettings settings;
     controller.Handle(Click(ValueBox(Width, Height, 0, 0)), true, false, settings);
-    REQUIRE(controller.Editor().Field() == 0);
+    REQUIRE(controller.Home().Editor().Field() == 0);
 
     RawInput typing;
     typing.typed = {{KeyStroke::Kind::Digit, 2}, {KeyStroke::Kind::Digit, 5}};
@@ -104,12 +102,12 @@ TEST_CASE("Pendant une saisie, Echap annule et Tab passe a la case suivante", "[
     typing.typed = {{KeyStroke::Kind::Digit, 3}, {KeyStroke::Kind::Next}};
     controller.Handle(typing, true, false, settings);
     REQUIRE(settings.waterPercent == 3);
-    REQUIRE(controller.Editor().Field() == 1);
+    REQUIRE(controller.Home().Editor().Field() == 1);
 
     RawInput escape;
     escape.escape = true;
     REQUIRE(controller.Handle(escape, true, false, settings) == UiAction::None);
-    REQUIRE_FALSE(controller.Editor().Field().has_value());
+    REQUIRE_FALSE(controller.Home().Editor().Field().has_value());
 }
 
 TEST_CASE("Un clic sur la carte choisit une case, un second la libere", "[controller]") {
@@ -118,37 +116,37 @@ TEST_CASE("Un clic sur la carte choisit une case, un second la libere", "[contro
     const UiRect cell{10 * CellSize, 8 * CellSize, CellSize, CellSize};
 
     REQUIRE(controller.Handle(Click(cell), false, false, settings) == UiAction::None);
-    REQUIRE(controller.SelectedCell() == Position{10, 8});
+    REQUIRE(controller.Map().SelectedCell() == Position{10, 8});
     controller.Handle(Click(cell), false, false, settings);
-    REQUIRE_FALSE(controller.SelectedCell().has_value());
+    REQUIRE_FALSE(controller.Map().SelectedCell().has_value());
 }
 
 TEST_CASE("Le panneau change de cote, bloque les clics et se ferme", "[controller]") {
     UiController controller{Width, Height, CellSize};
     SimulationSettings settings;
     controller.Handle(Click({40 * CellSize, 20 * CellSize, 1, 1}), false, false, settings);
-    REQUIRE(controller.IsCellPanelOnLeft());
+    REQUIRE(controller.Map().IsCellPanelOnLeft());
     const UiRect panel = CellPanel(Width, Height, true);
 
     controller.Handle(Click({panel.x + 100, panel.y + 100, 1, 1}), false, false, settings);
-    REQUIRE(controller.SelectedCell() == Position{40, 20});
+    REQUIRE(controller.Map().SelectedCell() == Position{40, 20});
     controller.Handle(Click(CellPanelClose(panel)), false, false, settings);
-    REQUIRE_FALSE(controller.SelectedCell().has_value());
+    REQUIRE_FALSE(controller.Map().SelectedCell().has_value());
 
     controller.Handle(Click({5 * CellSize, 5 * CellSize, 1, 1}), false, false, settings);
-    REQUIRE_FALSE(controller.IsCellPanelOnLeft());
+    REQUIRE_FALSE(controller.Map().IsCellPanelOnLeft());
 }
 
 TEST_CASE("Les boutons, les courbes et le bord de l'ecran ne choisissent pas de case", "[controller]") {
     UiController controller{Width, Height + 10, CellSize};
     SimulationSettings settings;
     controller.Handle(Click({100, Height + 2, 1, 1}), false, false, settings);
-    REQUIRE_FALSE(controller.SelectedCell().has_value());
+    REQUIRE_FALSE(controller.Map().SelectedCell().has_value());
 
     controller.Handle(Click(GraphButton(Width)), false, false, settings);
-    REQUIRE_FALSE(controller.SelectedCell().has_value());
+    REQUIRE_FALSE(controller.Map().SelectedCell().has_value());
     controller.Handle(Click({400, 400, 1, 1}), false, false, settings);
-    REQUIRE_FALSE(controller.SelectedCell().has_value());
+    REQUIRE_FALSE(controller.Map().SelectedCell().has_value());
 }
 
 TEST_CASE("La selection suit les courbes mais disparait au redemarrage", "[controller]") {
@@ -157,10 +155,10 @@ TEST_CASE("La selection suit les courbes mais disparait au redemarrage", "[contr
     controller.Handle(Click({400, 400, 1, 1}), false, false, settings);
     controller.Handle(Click(GraphButton(Width)), false, false, settings);
     controller.Handle(Click(BackButton()), false, false, settings);
-    REQUIRE(controller.SelectedCell() == Position{10, 10});
+    REQUIRE(controller.Map().SelectedCell() == Position{10, 10});
 
     controller.Handle(Click(RestartButton(Width)), false, false, settings);
-    REQUIRE_FALSE(controller.SelectedCell().has_value());
+    REQUIRE_FALSE(controller.Map().SelectedCell().has_value());
 }
 
 TEST_CASE("Un prereglage remplace les reglages, y compris une saisie en cours", "[controller]") {
@@ -175,7 +173,7 @@ TEST_CASE("Un prereglage remplace les reglages, y compris une saisie en cours", 
         const UiRect button = PresetButton(Width, Height, static_cast<int>(i));
         REQUIRE(controller.Handle(Click(button), true, false, settings) == UiAction::None);
         REQUIRE(settings == PresetSettings(Presets[i], Width / CellSize, Height / CellSize));
-        REQUIRE_FALSE(controller.Editor().Field().has_value());
+        REQUIRE_FALSE(controller.Home().Editor().Field().has_value());
     }
 }
 

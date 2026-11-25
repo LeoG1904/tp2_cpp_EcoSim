@@ -21,11 +21,11 @@ TEST_CASE("Les proportions de terrain sont respectees", "[settings]") {
 TEST_CASE("La simulation applique les statistiques choisies", "[settings]") {
     SimulationSettings settings;
     settings.vegetationGrowth = 20;
-    settings.herbivore.startingEnergy = 60;
-    settings.herbivore.energyLoss = 7;
-    settings.herbivore.foodEnergy = 4;
+    settings.species[AnimalKind::Herbivore].traits.startingEnergy = 60;
+    settings.species[AnimalKind::Herbivore].traits.energyLoss = 7;
+    settings.species[AnimalKind::Herbivore].traits.foodEnergy = 4;
     Simulation simulation{World{1, 1}, std::mt19937{2}, settings};
-    simulation.AddHerbivore({0, 0});
+    simulation.AddAnimal(AnimalKind::Herbivore, {0, 0});
 
     simulation.Step();
 
@@ -35,36 +35,36 @@ TEST_CASE("La simulation applique les statistiques choisies", "[settings]") {
 
 TEST_CASE("L'age maximum et le gain par proie sont reglables", "[settings]") {
     SimulationSettings settings;
-    settings.herbivore.maxAge = 1;
+    settings.species[AnimalKind::Herbivore].traits.maxAge = 1;
     Simulation old{World{1, 1}, std::mt19937{3}, settings};
-    old.AddHerbivore({0, 0});
+    old.AddAnimal(AnimalKind::Herbivore, {0, 0});
     old.Step();
     REQUIRE(old.IsFinished());
 
     settings = SimulationSettings{};
-    settings.predator.foodEnergy = 10;
+    settings.species[AnimalKind::Predator].traits.foodEnergy = 10;
     Simulation hunt{World{1, 1}, std::mt19937{4}, settings};
-    hunt.AddHerbivore({0, 0});
-    hunt.AddPredator({0, 0});
+    hunt.AddAnimal(AnimalKind::Herbivore, {0, 0});
+    hunt.AddAnimal(AnimalKind::Predator, {0, 0});
     hunt.Step();
     REQUIRE(hunt.Animals().front().energy == 58); // 50 + 10 - 2
 }
 
 TEST_CASE("La chance de naissance peut etre nulle ou certaine, et s'herite", "[settings]") {
     SimulationSettings settings;
-    settings.herbivore.reproductionEnergy = 40;
-    settings.herbivore.reproductionPercent = 0;
+    settings.species[AnimalKind::Herbivore].traits.reproductionEnergy = 40;
+    settings.species[AnimalKind::Herbivore].traits.reproductionPercent = 0;
     Simulation sterile{World{1, 1}, std::mt19937{5}, settings};
-    sterile.AddHerbivore({0, 0}, 100);
+    sterile.AddAnimal(AnimalKind::Herbivore, {0, 0}, 100);
     for (int i = 0; i < 8; ++i) sterile.Step();
-    REQUIRE(sterile.HerbivoreCount() == 1);
+    REQUIRE(sterile.Count(AnimalKind::Herbivore) == 1);
 
-    settings.herbivore.reproductionPercent = 100;
+    settings.species[AnimalKind::Herbivore].traits.reproductionPercent = 100;
     Simulation fertile{World{1, 1}, std::mt19937{5}, settings};
-    fertile.AddHerbivore({0, 0}, 100);
+    fertile.AddAnimal(AnimalKind::Herbivore, {0, 0}, 100);
     for (int i = 0; i < 5; ++i) fertile.Step();
-    REQUIRE(fertile.HerbivoreCount() == 2);
+    REQUIRE(fertile.Count(AnimalKind::Herbivore) == 2);
 
-    const Herbivore parent{1, {0, 0}, 90, settings.herbivore};
+    const Herbivore parent{1, {0, 0}, 90, settings.species[AnimalKind::Herbivore].traits};
     REQUIRE(parent.CreateOffspring(2)->GetTraits().reproductionPercent == 100);
 }

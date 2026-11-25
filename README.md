@@ -2,7 +2,7 @@
 
 EcoSim est une simulation d'écosystème cellulaire en **C++23**. Une grille de prairies, d'eau et d'obstacles accueille de la végétation, des herbivores et des prédateurs. Plusieurs animaux peuvent occuper la même case. La simulation évolue par générations et son moteur fonctionne indépendamment de l'affichage.
 
-Le projet est un prototype **2D** : il affiche la carte en direct et permet de consulter l'évolution des populations sur un graphique.
+L'application affiche la carte en direct, en **2D** ou dans une **première version 3D**, et permet de consulter l'évolution des statistiques sur des graphiques.
 
 ## Démarrage rapide sous Windows
 
@@ -43,7 +43,7 @@ Ces résultats sont des tendances : la carte et les animaux restent tirés au ha
 | Herbivores | Végétation mangée au maximum par génération |
 | Prédateurs | Énergie gagnée par proie |
 
-Les nouveau-nés gardent une énergie de 30, la reproduction coûte 30 et demande un âge d'au moins 5 générations. Le nombre d'animaux au départ dépend par défaut de la taille de l'écran. Les bornes sont définies dans `src/ui/settings_form.cpp`.
+Les nouveau-nés gardent une énergie de 30, la reproduction coûte 30 et demande un âge d'au moins 5 générations. Le nombre d'animaux au départ dépend par défaut de la taille de l'écran. Les bornes sont définies dans `src/ui/presentation/settings_form.cpp` et, pour ce qui dépend de l'espèce, dans `src/ui/presentation/species_style.cpp`.
 
 ## Utilisation
 
@@ -69,6 +69,21 @@ Quand il ne reste plus aucun animal, la simulation s'arrête à la dernière gé
 
 Le bouton **Recommencer** repart à la génération 0, réinitialise la vitesse à x1 et affiche la nouvelle carte.
 
+## Vue 3D
+
+Sur la carte, le bouton **Vue 3D** change l'affichage sans toucher à la simulation ; **Vue 2D** revient à la carte à plat. Les commandes de temps, les courbes, la confirmation Échap et le panneau d'une case fonctionnent dans les deux vues.
+
+| Action en 3D | Commande |
+| --- | --- |
+| Tourner autour de la carte et changer l'inclinaison | Maintenir le **clic droit** et glisser |
+| Se rapprocher ou s'éloigner | **Molette** |
+| Revenir à la vue d'ensemble | Bouton **Recentrer** |
+| Voir le détail d'une case | **Clic gauche** sur le sol de la case |
+
+Les obstacles sont des blocs, les herbivores de petits modèles jaunes et les prédateurs des modèles rouges plus hauts, la tête tournée dans le sens du déplacement. La couleur des prairies suit la végétation. La vue choisie et la position de la caméra sont conservées après **Recommencer** et le retour au menu.
+
+Limites de cette première version : le rendu est calculé par le processeur et dessiné avec Win32/GDI, sans carte graphique, textures ni éclairage dynamique. Au plus quatre modèles par espèce sont dessinés sur une même case ; le panneau donne les effectifs réels. La caméra vise toujours le centre de la carte. La sélection vise le sol : cliquer sur le haut d'un obstacle peut choisir la case située derrière.
+
 ## Règles de la simulation
 
 À chaque génération :
@@ -88,21 +103,21 @@ Les fichiers `.ixx` exposent les modules C++ ; leurs implémentations sont dans 
 | Emplacement | Responsabilité |
 | --- | --- |
 | `src/world/` | Cellules, terrains, accès à la grille et génération du monde. |
-| `src/animals/` | Classe de base `Animal`, interface `Habitat`, comportements de `Herbivore` et de `Predator`. |
+| `src/animals/` | Classe de base `Animal`, interface `Habitat`, comportements de `Herbivore` et de `Predator`, catalogue des espèces. |
 | `src/simulation/simulation/` | Module `ecosim.simulation` : classe `Simulation`, cycle des générations, végétation et historique des populations. |
 | `src/simulation/stats/` | Module `ecosim.stats` : classe `SimulationStats`, historique et événements. |
 | `src/simulation/settings/` | Module `ecosim.settings` : réglages d'une simulation et valeurs par défaut. |
 | `src/simulation/clock/` | Module `ecosim.clock` : classe `SimulationClock`, vitesses et pause. |
 | `src/core/` | Module `ecosim` : entrée publique du moteur. |
-| `src/ui/application.*` | Déroulement de l'application et interfaces `InputSource` et `View`. |
-| `src/ui/controller.*` et `layout.hpp` | Navigation entre les écrans, clics et placement des éléments. |
-| `src/ui/settings_form.*` | Libellés, limites et saisie des réglages. |
-| `src/ui/chart.*` | Choix des graphiques, séries et échelles. |
-| `src/ui/cell_info.*` | Texte du panneau d'une case. |
-| `src/ui/animation.*` | Animation d'un pas manuel et des naissances. |
-| `src/render/window.*` | Fenêtre Windows et messages. |
-| `src/render/win32_input.*` | Lecture du clavier et de la souris. |
-| `src/render/render*` | `Renderer2D` : dessin de l'accueil, de la carte, des courbes et de la confirmation. |
+| `src/ui/application/` | Déroulement de l'application et interfaces `InputSource` et `View`. |
+| `src/ui/navigation/` | Entrées, aiguillage et un rôle par module : accueil, confirmation, statistiques, carte et sélection. |
+| `src/ui/map/` | Vues de la carte (`MapView`), caméra et scène 3D, animations et texte du panneau d'une case. |
+| `src/ui/presentation/` | Contenu et placement : formulaire des réglages, apparence des espèces, graphiques et disposition. |
+| `src/render/platform/window.*` | Fenêtre Windows et messages. |
+| `src/render/platform/win32_input.*` | Lecture du clavier et de la souris. |
+| `src/render/renderer/` | `Win32Renderer` : assemble les dessinateurs et choisit l'écran. |
+| `src/render/painters/` | Un dessinateur par écran ou élément ; les cartes 2D et 3D suivent l'interface `MapPainter`. |
+| `src/render/gdi/` | Image en mémoire, texte et aides GDI. |
 | `src/app/main.cpp` | Assemblage des objets et boucle principale. |
 | `tests/` | Tests du monde, des animaux, de la simulation, de l'horloge et de la logique d'interface. |
 
@@ -118,13 +133,22 @@ Les tests ne compilent aucun code Windows. Le moteur peut être construit seul a
 
 ### Ajouter une espèce
 
-Le comportement tient dans une nouvelle classe dérivée d'`Animal` : phase du tour, choix de la destination, nourriture et descendance. Il faut aussi ajouter sa valeur à `AnimalKind` et sa création dans `MakeAnimal` (`population.cpp`). Les réglages, l'historique des populations, l'accueil, la carte et les courbes sont encore prévus pour deux espèces et doivent être complétés.
+1. Créer une classe dérivée d'`Animal` (phase du tour, destination, nourriture, descendance).
+2. Ajouter sa valeur à `AnimalKind` et augmenter `SpeciesCount` (`animal.ixx`).
+3. Ajouter son entrée au catalogue (`src/animals/species.cpp`) : noms, statistiques d'origine, population de départ et classe.
+4. Ajouter son apparence (`src/ui/presentation/species_style.cpp`) : couleur, silhouette et limites de saisie.
+
+Les réglages, les statistiques, les graphiques, le panneau d'une case et les cartes parcourent le catalogue et n'ont pas à être modifiés. Une colonne s'ajoute à l'accueil, qui se resserre : sa lisibilité est à vérifier à l'écran avec trois espèces ou plus. Les préréglages ne règlent que les herbivores et les prédateurs. Une nouvelle phase de tour doit être ajoutée à `TurnPhases`. Seules les espèces marquées comme proies (`IsPrey`) sont chassées, par tout chasseur : un régime alimentaire plus fin demanderait d'étendre `Habitat`.
+
+### Ajouter une vue de la carte
+
+Créer une classe `MapView` (navigation) et une classe `MapPainter` (dessin), ajouter une valeur à `MapViewKind` et augmenter `MapViewCount`, puis les enregistrer dans `MapNavigator` et `Win32Renderer`. Les vues existantes ne changent pas.
 
 ## Conventions de code
 
 Pour garder le code facile à lire dans le cadre du TP, on évite `std::span` et `std::string_view`. On utilise `std::string` pour les textes et des références à `std::vector` pour accéder aux collections sans les copier : `const std::vector<T>&` en lecture, `std::vector<T>&` si une modification est nécessaire.
 
-Les textes sont en UTF-8. Seule exception : les fonctions Windows attendent des caractères larges. La conversion en `std::wstring` est faite uniquement dans `src/render/text.cpp` ; les noms de police et de classe de fenêtre, passés directement à Windows, restent des littéraux `L"…"`.
+Les textes sont en UTF-8. Seule exception : les fonctions Windows attendent des caractères larges. La conversion en `std::wstring` est faite uniquement dans `src/render/gdi/text.cpp` ; les noms de police et de classe de fenêtre, passés directement à Windows, restent des littéraux `L"…"`.
 
 ## Lancer les tests
 

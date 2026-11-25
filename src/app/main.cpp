@@ -13,7 +13,7 @@ int main() {
     ecosim::Win32Window window{"EcoSim"};
     ecosim::UiController controller{window.Width(), window.Height(), CellSize};
     ecosim::Win32Input input{window, controller};
-    ecosim::Renderer2D renderer{window, controller, CellSize};
+    ecosim::Win32Renderer renderer{window, controller, CellSize};
     ecosim::Application application{input, renderer, window.Width() / CellSize,
                                     window.Height() / CellSize, std::random_device{}()};
 

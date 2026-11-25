@@ -6,6 +6,19 @@ export import ecosim.world;
 
 export namespace ecosim {
     enum class AnimalKind { Herbivore, Predator };
+    inline constexpr std::size_t SpeciesCount{2};
+
+    // Une valeur pour chaque espèce, désignée par son nom plutôt que par un indice.
+    template <typename T>
+    struct PerSpecies {
+        std::array<T, SpeciesCount> values{};
+
+        T& operator[](const AnimalKind kind) { return values.at(static_cast<std::size_t>(kind)); }
+        const T& operator[](const AnimalKind kind) const {
+            return values.at(static_cast<std::size_t>(kind));
+        }
+        bool operator==(const PerSpecies&) const = default;
+    };
 
     // Les phases d'une génération sont jouées dans l'ordre de ce tableau.
     enum class TurnPhase { Grazing, Hunting };

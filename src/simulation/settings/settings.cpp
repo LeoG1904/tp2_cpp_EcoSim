@@ -3,41 +3,50 @@ module ecosim.settings;
 import std;
 
 namespace ecosim {
-    const AnimalTraits& TraitsOf(const SimulationSettings& settings, const AnimalKind kind) {
-        return kind == AnimalKind::Herbivore ? settings.herbivore : settings.predator;
+    PerSpecies<SpeciesSettings> DefaultSpeciesSettings() {
+        PerSpecies<SpeciesSettings> result;
+        for (const SpeciesInfo& info : SpeciesCatalog()) {
+            result[info.kind] = {info.minimumAtStart, info.defaultTraits};
+        }
+        return result;
     }
 
     SimulationSettings DefaultSettings(const int width, const int height) {
         SimulationSettings settings;
-        settings.initialHerbivores = std::max(12, width * height / 15);
-        settings.initialPredators = std::max(3, width * height / 150);
+        for (const SpeciesInfo& info : SpeciesCatalog()) {
+            settings.species[info.kind].initialCount =
+                std::max(info.minimumAtStart, width * height / info.cellsPerAnimal);
+        }
         return settings;
     }
 
     // Valeurs choisies après des simulations sans affichage sur de nombreuses graines.
+    // Un scénario décrit un équilibre précis : il nomme les espèces qu'il modifie.
     SimulationSettings PresetSettings(const Preset preset, const int width, const int height) {
         SimulationSettings settings = DefaultSettings(width, height);
+        SpeciesSettings& herbivores = settings.species[AnimalKind::Herbivore];
+        SpeciesSettings& predators = settings.species[AnimalKind::Predator];
         switch (preset) {
             case Preset::Balance:
                 // Herbivores durables et prolifiques ; prédateurs qui se reproduisent peu.
-                settings.herbivore.maxAge = 120;
-                settings.herbivore.reproductionEnergy = 70;
-                settings.herbivore.reproductionPercent = 40;
-                settings.predator.energyLoss = 3;
-                settings.predator.maxAge = 60;
-                settings.predator.foodEnergy = 15;
-                settings.predator.reproductionEnergy = 70;
-                settings.predator.reproductionPercent = 5;
+                herbivores.traits.maxAge = 120;
+                herbivores.traits.reproductionEnergy = 70;
+                herbivores.traits.reproductionPercent = 40;
+                predators.traits.energyLoss = 3;
+                predators.traits.maxAge = 60;
+                predators.traits.foodEnergy = 15;
+                predators.traits.reproductionEnergy = 70;
+                predators.traits.reproductionPercent = 5;
                 break;
             case Preset::Famine:
                 // Plus de repousse et peu de chasseurs : la faim domine.
                 settings.vegetationGrowth = 0;
-                settings.herbivore.energyLoss = 3;
-                settings.initialPredators = std::max(1, settings.initialPredators / 3);
+                herbivores.traits.energyLoss = 3;
+                predators.initialCount = std::max(1, predators.initialCount / 3);
                 break;
             case Preset::Invasion:
                 // Les prédateurs sont bien plus nombreux au départ que les herbivores.
-                settings.initialPredators = std::clamp(width * height / 7, 10, 200);
+                predators.initialCount = std::clamp(width * height / 7, 10, 200);
                 break;
         }
         return settings;

@@ -6,6 +6,7 @@ export import ecosim.world;
 export import ecosim.animal;
 export import ecosim.herbivore;
 export import ecosim.predator;
+export import ecosim.species;
 export import ecosim.clock;
 export import ecosim.settings;
 export import ecosim.stats;

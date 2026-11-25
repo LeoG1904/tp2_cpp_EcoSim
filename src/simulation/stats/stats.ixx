@@ -14,16 +14,17 @@ export namespace ecosim {
         std::size_t Deaths() const { return starved + diedOfAge + eaten; }
     };
 
+    struct SpeciesSample {
+        std::size_t population{0};
+        double energy{0.0};   // énergie moyenne, 0 sans animal
+        LifeEvents events{};  // survenus pendant cette génération
+    };
+
     // État mesuré à la fin d'une génération.
     struct PopulationSample {
-        int generation;
-        std::size_t herbivores;
-        std::size_t predators;
-        long long vegetation{0};              // total sur les prairies
-        double herbivoreEnergy{0.0};          // énergie moyenne, 0 sans animal
-        double predatorEnergy{0.0};
-        LifeEvents herbivoreEvents{};         // survenus pendant cette génération
-        LifeEvents predatorEvents{};
+        int generation{0};
+        long long vegetation{0};  // total sur les prairies
+        PerSpecies<SpeciesSample> species{};
     };
 
     enum class DeathCause { Starvation, OldAge, Predation };
@@ -44,7 +45,7 @@ export namespace ecosim {
 
     private:
         std::vector<PopulationSample> history;
-        std::array<LifeEvents, 2> lastGeneration{};
-        std::array<LifeEvents, 2> total{};
+        PerSpecies<LifeEvents> lastGeneration{};
+        PerSpecies<LifeEvents> total{};
     };
 }
