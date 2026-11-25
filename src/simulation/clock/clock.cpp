@@ -27,4 +27,10 @@ namespace ecosim {
         accumulator -= steps;
         return steps;
     }
+
+    double SimulationClock::Progress() const { return std::min(accumulator, 1.0); }
+
+    void SimulationClock::SetProgress(const double fraction) {
+        accumulator = std::clamp(fraction, 0.0, 1.0);
+    }
 }

@@ -17,6 +17,8 @@ export namespace ecosim {
         AnimalKind kind;
         int age;
         int energy;
+        Position previousPosition;
+        std::optional<std::uint64_t> parentId;
     };
 
     struct PopulationSample {
@@ -31,6 +33,7 @@ export namespace ecosim {
 
         const World& GetWorld() const;
         int GetGeneration() const;
+        std::size_t Count(AnimalKind kind) const;
         std::size_t HerbivoreCount() const;
         std::size_t PredatorCount() const;
         bool IsFinished() const;
@@ -38,6 +41,7 @@ export namespace ecosim {
         const std::vector<PopulationSample>& PopulationHistory() const;
 
         // Sans énergie précisée, l'animal reçoit l'énergie de départ des réglages.
+        void AddAnimal(AnimalKind kind, Position position, std::optional<int> energy = std::nullopt);
         void AddHerbivore(Position position, std::optional<int> energy = std::nullopt);
         void SeedHerbivores(int count);
         void AddPredator(Position position, std::optional<int> energy = std::nullopt);
@@ -53,8 +57,7 @@ export namespace ecosim {
         int generation{0};
         std::vector<PopulationSample> populationHistory{{0, 0, 0}};
 
-        Position ChooseDestination(Position origin);
-        Position ChoosePredatorDestination(Position origin, const std::vector<int>& preyCounts);
+        void PlayPhase(TurnPhase phase);
         void SeedAnimals(int count, AnimalKind kind);
     };
 }

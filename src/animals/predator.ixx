@@ -13,7 +13,12 @@ export namespace ecosim {
         Predator(std::uint64_t id, Position position, int energy = StartingEnergy,
                  const AnimalTraits& traits = DefaultTraits);
         AnimalKind GetKind() const override;
-        void Hunt(std::vector<std::unique_ptr<Animal>>& animals);
-        std::unique_ptr<Animal> CreateOffspring(std::uint64_t id) const override;
+        TurnPhase Phase() const override;
+        // Va vers la case qui compte le plus de proies.
+        Position ChooseDestination(const Habitat& habitat, std::mt19937& rng) const override;
+        void Feed(Habitat& habitat) override;
+
+    protected:
+        std::unique_ptr<Animal> MakeOffspring(std::uint64_t id) const override;
     };
 }

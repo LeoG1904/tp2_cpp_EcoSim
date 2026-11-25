@@ -4,7 +4,7 @@ module;
 #define NOMINMAX
 #include <windows.h>
 
-#include "layout.hpp"
+#include "../ui/layout.hpp"
 
 module ecosim.render;
 
@@ -74,8 +74,8 @@ namespace ecosim {
                                             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                                             CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Segoe UI");
         const HGDIOBJ previousFont = SelectObject(buffer, labelFont);
-        const auto write = [&](const int x, const int y, const std::wstring& value) {
-            TextOutW(buffer, x, y, value.c_str(), static_cast<int>(value.size()));
+        const auto write = [&](const int x, const int y, const std::string& value) {
+            WriteText(buffer, x, y, value);
         };
         const UiRect back = BackButton();
         const RECT backRect{back.x, back.y, back.x + back.width, back.y + back.height};
@@ -88,25 +88,25 @@ namespace ecosim {
             const UiRect pause = PauseButton(windowWidth, true);
             const RECT pauseRect{pause.x, pause.y, pause.x + pause.width, pause.y + pause.height};
             FillRect(buffer, &pauseRect, buttonBrush);
-            write(pause.x + 20, pause.y + 9, paused ? L"Reprendre" : L"Pause");
+            write(pause.x + 20, pause.y + 9, paused ? "Reprendre" : "Pause");
             if (paused) {
                 const UiRect next = NextButton(windowWidth, true);
                 const RECT nextRect{next.x, next.y, next.x + next.width, next.y + next.height};
                 FillRect(buffer, &nextRect, buttonBrush);
-                write(next.x + 12, next.y + 9, L"Génération +1");
+                write(next.x + 12, next.y + 9, "Génération +1");
             }
         }
         DeleteObject(buttonBrush);
-        write(back.x + 20, back.y + 9, L"Retour");
-        write(restart.x + 20, restart.y + 9, L"Recommencer");
+        write(back.x + 20, back.y + 9, "Retour");
+        write(restart.x + 20, restart.y + 9, "Recommencer");
         SelectObject(buffer, headingFont);
-        write(155, 25, L"Évolution des populations");
+        write(155, 25, "Évolution des populations");
         SelectObject(buffer, labelFont);
-        std::wstring status;
-        if (simulation.IsFinished()) status = L"Fin de la simulation : plus aucun animal";
-        else if (paused) status = std::format(L"En pause   Vitesse x{}", speed);
-        else status = std::format(L"Vitesse x{}", speed);
-        write(90, 78, std::format(L"Génération {}    Herbivores {}    Prédateurs {}    {}",
+        std::string status;
+        if (simulation.IsFinished()) status = "Fin de la simulation : plus aucun animal";
+        else if (paused) status = std::format("En pause   Vitesse x{}", speed);
+        else status = std::format("Vitesse x{}", speed);
+        write(90, 78, std::format("Génération {}    Herbivores {}    Prédateurs {}    {}",
                                 simulation.GetGeneration(), simulation.HerbivoreCount(),
                                 simulation.PredatorCount(), status));
         const HBRUSH herbivoreBrush = CreateSolidBrush(RGB(245, 210, 70));
@@ -115,8 +115,8 @@ namespace ecosim {
         const RECT predatorLegend{270, 116, 285, 131};
         FillRect(buffer, &herbivoreLegend, herbivoreBrush);
         FillRect(buffer, &predatorLegend, predatorBrush);
-        write(115, 116, L"Herbivores");
-        write(295, 116, L"Prédateurs");
+        write(115, 116, "Herbivores");
+        write(295, 116, "Prédateurs");
 
         const HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(57, 66, 80));
         const HGDIOBJ oldPen = SelectObject(buffer, gridPen);
@@ -124,7 +124,7 @@ namespace ecosim {
             const int y = graph.plot.y + tick * graph.plot.height / 4;
             MoveToEx(buffer, graph.plot.x, y, nullptr);
             LineTo(buffer, graph.plot.x + graph.plot.width, y);
-            write(18, y - 9, std::to_wstring(graph.scale * (4 - tick) / 4));
+            write(18, y - 9, std::to_string(graph.scale * (4 - tick) / 4));
         }
         for (int tick = 0; tick <= 4; ++tick) {
             if (tick > 0 && graph.GenerationAt(tick) == graph.GenerationAt(tick - 1)) continue;
@@ -133,9 +133,8 @@ namespace ecosim {
                 MoveToEx(buffer, x, graph.plot.y, nullptr);
                 LineTo(buffer, x, graph.plot.y + graph.plot.height);
             }
-            const std::wstring label = std::to_wstring(graph.GenerationAt(tick));
-            SIZE extent{};
-            GetTextExtentPoint32W(buffer, label.c_str(), static_cast<int>(label.size()), &extent);
+            const std::string label = std::to_string(graph.GenerationAt(tick));
+            const TextSize extent = MeasureText(buffer, label);
             write(std::clamp(x - static_cast<int>(extent.cx) / 2, graph.plot.x,
                              std::max(graph.plot.x, graph.plot.x + graph.plot.width - static_cast<int>(extent.cx))),
                   graph.plot.y + graph.plot.height + 14, label);
@@ -176,20 +175,19 @@ namespace ecosim {
         };
         drawCurrentPoint(current.herbivores, herbivoreBrush);
         drawCurrentPoint(current.predators, predatorBrush);
-        const auto currentLabel = std::format(L"Génération actuelle : {}", current.generation);
-        SIZE currentExtent{};
-        GetTextExtentPoint32W(buffer, currentLabel.c_str(), static_cast<int>(currentLabel.size()), &currentExtent);
+        const auto currentLabel = std::format("Génération actuelle : {}", current.generation);
+        const TextSize currentExtent = MeasureText(buffer, currentLabel);
         SetTextColor(buffer, RGB(125, 183, 235));
         write(graph.plot.x + graph.plot.width - currentExtent.cx, graph.plot.y - 28, currentLabel);
         SetTextColor(buffer, RGB(255, 255, 255));
         write(graph.plot.x + graph.plot.width / 2 - 55,
-              graph.plot.y + graph.plot.height + 52, L"Générations");
+              graph.plot.y + graph.plot.height + 52, "Générations");
         SelectObject(buffer, previousFont);
         DeleteObject(headingFont);
         DeleteObject(labelFont);
         DeleteObject(herbivoreBrush);
         DeleteObject(predatorBrush);
-        if (showingExitDialog) DrawExitDialog(buffer);
+        if (controller.IsExitDialogOpen()) DrawExitDialog(buffer);
         BitBlt(screen, 0, 0, windowWidth, windowHeight, buffer, 0, 0, SRCCOPY);
         SelectObject(buffer, previous);
         DeleteObject(bitmap);

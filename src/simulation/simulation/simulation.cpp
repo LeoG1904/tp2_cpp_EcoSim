@@ -2,78 +2,65 @@ module ecosim.simulation;
 
 import std;
 
+namespace {
+    // Vue offerte aux animaux pendant une phase ; les proies sont comptées à son début.
+    class PhaseHabitat final : public ecosim::Habitat {
+    public:
+        PhaseHabitat(ecosim::World& world, std::vector<std::unique_ptr<ecosim::Animal>>& animals)
+            : world{world}, animals{animals},
+              preyCounts(static_cast<std::size_t>(world.GetWidth()) * world.GetHeight()) {
+            for (const auto& animal : animals) {
+                if (animal->IsPrey() && animal->IsAlive()) ++preyCounts[Index(animal->GetPosition())];
+            }
+        }
+
+        ecosim::World& GetWorld() override { return world; }
+        const ecosim::World& GetWorld() const override { return world; }
+
+        int PreyCount(const ecosim::Position position) const override {
+            return preyCounts[Index(position)];
+        }
+
+        bool CatchPrey(const ecosim::Position position) override {
+            for (const auto& prey : animals) {
+                if (prey->IsPrey() && prey->IsAlive() && prey->GetPosition() == position) {
+                    prey->Die();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+    private:
+        std::size_t Index(const ecosim::Position position) const {
+            return static_cast<std::size_t>(position.y) * world.GetWidth()
+                 + static_cast<std::size_t>(position.x);
+        }
+
+        ecosim::World& world;
+        std::vector<std::unique_ptr<ecosim::Animal>>& animals;
+        std::vector<int> preyCounts;
+    };
+}
+
 namespace ecosim {
     Simulation::Simulation(World world, std::mt19937 rng, const SimulationSettings& settings)
         : world{std::move(world)}, settings{settings}, rng{std::move(rng)} {}
 
-    Position Simulation::ChooseDestination(const Position origin) {
-        Position best = origin;
-        int bestVegetation = world.GetCell(origin).GetVegetation();
-        int ties = 1;
-        for (const Position neighbor : world.Neighbors(origin)) {
-            const Cell& cell = world.GetCell(neighbor);
-            if (!cell.IsAccessible()) continue;
-            if (cell.GetVegetation() > bestVegetation) {
-                bestVegetation = cell.GetVegetation();
-                best = neighbor;
-                ties = 1;
-            } else if (cell.GetVegetation() == bestVegetation) {
-                std::uniform_int_distribution<int> pick{1, ++ties};
-                if (pick(rng) == 1) best = neighbor;
-            }
+    void Simulation::PlayPhase(const TurnPhase phase) {
+        PhaseHabitat habitat{world, animals};
+        for (auto& animal : animals) {
+            if (animal->Phase() != phase || !animal->IsAlive()) continue;
+            animal->MoveTo(animal->ChooseDestination(habitat, rng));
+            animal->Feed(habitat);
         }
-        return best;
-    }
-
-    Position Simulation::ChoosePredatorDestination(const Position origin,
-                                                   const std::vector<int>& preyCounts) {
-        Position best = origin;
-        int bestCount = -1;
-        int ties = 0;
-        const auto consider = [&](const Position position) {
-            if (!world.GetCell(position).IsAccessible()) return;
-            const auto index = static_cast<std::size_t>(position.y) * world.GetWidth()
-                             + static_cast<std::size_t>(position.x);
-            const int count = preyCounts[index];
-            if (count > bestCount) {
-                bestCount = count;
-                best = position;
-                ties = 1;
-            } else if (count == bestCount) {
-                std::uniform_int_distribution<int> pick{1, ++ties};
-                if (pick(rng) == 1) best = position;
-            }
-        };
-        consider(origin);
-        for (const Position neighbor : world.Neighbors(origin)) consider(neighbor);
-        return best;
     }
 
     void Simulation::Step() {
         if (IsFinished()) return;
         GrowVegetation(world, settings.vegetationGrowth);
         // Les herbivores se déplacent et mangent avant la chasse.
-        for (auto& animal : animals) {
-            auto* herbivore = dynamic_cast<Herbivore*>(animal.get());
-            if (!herbivore) continue;
-            herbivore->MoveTo(ChooseDestination(herbivore->GetPosition()));
-            herbivore->Feed(world);
-        }
-
-        std::vector<int> preyCounts(static_cast<std::size_t>(world.GetWidth()) * world.GetHeight());
-        for (const auto& animal : animals) {
-            if (animal->GetKind() != AnimalKind::Herbivore) continue;
-            const Position position = animal->GetPosition();
-            ++preyCounts[static_cast<std::size_t>(position.y) * world.GetWidth() + position.x];
-        }
-
-        // Chaque prédateur vise une case avec des proies et ne chasse qu'une fois.
-        for (auto& animal : animals) {
-            auto* predator = dynamic_cast<Predator*>(animal.get());
-            if (!predator) continue;
-            predator->MoveTo(ChoosePredatorDestination(predator->GetPosition(), preyCounts));
-            predator->Hunt(animals);
-        }
+        for (const TurnPhase phase : TurnPhases) PlayPhase(phase);
 
         std::vector<std::unique_ptr<Animal>> newborns;
         for (auto& animal : animals) {

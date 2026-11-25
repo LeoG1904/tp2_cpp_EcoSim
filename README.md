@@ -31,7 +31,7 @@ Avant de démarrer, cliquez sur une case et tapez la nouvelle valeur : le premie
 | Herbivores | Végétation mangée au maximum par génération |
 | Prédateurs | Énergie gagnée par proie |
 
-Les nouveau-nés gardent une énergie de 30, la reproduction coûte 30 et demande un âge d'au moins 5 générations. Le nombre d'animaux au départ dépend par défaut de la taille de l'écran. Les bornes sont définies dans `src/simulation/settings/`.
+Les nouveau-nés gardent une énergie de 30, la reproduction coûte 30 et demande un âge d'au moins 5 générations. Le nombre d'animaux au départ dépend par défaut de la taille de l'écran. Les bornes sont définies dans `src/ui/settings_form.cpp`.
 
 ## Utilisation
 
@@ -48,7 +48,7 @@ Les nouveau-nés gardent une énergie de 30, la reproduction coûte 30 et demand
 | Revenir à l'accueil, quitter ou annuler | `Échap` pendant la simulation, puis choisir **Menu**, **Quitter** ou **Annuler** |
 | Quitter depuis l'accueil | `Échap` |
 
-L'application s'ouvre sur l'accueil ; aucune simulation ne démarre avant le clic sur **Démarrer**. La simulation continue pendant la consultation du graphique tant qu'elle n'est pas en pause. Pendant la pause, **Génération +1** fait avancer le monde et les courbes d'une seule génération. La courbe jaune représente les herbivores et la courbe rouge les prédateurs. L'axe horizontal indique les générations ; une ligne marque la génération actuelle.
+L'application s'ouvre sur l'accueil ; aucune simulation ne démarre avant le clic sur **Démarrer**. La simulation continue pendant la consultation du graphique tant qu'elle n'est pas en pause. Pendant la pause, **Génération +1** fait avancer le monde et les courbes d'une seule génération. Sur la carte, les animaux glissent de leur ancienne case vers la nouvelle pendant la durée d'une génération. Seul l'affichage est animé : le moteur reste case par case. La pause fige le mouvement, et un pas manuel est animé en un quart de seconde. La courbe jaune représente les herbivores et la courbe rouge les prédateurs. L'axe horizontal indique les générations ; une ligne marque la génération actuelle.
 
 La touche `Échap` fige la simulation et affiche un choix : **Menu** revient à l'accueil, **Quitter** ferme l'application, **Annuler** reprend l'affichage. Un second appui sur `Échap` annule aussi le choix.
 
@@ -75,21 +75,40 @@ Les fichiers `.ixx` exposent les modules C++ ; leurs implémentations sont dans 
 | Emplacement | Responsabilité |
 | --- | --- |
 | `src/world/` | Cellules, terrains, accès à la grille et génération du monde. |
-| `src/animals/` | Classe de base `Animal`, comportements de `Herbivore` et de `Predator`. |
-| `src/simulation/settings/` | Module `ecosim.settings` : réglages d'une simulation, valeurs par défaut et bornes. |
-| `src/simulation/clock/` | Module `ecosim.clock` : classe `SimulationClock`, vitesses et pause. |
+| `src/animals/` | Classe de base `Animal`, interface `Habitat`, comportements de `Herbivore` et de `Predator`. |
 | `src/simulation/simulation/` | Module `ecosim.simulation` : classe `Simulation`, cycle des générations, végétation et historique des populations. |
-| `src/render/render.ixx` et `render.cpp` | Interface graphique, fenêtre, entrées et choix de l'écran. |
-| `src/render/render_home.cpp` | Affichage de l'écran d'accueil. |
-| `src/render/render_exit_dialog.cpp` | Confirmation pour revenir au menu ou quitter. |
-| `src/render/render_world.cpp` | Affichage de la carte et des animaux. |
-| `src/render/render_chart.cpp` et `layout.hpp` | Graphique des populations et placement des éléments. |
-| `src/app/main.cpp` | Initialisation du monde et boucle de l'application. |
-| `tests/` | Tests des règles du monde, des animaux, de l'horloge et de l'historique. |
+| `src/simulation/settings/` | Module `ecosim.settings` : réglages d'une simulation et valeurs par défaut. |
+| `src/simulation/clock/` | Module `ecosim.clock` : classe `SimulationClock`, vitesses et pause. |
+| `src/core/` | Module `ecosim` : entrée publique du moteur. |
+| `src/ui/application.*` | Déroulement de l'application et interfaces `InputSource` et `View`. |
+| `src/ui/controller.*` et `layout.hpp` | Navigation entre les écrans, clics et placement des éléments. |
+| `src/ui/settings_form.*` | Libellés, limites et saisie des réglages. |
+| `src/ui/animation.*` | Animation d'un pas manuel et des naissances. |
+| `src/render/window.*` | Fenêtre Windows et messages. |
+| `src/render/win32_input.*` | Lecture du clavier et de la souris. |
+| `src/render/render*` | `Renderer2D` : dessin de l'accueil, de la carte, des courbes et de la confirmation. |
+| `src/app/main.cpp` | Assemblage des objets et boucle principale. |
+| `tests/` | Tests du monde, des animaux, de la simulation, de l'horloge et de la logique d'interface. |
+
+### Trois couches
+
+| Cible CMake | Contenu | Dépend de |
+| --- | --- | --- |
+| `ecosim_core` | Moteur : monde, animaux, simulation, horloge | bibliothèque standard |
+| `ecosim_ui` | Logique d'interface en C++ pur | `ecosim_core` |
+| `EcoSim` | Fenêtre, entrées et dessin Win32/GDI | `ecosim_ui`, `user32`, `gdi32` |
+
+Les tests ne compilent aucun code Windows. Le moteur peut être construit seul avec `cmake --build cmake-build-debug --target ecosim_core`. Un autre rendu doit implémenter `View` et `InputSource`, sans modifier `Application` ni le moteur.
+
+### Ajouter une espèce
+
+Le comportement tient dans une nouvelle classe dérivée d'`Animal` : phase du tour, choix de la destination, nourriture et descendance. Il faut aussi ajouter sa valeur à `AnimalKind` et sa création dans `MakeAnimal` (`population.cpp`). Les réglages, l'historique des populations, l'accueil, la carte et les courbes sont encore prévus pour deux espèces et doivent être complétés.
 
 ## Conventions de code
 
 Pour garder le code facile à lire dans le cadre du TP, on évite `std::span` et `std::string_view`. On utilise `std::string` pour les textes et des références à `std::vector` pour accéder aux collections sans les copier : `const std::vector<T>&` en lecture, `std::vector<T>&` si une modification est nécessaire.
+
+Les textes sont en UTF-8. Seule exception : les fonctions Windows attendent des caractères larges. La conversion en `std::wstring` est faite uniquement dans `src/render/text.cpp` ; les noms de police et de classe de fenêtre, passés directement à Windows, restent des littéraux `L"…"`.
 
 ## Lancer les tests
 

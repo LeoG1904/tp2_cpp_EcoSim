@@ -15,6 +15,10 @@ export namespace ecosim {
         void SetPaused(bool value);
         bool IsPaused() const;
         int Advance(double realSeconds);
+        // Part écoulée de la génération en cours, de 0 à 1.
+        double Progress() const;
+        // Replace l'horloge à un point de la génération en cours, de 0 à 1.
+        void SetProgress(double fraction);
 
     private:
         int speed{1};

@@ -4,7 +4,7 @@ module;
 #define NOMINMAX
 #include <windows.h>
 
-#include "layout.hpp"
+#include "../ui/layout.hpp"
 
 module ecosim.render;
 
@@ -34,31 +34,27 @@ namespace ecosim {
                                            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                                            CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Segoe UI");
         const HGDIOBJ previousFont = SelectObject(buffer, titleFont);
-        const auto writeCentered = [&](const std::wstring& value, const int y) {
-            SIZE size{};
-            GetTextExtentPoint32W(buffer, value.c_str(), static_cast<int>(value.size()), &size);
-            TextOutW(buffer, centerX - size.cx / 2, y, value.c_str(), static_cast<int>(value.size()));
+        const auto writeCentered = [&](const std::string& value, const int y) {
+            const TextSize size = MeasureText(buffer, value);
+            WriteText(buffer, centerX - size.cx / 2, y, value);
         };
         SetTextColor(buffer, RGB(239, 246, 242));
-        writeCentered(L"Quitter la simulation ?", centerY - 86);
+        writeCentered("Quitter la simulation ?", centerY - 86);
         SelectObject(buffer, textFont);
-        writeCentered(L"Revenir au menu ou fermer EcoSim ?", centerY - 26);
+        writeCentered("Revenir au menu ou fermer EcoSim ?", centerY - 26);
 
         const auto drawButton = [&](const UiRect button, const COLORREF color,
-                                    const std::wstring& label) {
+                                    const std::string& label) {
             const RECT rect{button.x, button.y, button.x + button.width, button.y + button.height};
             const HBRUSH brush = CreateSolidBrush(color);
             FillRect(buffer, &rect, brush);
             DeleteObject(brush);
-            SIZE size{};
-            GetTextExtentPoint32W(buffer, label.c_str(), static_cast<int>(label.size()), &size);
-            TextOutW(buffer, button.x + (button.width - size.cx) / 2,
-                     button.y + (button.height - size.cy) / 2,
-                     label.c_str(), static_cast<int>(label.size()));
+            const TextSize size = MeasureText(buffer, label);
+            WriteText(buffer, button.x + (button.width - size.cx) / 2, button.y + (button.height - size.cy) / 2, label);
         };
-        drawButton(ExitMenuButton(windowWidth, windowHeight), RGB(62, 148, 105), L"Menu");
-        drawButton(ExitQuitButton(windowWidth, windowHeight), RGB(166, 77, 72), L"Quitter");
-        drawButton(ExitCancelButton(windowWidth, windowHeight), RGB(55, 64, 77), L"Annuler");
+        drawButton(ExitMenuButton(windowWidth, windowHeight), RGB(62, 148, 105), "Menu");
+        drawButton(ExitQuitButton(windowWidth, windowHeight), RGB(166, 77, 72), "Quitter");
+        drawButton(ExitCancelButton(windowWidth, windowHeight), RGB(55, 64, 77), "Annuler");
         SelectObject(buffer, previousFont);
         DeleteObject(titleFont);
         DeleteObject(textFont);

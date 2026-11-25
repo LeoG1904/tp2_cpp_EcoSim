@@ -4,12 +4,13 @@ module;
 #define NOMINMAX
 #include <windows.h>
 
-#include "layout.hpp"
+#include "../ui/layout.hpp"
 
 module ecosim.render;
 
 import std;
 import ecosim.simulation;
+import ecosim.animation;
 
 using namespace ecosim_render_detail;
 
@@ -24,19 +25,99 @@ namespace {
         return RGB(static_cast<int>(150 - ratio * 90),
                    static_cast<int>(110 + ratio * 90), 70);
     }
+
+    struct Marker {
+        int x;
+        int y;
+        int radius;
+        ecosim::AnimalKind kind;
+        int count;
+    };
+
+    // Un rond par groupe d'animaux, placé entre l'ancienne et la nouvelle case.
+    std::vector<Marker> AnimalMarkers(const std::vector<ecosim::AnimalSnapshot>& animals,
+                                      const ecosim::World& world, const int cellSize,
+                                      const double progress) {
+        const auto indexOf = [&](const ecosim::Position position) {
+            return static_cast<std::size_t>(position.y) * world.GetWidth()
+                 + static_cast<std::size_t>(position.x);
+        };
+        const std::size_t cellCount = static_cast<std::size_t>(world.GetWidth()) * world.GetHeight();
+        // Un bit par espèce, au départ et à l'arrivée : les deux espèces se partagent la case.
+        std::vector<unsigned char> before(cellCount);
+        std::vector<unsigned char> after(cellCount);
+        const auto bit = [](const ecosim::AnimalKind kind) {
+            return static_cast<unsigned char>(kind == ecosim::AnimalKind::Herbivore ? 1 : 2);
+        };
+        for (const auto& animal : animals) {
+            before[indexOf(animal.previousPosition)] |= bit(animal.kind);
+            after[indexOf(animal.position)] |= bit(animal.kind);
+        }
+
+        const auto anchor = [&](const ecosim::Position position, const ecosim::AnimalKind kind,
+                                const std::vector<unsigned char>& occupancy) {
+            const bool shared = occupancy[indexOf(position)] == 3;
+            const int offset = !shared ? cellSize / 2
+                : kind == ecosim::AnimalKind::Herbivore ? cellSize / 4 : 3 * cellSize / 4;
+            return Marker{position.x * cellSize + offset, position.y * cellSize + cellSize / 2,
+                          shared ? cellSize / 5 : cellSize * 36 / 100, kind, 1};
+        };
+        const auto between = [&](const int from, const int to) {
+            return from + static_cast<int>(std::lround((to - from) * progress));
+        };
+
+        // Les animaux qui font le même trajet avancent ensemble.
+        std::map<std::tuple<std::size_t, std::size_t, ecosim::AnimalKind>, Marker> trips;
+        for (const auto& animal : animals) {
+            const auto key = std::tuple{indexOf(animal.previousPosition), indexOf(animal.position),
+                                        animal.kind};
+            if (const auto found = trips.find(key); found != trips.end()) {
+                ++found->second.count;
+                continue;
+            }
+            const Marker from = anchor(animal.previousPosition, animal.kind, before);
+            const Marker to = anchor(animal.position, animal.kind, after);
+            trips.emplace(key, Marker{between(from.x, to.x), between(from.y, to.y),
+                                      between(from.radius, to.radius), animal.kind, 1});
+        }
+
+        // Des ronds presque superposés n'en forment qu'un, pour garder un compte lisible.
+        std::vector<Marker> markers;
+        std::vector<std::vector<std::size_t>> nearby(cellCount);
+        for (const auto& [key, trip] : trips) {
+            const int cellX = std::clamp(trip.x / cellSize, 0, world.GetWidth() - 1);
+            const int cellY = std::clamp(trip.y / cellSize, 0, world.GetHeight() - 1);
+            Marker* match = nullptr;
+            for (int y = std::max(0, cellY - 1); y <= std::min(world.GetHeight() - 1, cellY + 1); ++y) {
+                for (int x = std::max(0, cellX - 1); x <= std::min(world.GetWidth() - 1, cellX + 1); ++x) {
+                    for (const std::size_t i : nearby[indexOf({x, y})]) {
+                        Marker& other = markers[i];
+                        if (!match && other.kind == trip.kind
+                            && std::abs(other.x - trip.x) <= trip.radius / 2
+                            && std::abs(other.y - trip.y) <= trip.radius / 2) {
+                            match = &other;
+                        }
+                    }
+                }
+            }
+            if (match) {
+                match->count += trip.count;
+            } else {
+                nearby[indexOf({cellX, cellY})].push_back(markers.size());
+                markers.push_back(trip);
+            }
+        }
+        return markers;
+    }
 }
 
 namespace ecosim {
-    void Renderer2D::DrawWorld(const Simulation& simulation, const int speed, const bool paused) const {
+    void Renderer2D::DrawWorld(const Simulation& simulation, const int speed, const bool paused,
+                               const double progress) const {
         const World& world = simulation.GetWorld();
-        std::vector<int> herbivores(static_cast<std::size_t>(world.GetWidth()) * world.GetHeight());
-        std::vector<int> predators(herbivores.size());
-        for (const auto& animal : simulation.Animals()) {
-            const auto index = static_cast<std::size_t>(animal.position.y) * world.GetWidth()
-                             + static_cast<std::size_t>(animal.position.x);
-            if (animal.kind == AnimalKind::Herbivore) ++herbivores[index];
-            else if (animal.kind == AnimalKind::Predator) ++predators[index];
-        }
+        std::vector<AnimalSnapshot> animals = simulation.Animals();
+        AttachNewbornsToParents(animals);
+        const std::vector<Marker> markers = AnimalMarkers(animals, world, cellSize, progress);
         const auto hwnd = static_cast<HWND>(window);
         const HDC screen = GetDC(hwnd);
         const HDC buffer = CreateCompatibleDC(screen);
@@ -62,34 +143,15 @@ namespace ecosim {
         const HGDIOBJ previousBrush = SelectObject(buffer, animalBrush);
         const HGDIOBJ previousPen = SelectObject(buffer, GetStockObject(NULL_PEN));
         SetBkMode(buffer, TRANSPARENT);
-        for (int y = 0; y < world.GetHeight(); ++y) {
-            for (int x = 0; x < world.GetWidth(); ++x) {
-                const auto index = static_cast<std::size_t>(y) * world.GetWidth() + x;
-                const int herbivoreCount = herbivores[index];
-                const int predatorCount = predators[index];
-                if (herbivoreCount == 0 && predatorCount == 0) continue;
-                const bool shared = herbivoreCount > 0 && predatorCount > 0;
-                const int centerY = y * cellSize + cellSize / 2;
-                const int radius = shared ? cellSize / 5 : cellSize * 36 / 100;
-                const auto drawAnimal = [&](const int count, const int centerX,
-                                            const HBRUSH brush) {
-                    if (count == 0) return;
-                    SelectObject(buffer, brush);
-                    Ellipse(buffer, centerX - radius, centerY - radius,
-                            centerX + radius, centerY + radius);
-                    if (count > 1) {
-                        const std::wstring label = std::to_wstring(count);
-                        SIZE extent{};
-                        GetTextExtentPoint32W(buffer, label.c_str(), static_cast<int>(label.size()), &extent);
-                        SetTextColor(buffer, RGB(30, 30, 30));
-                        TextOutW(buffer, centerX - extent.cx / 2, centerY - extent.cy / 2,
-                                 label.c_str(), static_cast<int>(label.size()));
-                    }
-                };
-                drawAnimal(herbivoreCount, x * cellSize + (shared ? cellSize / 4 : cellSize / 2),
-                           animalBrush);
-                drawAnimal(predatorCount, x * cellSize + (shared ? 3 * cellSize / 4 : cellSize / 2),
-                           predatorBrush);
+        for (const Marker& marker : markers) {
+            SelectObject(buffer, marker.kind == AnimalKind::Herbivore ? animalBrush : predatorBrush);
+            Ellipse(buffer, marker.x - marker.radius, marker.y - marker.radius,
+                    marker.x + marker.radius, marker.y + marker.radius);
+            if (marker.count > 1) {
+                const std::string label = std::to_string(marker.count);
+                const TextSize extent = MeasureText(buffer, label);
+                SetTextColor(buffer, RGB(30, 30, 30));
+                WriteText(buffer, marker.x - extent.cx / 2, marker.y - extent.cy / 2, label);
             }
         }
         SelectObject(buffer, previousPen);
@@ -97,16 +159,16 @@ namespace ecosim {
         DeleteObject(animalBrush);
         DeleteObject(predatorBrush);
 
-        std::wstring status;
-        if (simulation.IsFinished()) status = L"Fin de la simulation : plus aucun animal";
-        else if (paused) status = std::format(L"En pause   Vitesse x{}   (flèche droite ou haut : avancer ; Tab : vitesse)", speed);
-        else status = std::format(L"Vitesse x{}   (Tab ou touches 1 à 4 : x1 x2 x5 x10 ; Échap : options)", speed);
-        const auto hud = std::format(L"Génération {}   Herbivores {}   Prédateurs {}",
+        std::string status;
+        if (simulation.IsFinished()) status = "Fin de la simulation : plus aucun animal";
+        else if (paused) status = std::format("En pause   Vitesse x{}   (flèche droite ou haut : avancer ; Tab : vitesse)", speed);
+        else status = std::format("Vitesse x{}   (Tab ou touches 1 à 4 : x1 x2 x5 x10 ; Échap : options)", speed);
+        const auto hud = std::format("Génération {}   Herbivores {}   Prédateurs {}",
                                      simulation.GetGeneration(), simulation.HerbivoreCount(),
                                      simulation.PredatorCount());
         SetTextColor(buffer, RGB(255, 255, 255));
-        TextOutW(buffer, 10, 10, hud.c_str(), static_cast<int>(hud.size()));
-        TextOutW(buffer, 10, 30, status.c_str(), static_cast<int>(status.size()));
+        WriteText(buffer, 10, 10, hud);
+        WriteText(buffer, 10, 30, status);
         const UiRect button = GraphButton(windowWidth);
         const RECT buttonRect{button.x, button.y, button.x + button.width, button.y + button.height};
         const HBRUSH buttonBrush = CreateSolidBrush(RGB(55, 64, 77));
@@ -118,21 +180,20 @@ namespace ecosim {
             const UiRect pause = PauseButton(windowWidth, false);
             const RECT pauseRect{pause.x, pause.y, pause.x + pause.width, pause.y + pause.height};
             FillRect(buffer, &pauseRect, buttonBrush);
-            const std::wstring label = paused ? L"Reprendre" : L"Pause";
-            TextOutW(buffer, pause.x + 20, pause.y + 9, label.c_str(), static_cast<int>(label.size()));
+            const std::string label = paused ? "Reprendre" : "Pause";
+            WriteText(buffer, pause.x + 20, pause.y + 9, label);
             if (paused) {
                 const UiRect next = NextButton(windowWidth, false);
                 const RECT nextRect{next.x, next.y, next.x + next.width, next.y + next.height};
                 FillRect(buffer, &nextRect, buttonBrush);
-                const std::wstring nextLabel = L"Génération +1";
-                TextOutW(buffer, next.x + 20, next.y + 9, nextLabel.c_str(),
-                         static_cast<int>(nextLabel.size()));
+                const std::string nextLabel = "Génération +1";
+                WriteText(buffer, next.x + 20, next.y + 9, nextLabel);
             }
         }
         DeleteObject(buttonBrush);
-        TextOutW(buffer, button.x + 20, button.y + 9, L"Courbes", 7);
-        TextOutW(buffer, restart.x + 20, restart.y + 9, L"Recommencer", 11);
-        if (showingExitDialog) DrawExitDialog(buffer);
+        WriteText(buffer, button.x + 20, button.y + 9, "Courbes");
+        WriteText(buffer, restart.x + 20, restart.y + 9, "Recommencer");
+        if (controller.IsExitDialogOpen()) DrawExitDialog(buffer);
         BitBlt(screen, 0, 0, windowWidth, windowHeight, buffer, 0, 0, SRCCOPY);
         SelectObject(buffer, previous);
         DeleteObject(bitmap);

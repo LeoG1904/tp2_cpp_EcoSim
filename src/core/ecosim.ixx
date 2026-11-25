@@ -1,4 +1,4 @@
-// Entrée publique : réexporte les domaines du projet.
+// Entrée publique du moteur : aucun module d'interface ou d'affichage.
 export module ecosim;
 
 import std;
@@ -9,7 +9,6 @@ export import ecosim.predator;
 export import ecosim.clock;
 export import ecosim.settings;
 export import ecosim.simulation;
-export import ecosim.render;
 
 export namespace ecosim {
     inline std::string Version() { return "0.1.0"; }

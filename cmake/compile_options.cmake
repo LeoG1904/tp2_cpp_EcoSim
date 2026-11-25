@@ -2,6 +2,7 @@ function(compile_options TARGET_NAME )
     if(MSVC)
         target_compile_options(${TARGET_NAME} PRIVATE
                 /nologo
+                /utf-8
                 /W2
                 /WX
                 /std:c++latest

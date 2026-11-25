@@ -2,21 +2,33 @@ module ecosim.simulation;
 
 import std;
 
+namespace {
+    // Seul endroit du moteur qui associe une espèce à sa classe.
+    std::unique_ptr<ecosim::Animal> MakeAnimal(const ecosim::AnimalKind kind, const std::uint64_t id,
+                                                const ecosim::Position position, const int energy,
+                                                const ecosim::AnimalTraits& traits) {
+        switch (kind) {
+            case ecosim::AnimalKind::Herbivore:
+                return std::make_unique<ecosim::Herbivore>(id, position, energy, traits);
+            case ecosim::AnimalKind::Predator:
+                return std::make_unique<ecosim::Predator>(id, position, energy, traits);
+        }
+        throw std::invalid_argument{"Espèce inconnue"};
+    }
+}
+
 namespace ecosim {
     const World& Simulation::GetWorld() const { return world; }
     int Simulation::GetGeneration() const { return generation; }
 
-    std::size_t Simulation::HerbivoreCount() const {
-        return static_cast<std::size_t>(std::ranges::count_if(animals, [](const auto& animal) {
-            return animal->GetKind() == AnimalKind::Herbivore;
+    std::size_t Simulation::Count(const AnimalKind kind) const {
+        return static_cast<std::size_t>(std::ranges::count_if(animals, [kind](const auto& animal) {
+            return animal->GetKind() == kind;
         }));
     }
 
-    std::size_t Simulation::PredatorCount() const {
-        return static_cast<std::size_t>(std::ranges::count_if(animals, [](const auto& animal) {
-            return animal->GetKind() == AnimalKind::Predator;
-        }));
-    }
+    std::size_t Simulation::HerbivoreCount() const { return Count(AnimalKind::Herbivore); }
+    std::size_t Simulation::PredatorCount() const { return Count(AnimalKind::Predator); }
 
     bool Simulation::IsFinished() const { return animals.empty(); }
 
@@ -25,7 +37,8 @@ namespace ecosim {
         result.reserve(animals.size());
         for (const auto& animal : animals) {
             result.push_back({animal->GetId(), animal->GetPosition(), animal->GetKind(),
-                              animal->GetAge(), animal->GetEnergy()});
+                              animal->GetAge(), animal->GetEnergy(),
+                              animal->GetPreviousPosition(), animal->GetParentId()});
         }
         return result;
     }
@@ -34,14 +47,21 @@ namespace ecosim {
         return populationHistory;
     }
 
-    void Simulation::AddHerbivore(const Position position, const std::optional<int> energy) {
+    void Simulation::AddAnimal(const AnimalKind kind, const Position position,
+                               const std::optional<int> energy) {
         if (!world.IsInside(position) || !world.GetCell(position).IsAccessible()) {
-            throw std::invalid_argument{"Un herbivore doit naître sur une prairie"};
+            throw std::invalid_argument{"Un animal doit naître sur une prairie"};
         }
-        animals.push_back(std::make_unique<Herbivore>(nextId, position,
-            energy.value_or(settings.herbivore.startingEnergy), settings.herbivore));
+        const AnimalTraits& traits = TraitsOf(settings, kind);
+        animals.push_back(MakeAnimal(kind, nextId, position,
+                                     energy.value_or(traits.startingEnergy), traits));
         ++nextId;
-        ++populationHistory.back().herbivores;
+        populationHistory.back().herbivores = HerbivoreCount();
+        populationHistory.back().predators = PredatorCount();
+    }
+
+    void Simulation::AddHerbivore(const Position position, const std::optional<int> energy) {
+        AddAnimal(AnimalKind::Herbivore, position, energy);
     }
 
     void Simulation::SeedHerbivores(const int count) {
@@ -49,13 +69,7 @@ namespace ecosim {
     }
 
     void Simulation::AddPredator(const Position position, const std::optional<int> energy) {
-        if (!world.IsInside(position) || !world.GetCell(position).IsAccessible()) {
-            throw std::invalid_argument{"Un prédateur doit naître sur une prairie"};
-        }
-        animals.push_back(std::make_unique<Predator>(nextId, position,
-            energy.value_or(settings.predator.startingEnergy), settings.predator));
-        ++nextId;
-        ++populationHistory.back().predators;
+        AddAnimal(AnimalKind::Predator, position, energy);
     }
 
     void Simulation::SeedPredators(const int count) {
@@ -77,9 +91,7 @@ namespace ecosim {
 
         std::uniform_int_distribution<std::size_t> pick{0, accessible.size() - 1};
         for (int i = 0; i < count; ++i) {
-            const Position position = accessible[pick(rng)];
-            if (kind == AnimalKind::Herbivore) AddHerbivore(position);
-            else AddPredator(position);
+            AddAnimal(kind, accessible[pick(rng)]);
         }
     }
 }

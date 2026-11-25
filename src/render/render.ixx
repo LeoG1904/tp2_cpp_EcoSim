@@ -1,54 +1,39 @@
-// Interface d'affichage : le monde ne dépend d'aucune bibliothèque graphique.
+// Rendu 2D avec Win32/GDI : dessine l'état sans le modifier.
 export module ecosim.render;
 
 import std;
-import ecosim.simulation;
+export import ecosim.application;
+export import ecosim.window;
+
+// Outils internes au rendu (non exportés) : tout le texte passe par ces deux fonctions.
+namespace ecosim {
+    struct TextSize {
+        int cx;
+        int cy;
+    };
+
+    void WriteText(void* context, int x, int y, const std::string& text);
+    TextSize MeasureText(void* context, const std::string& text);
+}
 
 export namespace ecosim {
-    enum class UiAction { None, StartOrRestart, TogglePause, NextGeneration,
-                          CycleSpeed, ResetSettings,
-                          CancelExit, ReturnHome, Quit };
-
-    class Renderer2D {
+    class Renderer2D final : public View {
     public:
-        Renderer2D(int cellSize, const char* title);
-        ~Renderer2D();
+        // window et controller doivent rester valides pendant la vie du rendu.
+        Renderer2D(const Win32Window& window, const UiController& controller, int cellSize);
 
-        Renderer2D(const Renderer2D&) = delete;
-        Renderer2D& operator=(const Renderer2D&) = delete;
-
-        int GetWidth() const;
-        int GetHeight() const;
-        bool ShouldClose() const;
-        bool IsExitDialogOpen() const;
-        double FrameTime() const;
-        std::optional<int> SpeedKeyPressed() const;
-        // Sur l'accueil, la saisie au clavier modifie directement les réglages.
-        UiAction HandleInput(bool isHomeScreen, bool paused, SimulationSettings& settings);
-        void DrawHome(SimulationSettings settings) const;
-        void Draw(const Simulation& simulation, int speed, bool paused) const;
+        void DrawHome(const SimulationSettings& settings) override;
+        void DrawSimulation(const Simulation& simulation, const PlaybackState& playback) override;
 
     private:
-        void HandleSettingsKeys(std::span<const int> keys, SimulationSettings& settings);
-        void HandleSettingsClick(int mouseX, int mouseY, SimulationSettings& settings);
-        void DrawWorld(const Simulation& simulation, int speed, bool paused) const;
+        void DrawWorld(const Simulation& simulation, int speed, bool paused, double progress) const;
         void DrawGraph(const Simulation& simulation, int speed, bool paused) const;
         void DrawExitDialog(void* context) const;
 
+        const UiController& controller;
         int cellSize;
-        int windowWidth{0};
-        int windowHeight{0};
-        void* window{};
-        bool showingGraph{false};
-        bool showingExitDialog{false};
-        bool leftMouseDown{false};
-        bool spaceWasDown{false};
-        bool escapeWasDown{false};
-        bool tabWasDown{false};
-        bool rightWasDown{false};
-        bool upWasDown{false};
-        SettingEditor settingEditor;
-        mutable bool closed{false};
-        mutable std::chrono::steady_clock::time_point lastFrame{};
+        int windowWidth;
+        int windowHeight;
+        void* window;
     };
 }

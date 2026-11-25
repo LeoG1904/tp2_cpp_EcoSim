@@ -12,7 +12,13 @@ export namespace ecosim {
         Herbivore(std::uint64_t id, Position position, int energy = StartingEnergy,
                   const AnimalTraits& traits = {});
         AnimalKind GetKind() const override;
-        void Feed(World& world);
-        std::unique_ptr<Animal> CreateOffspring(std::uint64_t id) const override;
+        TurnPhase Phase() const override;
+        bool IsPrey() const override;
+        // Va vers la végétation la plus abondante.
+        Position ChooseDestination(const Habitat& habitat, std::mt19937& rng) const override;
+        void Feed(Habitat& habitat) override;
+
+    protected:
+        std::unique_ptr<Animal> MakeOffspring(std::uint64_t id) const override;
     };
 }

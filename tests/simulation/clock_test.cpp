@@ -63,3 +63,28 @@ TEST_CASE("Tab parcourt les vitesses puis revient a x1", "[clock]") {
         REQUIRE(clock.GetSpeed() == expected);
     }
 }
+
+TEST_CASE("La progression suit la generation en cours", "[clock]") {
+    SimulationClock clock;
+    REQUIRE(clock.Progress() == 0.0);
+    REQUIRE(clock.Advance(0.25) == 0);
+    REQUIRE(clock.Progress() == 0.25);
+    REQUIRE(clock.Advance(1.0) == 1);
+    REQUIRE(clock.Progress() == 0.25);
+
+    clock.SetPaused(true);
+    clock.Advance(10.0);
+    REQUIRE(clock.Progress() == 0.25);
+}
+
+TEST_CASE("L'horloge peut etre replacee dans la generation en cours", "[clock]") {
+    SimulationClock clock;
+    clock.SetProgress(0.75);
+    REQUIRE(clock.Progress() == 0.75);
+    REQUIRE(clock.Advance(0.25) == 1);
+
+    clock.SetProgress(3.0);
+    REQUIRE(clock.Progress() == 1.0);
+    clock.SetProgress(-1.0);
+    REQUIRE(clock.Progress() == 0.0);
+}

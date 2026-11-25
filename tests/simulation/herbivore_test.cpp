@@ -70,3 +70,15 @@ TEST_CASE("La naissance crée un animal distinct qui attend la génération suiv
     REQUIRE(animals[1].age == 0);
     REQUIRE(animals[1].position == animals[0].position);
 }
+
+TEST_CASE("Chaque animal garde sa case precedente pour l'animation", "[herbivore]") {
+    World world{2, 1};
+    world.GetCell({1, 0}).SetVegetation(50);
+    Simulation simulation{std::move(world), std::mt19937{2}};
+    simulation.AddHerbivore({0, 0});
+    REQUIRE(simulation.Animals().front().previousPosition == Position{0, 0});
+
+    simulation.Step();
+    REQUIRE(simulation.Animals().front().previousPosition == Position{0, 0});
+    REQUIRE(simulation.Animals().front().position == Position{1, 0});
+}

@@ -9,18 +9,19 @@ namespace ecosim {
 
     AnimalKind Predator::GetKind() const { return AnimalKind::Predator; }
 
-    void Predator::Hunt(std::vector<std::unique_ptr<Animal>>& animals) {
-        for (const auto& prey : animals) {
-            if (prey->GetKind() == AnimalKind::Herbivore && prey->IsAlive()
-                && prey->GetPosition() == GetPosition()) {
-                prey->Die();
-                GainEnergy(GetTraits().foodEnergy);
-                return;
-            }
-        }
+    TurnPhase Predator::Phase() const { return TurnPhase::Hunting; }
+
+    Position Predator::ChooseDestination(const Habitat& habitat, std::mt19937& rng) const {
+        return BestAccessiblePosition(habitat.GetWorld(), [&habitat](const Position position) {
+            return habitat.PreyCount(position);
+        }, rng);
     }
 
-    std::unique_ptr<Animal> Predator::CreateOffspring(const std::uint64_t id) const {
+    void Predator::Feed(Habitat& habitat) {
+        if (habitat.CatchPrey(GetPosition())) GainEnergy(GetTraits().foodEnergy);
+    }
+
+    std::unique_ptr<Animal> Predator::MakeOffspring(const std::uint64_t id) const {
         return std::make_unique<Predator>(id, GetPosition(), 30, GetTraits());
     }
 }

@@ -33,42 +33,49 @@ set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 # Répertoire contenant les sources des tests unitaires
 set(TESTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
-# Découvrir les sources et relancer CMake lors de leur ajout ou suppression
-# Note : la recherche est récursive, les sous-répertoires sont pris en compte
-file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
-        "${SRC_DIR}/*.cpp"
-)
-file(GLOB_RECURSE MODULE_FILES CONFIGURE_DEPENDS
-        "${SRC_DIR}/*.ixx"
-)
-file(GLOB_RECURSE TEST_FILES CONFIGURE_DEPENDS
-        "${TESTS_DIR}/*.cpp"
-)
+# Découvrir les sources et relancer CMake lors de leur ajout ou suppression.
+# Chaque couche est une cible distincte : une dépendance interdite ne compile pas.
+function(ecosim_sources SOURCES_VAR MODULES_VAR)
+    set(cpp_patterns "")
+    set(module_patterns "")
+    foreach(directory IN LISTS ARGN)
+        list(APPEND cpp_patterns "${SRC_DIR}/${directory}/*.cpp")
+        list(APPEND module_patterns "${SRC_DIR}/${directory}/*.ixx")
+    endforeach()
+    file(GLOB_RECURSE sources CONFIGURE_DEPENDS ${cpp_patterns})
+    file(GLOB_RECURSE modules CONFIGURE_DEPENDS ${module_patterns})
+    set(${SOURCES_VAR} ${sources} PARENT_SCOPE)
+    set(${MODULES_VAR} ${modules} PARENT_SCOPE)
+endfunction()
 
-# Les tests utilisent le main fourni par Catch2
-set(TEST_SRC_FILES ${SRC_FILES} ${TEST_FILES})
-list(FILTER TEST_SRC_FILES EXCLUDE REGEX "(^|[/\\\\])main\\.cpp$")
+ecosim_sources(CORE_SOURCES CORE_MODULES core world animals simulation)
+ecosim_sources(UI_SOURCES UI_MODULES ui)
+ecosim_sources(APP_SOURCES APP_MODULES render app)
 
-# Exécutable principal
-add_executable(${PROJECT_NAME} ${SRC_FILES})
-target_sources(${PROJECT_NAME}
-        PUBLIC
-        FILE_SET CXX_MODULES
-        FILES
-        ${MODULE_FILES}
-)
+# Moteur de simulation : utilisable sans affichage
+add_library(ecosim_core STATIC ${CORE_SOURCES})
+target_sources(ecosim_core PUBLIC FILE_SET CXX_MODULES FILES ${CORE_MODULES})
+compile_options(ecosim_core)
+
+# Logique d'interface en C++ pur : navigation, formulaire, animation, interfaces de rendu
+add_library(ecosim_ui STATIC ${UI_SOURCES})
+target_sources(ecosim_ui PUBLIC FILE_SET CXX_MODULES FILES ${UI_MODULES})
+compile_options(ecosim_ui)
+target_link_libraries(ecosim_ui ecosim_core)
+
+# Exécutable principal : seule cible qui contient le code Windows
+add_executable(${PROJECT_NAME} ${APP_SOURCES})
+target_sources(${PROJECT_NAME} PRIVATE FILE_SET CXX_MODULES FILES ${APP_MODULES})
 compile_options(${PROJECT_NAME})
-target_link_libraries(${PROJECT_NAME} user32 gdi32)
+target_link_libraries(${PROJECT_NAME} ecosim_ui user32 gdi32)
 
-# Exécutable et liste des fichiers sources des tests unitaires
+# Tests unitaires : ils n'embarquent pas le rendu Windows
 if(ECOSIM_BUILD_TESTS)
     include(cmake/catch2.cmake)
-    add_executable(tests ${TEST_SRC_FILES})
-    target_sources(tests PUBLIC FILE_SET CXX_MODULES FILES ${MODULE_FILES})
-    target_link_libraries(tests PRIVATE Catch2::Catch2WithMain std-cxx-modules)
-    target_link_libraries(tests PRIVATE user32 gdi32)
+    file(GLOB_RECURSE TEST_FILES CONFIGURE_DEPENDS "${TESTS_DIR}/*.cpp")
+    add_executable(tests ${TEST_FILES})
+    target_link_libraries(tests PRIVATE ecosim_ui Catch2::Catch2WithMain)
     include(CTest)
     # Sous Windows, la découverte Catch2 corrompt les noms accentués lors du filtrage CTest.
     add_test(NAME EcoSimSuite COMMAND tests)
 endif()
-
