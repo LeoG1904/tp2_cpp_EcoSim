@@ -29,7 +29,6 @@ export namespace ecosim {
         void PayReproductionCost();
 
         virtual AnimalKind GetKind() const = 0;
-        virtual void Feed(World& world, std::span<const std::unique_ptr<Animal>> animals) = 0;
         virtual std::unique_ptr<Animal> CreateOffspring(std::uint64_t id) const = 0;
 
     protected:

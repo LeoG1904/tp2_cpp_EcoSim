@@ -11,7 +11,7 @@ export namespace ecosim {
 
         Herbivore(std::uint64_t id, Position position, int energy = StartingEnergy);
         AnimalKind GetKind() const override;
-        void Feed(World& world, std::span<const std::unique_ptr<Animal>> animals) override;
+        void Feed(World& world);
         std::unique_ptr<Animal> CreateOffspring(std::uint64_t id) const override;
     };
 }

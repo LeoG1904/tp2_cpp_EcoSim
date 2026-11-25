@@ -12,7 +12,7 @@ export namespace ecosim {
 
         Predator(std::uint64_t id, Position position, int energy = StartingEnergy);
         AnimalKind GetKind() const override;
-        void Feed(World& world, std::span<const std::unique_ptr<Animal>> animals) override;
+        void Hunt(std::vector<std::unique_ptr<Animal>>& animals);
         std::unique_ptr<Animal> CreateOffspring(std::uint64_t id) const override;
     };
 }

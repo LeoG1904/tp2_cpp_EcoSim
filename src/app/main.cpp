@@ -21,10 +21,11 @@ int main() {
     ecosim::SimulationClock clock;
 
     while (!renderer.ShouldClose()) {
+        renderer.HandleInput();
         if (const auto speed = renderer.SpeedKeyPressed()) {
             clock.SetSpeed(*speed);
         }
-        // Chaque génération fait évoluer la végétation et les herbivores.
+        // La simulation continue pendant la consultation des courbes.
         const int steps = clock.Advance(renderer.FrameTime());
         for (int i = 0; i < steps; ++i) {
             simulation.Step();

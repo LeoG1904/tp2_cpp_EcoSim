@@ -8,7 +8,7 @@ namespace ecosim {
 
     AnimalKind Predator::GetKind() const { return AnimalKind::Predator; }
 
-    void Predator::Feed(World&, const std::span<const std::unique_ptr<Animal>> animals) {
+    void Predator::Hunt(std::vector<std::unique_ptr<Animal>>& animals) {
         for (const auto& prey : animals) {
             if (prey->GetKind() == AnimalKind::Herbivore && prey->IsAlive()
                 && prey->GetPosition() == GetPosition()) {
