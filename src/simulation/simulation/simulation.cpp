@@ -9,10 +9,33 @@ namespace {
         PhaseHabitat(ecosim::World& world, std::vector<std::unique_ptr<ecosim::Animal>>& animals,
                      ecosim::SimulationStats& stats)
             : world{world}, animals{animals}, stats{stats},
-              preyCounts(static_cast<std::size_t>(world.GetWidth()) * world.GetHeight()) {
+              preyCounts(static_cast<std::size_t>(world.GetWidth()) * world.GetHeight()),
+              hunterCounts(preyCounts.size()) {
             for (const auto& animal : animals) {
-                if (animal->IsPrey() && animal->IsAlive()) ++preyCounts[Index(animal->GetPosition())];
+                if (!animal->IsAlive()) continue;
+                if (animal->IsPrey()) ++preyCounts[Index(animal->GetPosition())];
+                if (animal->IsHunter()) ++hunterCounts[Index(animal->GetPosition())];
             }
+        }
+
+        int HunterCount(const ecosim::Position position) const override {
+            return hunterCounts[Index(position)];
+        }
+
+        // Le repas est divisé avec les membres de la meute situés à un pas au plus.
+        int ShareMeal(const ecosim::Animal& hunter, const int energy) override {
+            std::vector<ecosim::Animal*> mates;
+            for (const auto& other : animals) {
+                if (other.get() == &hunter || !other->IsAlive() || other->GetKind() != hunter.GetKind()) {
+                    continue;
+                }
+                const ecosim::Position a = other->GetPosition();
+                const ecosim::Position b = hunter.GetPosition();
+                if (std::abs(a.x - b.x) + std::abs(a.y - b.y) <= 1) mates.push_back(other.get());
+            }
+            const int share = energy / (static_cast<int>(mates.size()) + 1);
+            for (ecosim::Animal* mate : mates) mate->ReceiveMeal(share);
+            return energy - share * static_cast<int>(mates.size());
         }
 
         ecosim::World& GetWorld() override { return world; }
@@ -43,6 +66,7 @@ namespace {
         std::vector<std::unique_ptr<ecosim::Animal>>& animals;
         ecosim::SimulationStats& stats;
         std::vector<int> preyCounts;
+        std::vector<int> hunterCounts;
     };
 }
 

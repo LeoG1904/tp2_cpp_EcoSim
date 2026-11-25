@@ -36,6 +36,23 @@ namespace ecosim {
     void Animal::GainEnergy(const int amount) { energy = std::min(MaxEnergy, energy + amount); }
 
     bool Animal::IsPrey() const { return false; }
+    bool Animal::IsHunter() const { return false; }
+    void Animal::ReceiveMeal(const int amount) { GainEnergy(amount); }
+
+    int Animal::NearestDistance(const World& world, const Position from, const int radius,
+                                const std::function<bool(Position)>& found) {
+        // On explore des anneaux de plus en plus larges et on s'arrête au premier succès.
+        for (int distance = 0; distance <= radius; ++distance) {
+            for (int dx = -distance; dx <= distance; ++dx) {
+                const int dy = distance - std::abs(dx);
+                const Position above{from.x + dx, from.y - dy};
+                const Position below{from.x + dx, from.y + dy};
+                if (world.IsInside(above) && found(above)) return distance;
+                if (dy != 0 && world.IsInside(below) && found(below)) return distance;
+            }
+        }
+        return radius + 1;
+    }
 
     std::unique_ptr<Animal> Animal::CreateOffspring(const std::uint64_t childId) const {
         auto child = MakeOffspring(childId);

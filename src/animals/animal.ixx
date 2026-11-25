@@ -32,9 +32,14 @@ export namespace ecosim {
         int foodEnergy{10};           // végétation mangée au maximum, ou énergie par proie
         int reproductionEnergy{80};   // énergie minimale pour se reproduire
         int reproductionPercent{20};  // chance de naissance quand les conditions sont réunies
+        // Instinct propre à l'espèce, 0 pour le désactiver. Proie : chance (%) de fuir un
+        // chasseur repéré. Chasseur : rayon de meute, en cases.
+        int instinct{0};
 
         bool operator==(const AnimalTraits&) const = default;
     };
+
+    class Animal;
 
     // Ce qu'un animal peut percevoir et modifier pendant son tour, sans connaître la simulation.
     class Habitat {
@@ -46,6 +51,10 @@ export namespace ecosim {
         virtual int PreyCount(Position position) const = 0;
         // Capture une proie encore vivante sur la case, s'il en reste une.
         virtual bool CatchPrey(Position position) = 0;
+        // Nombre de chasseurs sur la case au début de la phase en cours.
+        virtual int HunterCount(Position position) const = 0;
+        // Partage un repas avec les congénères proches ; renvoie la part du chasseur.
+        virtual int ShareMeal(const Animal& hunter, int energy) = 0;
     };
 
     class Animal {
@@ -77,6 +86,9 @@ export namespace ecosim {
         virtual AnimalKind GetKind() const = 0;
         virtual TurnPhase Phase() const = 0;
         virtual bool IsPrey() const;
+        virtual bool IsHunter() const;
+        // Énergie reçue d'un autre animal.
+        void ReceiveMeal(int energy);
         virtual Position ChooseDestination(const Habitat& habitat, std::mt19937& rng) const = 0;
         virtual void Feed(Habitat& habitat) = 0;
 
@@ -86,6 +98,10 @@ export namespace ecosim {
         // Case accessible, sur place ou voisine, au meilleur score ; égalités tirées au sort.
         Position BestAccessiblePosition(const World& world, const std::function<int(Position)>& score,
                                         std::mt19937& rng) const;
+        // Distance (en pas sur la grille) jusqu'à la case la plus proche qui vérifie found,
+        // dans la limite de radius ; radius + 1 si aucune. Les obstacles ne bloquent pas la vue.
+        static int NearestDistance(const World& world, Position from, int radius,
+                                   const std::function<bool(Position)>& found);
         virtual std::unique_ptr<Animal> MakeOffspring(std::uint64_t id) const = 0;
 
     private:

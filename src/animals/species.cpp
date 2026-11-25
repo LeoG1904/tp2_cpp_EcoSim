@@ -13,9 +13,9 @@ namespace {
 namespace ecosim {
     const std::vector<SpeciesInfo>& SpeciesCatalog() {
         static const std::vector<SpeciesInfo> catalog{
-            {AnimalKind::Herbivore, "Herbivore", "Herbivores", AnimalTraits{}, 15, 12, true,
+            {AnimalKind::Herbivore, "Herbivore", "Herbivores", AnimalTraits{}, 15, 12, true, 25,
              &Create<Herbivore>},
-            {AnimalKind::Predator, "Prédateur", "Prédateurs", Predator::DefaultTraits, 150, 3, false,
+            {AnimalKind::Predator, "Prédateur", "Prédateurs", Predator::DefaultTraits, 150, 3, false, 2,
              &Create<Predator>},
         };
         return catalog;

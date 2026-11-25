@@ -16,6 +16,7 @@ namespace ecosim {
         for (const SpeciesInfo& info : SpeciesCatalog()) {
             settings.species[info.kind].initialCount =
                 std::max(info.minimumAtStart, width * height / info.cellsPerAnimal);
+            settings.species[info.kind].traits.instinct = info.defaultInstinct;
         }
         return settings;
     }
@@ -47,6 +48,9 @@ namespace ecosim {
             case Preset::Invasion:
                 // Les prédateurs sont bien plus nombreux au départ que les herbivores.
                 predators.initialCount = std::clamp(width * height / 7, 10, 200);
+                // Les proies sont prises par surprise face à de larges meutes.
+                herbivores.traits.instinct = 0;
+                predators.traits.instinct = 3;
                 break;
         }
         return settings;

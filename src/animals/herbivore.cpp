@@ -14,8 +14,23 @@ namespace ecosim {
 
     Position Herbivore::ChooseDestination(const Habitat& habitat, std::mt19937& rng) const {
         const World& world = habitat.GetWorld();
-        return BestAccessiblePosition(world, [&world](const Position position) {
-            return world.GetCell(position).GetVegetation();
+        const auto hunterThere = [&habitat](const Position other) {
+            return habitat.HunterCount(other) > 0;
+        };
+        // La fuite n'est pas automatique : un chasseur repéré n'est évité qu'avec une certaine
+        // chance. Sinon les proies, qui jouent les premières, ne seraient jamais rattrapées.
+        bool fleeing = false;
+        if (const int reflex = GetTraits().instinct;
+            reflex > 0 && NearestDistance(world, GetPosition(), ThreatSight, hunterThere) <= ThreatSight) {
+            std::bernoulli_distribution react{std::min(reflex, 100) / 100.0};
+            fleeing = react(rng);
+        }
+        return BestAccessiblePosition(world, [&](const Position position) {
+            const int food = world.GetCell(position).GetVegetation();
+            if (!fleeing) return food;
+            // En fuite, s'éloigner passe avant la nourriture.
+            const int safety = NearestDistance(world, position, ThreatSight, hunterThere);
+            return safety * (Cell::MaxVegetation + 1) + food;
         }, rng);
     }
 

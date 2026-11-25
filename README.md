@@ -30,9 +30,9 @@ Les boutons situés sous les colonnes remplacent tous les réglages. Chaque vale
 
 | Préréglage | Ce qui change par rapport aux valeurs par défaut | Comportement observé (carte 42 × 26) |
 | --- | --- | --- |
-| **Équilibre** | Herbivores : âge maximum 120, seuil de reproduction 70, chance 40 %. Prédateurs : perte 3, âge maximum 60, énergie par proie 15, seuil 70, chance 5 % | Les deux espèces sont encore présentes à 1000 générations sur 20 graines sur 20 (18 sur 20 en 32 × 18) |
+| **Équilibre** | Herbivores : âge maximum 120, seuil de reproduction 70, chance 40 %. Prédateurs : perte 3, âge maximum 60, énergie par proie 15, seuil 70, chance 5 % | Les deux espèces sont encore présentes à 1000 générations sur 19 graines sur 20 |
 | **Famine** | Aucune repousse, perte des herbivores 3, trois fois moins de prédateurs au départ | Herbivores éteints vers la génération 70, avec bien plus de morts de faim que de captures |
-| **Invasion** | Beaucoup plus de prédateurs au départ (une case sur sept, 200 au maximum) | Herbivores mangés vers la génération 30 |
+| **Invasion** | Beaucoup plus de prédateurs au départ (une case sur sept, 200 au maximum), aucune fuite, meutes de rayon 3 | Herbivores mangés vers la génération 20 ; dans de rares cas, quelques-uns s'échappent |
 
 Ces résultats sont des tendances : la carte et les animaux restent tirés au hasard.
 
@@ -68,6 +68,19 @@ La touche `Échap` fige la simulation et affiche un choix : **Menu** revient à 
 Quand il ne reste plus aucun animal, la simulation s'arrête à la dernière génération. La carte et les courbes restent accessibles pour consulter le résultat final.
 
 Le bouton **Recommencer** repart à la génération 0, réinitialise la vitesse à x1 et affiche la nouvelle carte.
+
+## Fuite et meutes
+
+Chaque espèce a un **instinct**, réglable à l'accueil (dernière ligne de sa colonne) ; **0** le désactive.
+
+| Réglage | Comportement | Valeur de départ |
+| --- | --- | --- |
+| **Chance de fuir (%)** (herbivores) | Quand un prédateur se trouve à 2 cases ou moins, l'herbivore a cette chance de fuir : il s'éloigne d'abord, puis choisit la case la plus riche parmi les plus sûres. Sinon il broute normalement. | 25 |
+| **Rayon de meute (cases)** (prédateurs) | Sans proie sur les cases atteignables, le prédateur se rapproche des proies repérées dans ce rayon, puis de ses congénères. Après une capture, le repas est partagé à parts égales avec les prédateurs situés à un pas au plus, le chasseur gardant le reste de la division ; aucune énergie n'est créée. | 2 |
+
+La distance se compte en pas sur la grille et les obstacles ne bloquent pas la vue. La fuite est volontairement imparfaite : les herbivores jouent avant les prédateurs, qui n'avancent que d'une case. Avec une fuite systématique à portée d'une ou deux cases, aucune proie n'était mangée dans les mesures et les prédateurs mouraient de faim.
+
+Effets mesurés sur 30 simulations en 42 × 26 avec les autres réglages d'origine (valeurs médianes) : la part des herbivores morts parce qu'ils sont mangés passe d'environ 95 % sans fuite à 79 % avec 40 % de fuite et 39 % avec 60 % ; des meutes de rayon 3 font passer le pic de prédateurs d'environ 210 à 280.
 
 ## Vue 3D
 

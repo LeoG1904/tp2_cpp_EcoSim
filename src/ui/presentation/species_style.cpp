@@ -6,8 +6,10 @@ namespace ecosim {
     const SpeciesStyle& StyleOf(const AnimalKind kind) {
         // Une entrée par espèce, dans l'ordre du catalogue.
         static const std::vector<SpeciesStyle> styles{
-            {{245, 210, 70}, 500, "Végétation mangée max", 1, 50, 0.28, 0.17, 0.26},
-            {{220, 85, 75}, 200, "Énergie par proie", 5, 100, 0.34, 0.20, 0.40},
+            {{245, 210, 70}, 500, "Végétation mangée max", 1, 50, "Chance de fuir (%)", 100,
+             0.28, 0.17, 0.26},
+            {{220, 85, 75}, 200, "Énergie par proie", 5, 100, "Rayon de meute (cases)", 4,
+             0.34, 0.20, 0.40},
         };
         return styles.at(static_cast<std::size_t>(kind));
     }

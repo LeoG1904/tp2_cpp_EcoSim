@@ -8,6 +8,8 @@ export namespace ecosim {
     class Herbivore final : public Animal {
     public:
         static constexpr int StartingEnergy{50};
+        // Distance à laquelle un chasseur peut être repéré.
+        static constexpr int ThreatSight{2};
 
         Herbivore(std::uint64_t id, Position position, int energy = StartingEnergy,
                   const AnimalTraits& traits = {});

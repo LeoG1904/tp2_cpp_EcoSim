@@ -23,7 +23,7 @@ TEST_CASE("Le formulaire cree une colonne et les memes lignes pour chaque espece
     std::array<int, 1 + SpeciesCount> rows{};
     for (const SettingField& field : SettingFields()) ++rows.at(field.column);
     for (std::size_t column = 1; column <= SpeciesCount; ++column) {
-        REQUIRE(rows[column] == 7);
+        REQUIRE(rows[column] == 8);
         REQUIRE(ColumnTitle(column) == SpeciesCatalog()[column - 1].pluralName);
     }
 }

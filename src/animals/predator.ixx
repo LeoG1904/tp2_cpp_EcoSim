@@ -14,6 +14,7 @@ export namespace ecosim {
                  const AnimalTraits& traits = DefaultTraits);
         AnimalKind GetKind() const override;
         TurnPhase Phase() const override;
+        bool IsHunter() const override;
         // Va vers la case qui compte le plus de proies.
         Position ChooseDestination(const Habitat& habitat, std::mt19937& rng) const override;
         void Feed(Habitat& habitat) override;

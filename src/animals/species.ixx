@@ -15,6 +15,8 @@ export namespace ecosim {
         int cellsPerAnimal;
         int minimumAtStart;
         bool canBeEaten;
+        // Instinct activé dans l'application : fuite (%) ou rayon de meute.
+        int defaultInstinct;
         std::unique_ptr<Animal> (*create)(std::uint64_t id, Position position, int energy,
                                           const AnimalTraits& traits);
     };

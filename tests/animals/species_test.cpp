@@ -14,6 +14,8 @@ namespace {
         Position prey{2, 0};
         int captures{0};
 
+        int HunterCount(Position) const override { return 0; }
+        int ShareMeal(const Animal&, const int energy) override { return energy; }
         World& GetWorld() override { return world; }
         const World& GetWorld() const override { return world; }
         int PreyCount(const Position position) const override { return position == prey ? 1 : 0; }

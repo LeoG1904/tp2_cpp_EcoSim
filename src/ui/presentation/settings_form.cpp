@@ -35,6 +35,7 @@ namespace {
                   &ecosim::AnimalTraits::foodEnergy);
             trait("Seuil de reproduction", 40, 100, &ecosim::AnimalTraits::reproductionEnergy);
             trait("Chance de naissance (%)", 0, 100, &ecosim::AnimalTraits::reproductionPercent);
+            trait(style.instinctLabel, 0, style.instinctMaximum, &ecosim::AnimalTraits::instinct);
         }
         return fields;
     }
@@ -69,7 +70,7 @@ namespace ecosim {
         switch (preset) {
             case Preset::Balance: return "Les deux espèces coexistent longtemps.";
             case Preset::Famine: return "La végétation ne repousse plus : les herbivores meurent de faim.";
-            case Preset::Invasion: return "Une arrivée massive de prédateurs décime les herbivores.";
+            case Preset::Invasion: return "Des meutes massives prennent les herbivores par surprise et les déciment.";
         }
         return {};
     }

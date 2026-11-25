@@ -18,6 +18,8 @@ export namespace ecosim {
         std::string foodLabel;
         int foodMinimum;
         int foodMaximum;
+        std::string instinctLabel;
+        int instinctMaximum;
         // Corps du modèle 3D, en fractions de case.
         double length;
         double thickness;
