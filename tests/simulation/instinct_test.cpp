@@ -128,10 +128,10 @@ TEST_CASE("La meute partage le repas sans creer d'energie", "[instinct]") {
     simulation.AddAnimal(AnimalKind::Wolf, {0, 0});
     simulation.Step();
 
-    // 25 points : 13 pour le chasseur et 12 pour son voisin, moins 3 pour la génération.
+    // 25 points : 13 pour le chasseur et 12 pour son voisin, moins 2 pour la génération.
     const auto animals = simulation.Animals();
     REQUIRE(animals.size() == 2);
-    REQUIRE(animals[0].energy + animals[1].energy == 60 + 59);
+    REQUIRE(animals[0].energy + animals[1].energy == 61 + 60);
 }
 
 TEST_CASE("L'application active la fuite et les meutes, le moteur seul non", "[instinct]") {

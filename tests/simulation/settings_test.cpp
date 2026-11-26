@@ -26,9 +26,9 @@ TEST_CASE("La simulation applique la repousse et les caracteristiques de l'espec
 
     simulation.Step();
 
-    // 50 au départ, 10 mangés, 2 perdus.
-    REQUIRE(simulation.Animals().front().energy == 58);
-    REQUIRE(simulation.GetWorld().GetCell({0, 0}).GetVegetation() == 10);
+    // 50 au départ, 12 mangés, 2 perdus.
+    REQUIRE(simulation.Animals().front().energy == 60);
+    REQUIRE(simulation.GetWorld().GetCell({0, 0}).GetVegetation() == 8);
 }
 
 TEST_CASE("Chaque proie nourrit le predateur selon sa taille", "[settings]") {
@@ -39,8 +39,8 @@ TEST_CASE("Chaque proie nourrit le predateur selon sa taille", "[settings]") {
         hunt.Step();
         return hunt.Animals().front().energy;
     };
-    REQUIRE(energyAfterHunt(AnimalKind::Deer) == 72);   // 50 + 25 - 3
-    REQUIRE(energyAfterHunt(AnimalKind::Rabbit) == 59); // 50 + 12 - 3
+    REQUIRE(energyAfterHunt(AnimalKind::Deer) == 73);   // 50 + 25 - 2
+    REQUIRE(energyAfterHunt(AnimalKind::Rabbit) == 60); // 50 + 12 - 2
 }
 
 TEST_CASE("La chance de naissance peut etre nulle ou certaine, et s'herite", "[settings]") {

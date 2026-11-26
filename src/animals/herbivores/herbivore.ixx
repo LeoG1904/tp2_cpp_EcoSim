@@ -14,7 +14,7 @@ export namespace ecosim {
     /// @ingroup moteur
     class Herbivore : public Animal {
     public:
-        /// @brief Distance, en cases, à laquelle un prédateur est repéré.
+        /// @brief Distance, en cases, à laquelle un chasseur est repéré.
         static constexpr double ThreatSight{2.0};
         /// @brief Distance, en cases, à laquelle il cherche de l'herbe.
         static constexpr double FoodSight{2.0};
@@ -23,9 +23,9 @@ export namespace ecosim {
         bool IsPrey() const override;
         /// @brief Tire au sort s'il sera sur ses gardes pendant cette génération.
         void BeginGeneration(std::mt19937& rng) override;
-        /// @brief Fuit un prédateur s'il est sur ses gardes, sinon broute ou cherche de l'herbe.
+        /// @brief Fuit un chasseur qui le mange s'il est sur ses gardes, sinon broute ou cherche de l'herbe.
         Steering Steer(const Habitat& habitat, std::mt19937& rng) const override;
-        /// @brief Mange une fois par génération, au dernier petit pas, là où il se trouve.
+        /// @brief Mange une fois par génération, au dernier petit pas, là où il se trouve, sans toucher à l'herbe hors de sa portée.
         void Act(Habitat& habitat, int tick) override;
 
     protected:
@@ -36,14 +36,17 @@ export namespace ecosim {
         /// @param traits Caractéristiques de l'espèce.
         /// @param options Réglages de l'individu.
         /// @param grazingVegetation À partir de cette quantité d'herbe sous lui, il reste brouter.
+        /// @param ungrazableVegetation Herbe qui reste toujours sur la case : l'espèce ne peut pas la brouter.
         /// @throws std::invalid_argument si l'énergie n'est pas entre 1 et 100.
         Herbivore(std::uint64_t id, Position cell, int energy, const SpeciesTraits& traits,
-                  const AnimalOptions& options, int grazingVegetation);
+                  const AnimalOptions& options, int grazingVegetation, int ungrazableVegetation);
 
     private:
         /// @brief Quantité d'herbe qui suffit à l'espèce pour rester sur place.
         int grazingVegetation;
-        /// @brief Vrai si l'herbivore fuira les prédateurs pendant cette génération. Tiré au sort : la fuite n'est pas automatique.
+        /// @brief Quantité d'herbe que l'espèce ne peut pas brouter.
+        int ungrazableVegetation;
+        /// @brief Vrai si l'herbivore fuira les chasseurs pendant cette génération. Tiré au sort : la fuite n'est pas automatique.
         bool alert{false};
     };
 }

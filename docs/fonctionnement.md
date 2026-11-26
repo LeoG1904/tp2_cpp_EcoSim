@@ -24,7 +24,7 @@ ecosim::Simulation::Step() applique toujours les mêmes étapes, dans cet ordre.
             |
   2. Dix petits pas, et à chacun :
      - les cerfs et les lapins avancent
-     - puis les prédateurs avancent et chassent
+     - puis les loups et les renards avancent et chassent
      (les herbivores mangent au dernier pas)
             |
   3. Métabolisme
@@ -51,7 +51,7 @@ ensuite de façon fluide.
 
 **Cerfs et lapins** (ecosim::Herbivore, la base commune des herbivores) :
 
-- s'il est sur ses gardes et qu'un prédateur est à 2 cases ou moins, il **fuit** ;
+- s'il est sur ses gardes et qu'un chasseur **qui le mange** est à 2 cases ou moins, il **fuit** ;
 - sinon, si l'herbe sous lui est suffisante, il **flâne** ;
 - sinon, il **cherche** une herbe plus riche autour de lui, avec un peu d'hésitation.
 
@@ -59,25 +59,39 @@ Les deux espèces d'herbivores partagent ces règles, mais pas leurs atouts.
 
 | Caractéristique fixe | Cerf (ecosim::Deer) | Lapin (ecosim::Rabbit) |
 | --- | --- | --- |
-| Reste brouter si l'herbe sous lui atteint | 30 | 10 : il se contente d'une herbe rase |
-| Herbe mangée au maximum par génération | 10 | 6 |
-| Vitesse (% de case par génération) | 110 | 100 |
+| Reste brouter si l'herbe sous lui atteint | 30 | 5 : il se contente d'une herbe rase |
+| Herbe qu'il ne peut pas brouter | les 5 derniers points | aucune |
+| Herbe mangée au maximum par génération | 12 | 5 |
+| Vitesse (% de case par génération) | 120 | 100 |
 | Énergie perdue par génération | 2 | 1 |
 | Âge maximum | 80 | 60 |
-| Énergie pour se reproduire | 80 | 60 |
-| Repas offert au prédateur | entier | la moitié |
+| Énergie pour se reproduire | 80 | 50 |
+| Repas offert au chasseur | entier | la moitié |
 
-Les deux peuvent manger une herbe de n'importe quelle hauteur : le seuil décide seulement s'ils
-restent sur place ou cherchent mieux.
+L'herbe au ras du sol est donc **réservée aux lapins** : les cerfs ne peuvent pas leur retirer
+toute leur nourriture.
 
 Ces caractéristiques (ecosim::SpeciesTraits) **ne se règlent pas** : ce sont elles qui font
-l'espèce. Le prédateur a aussi les siennes.
+l'espèce. Les chasseurs ont aussi les leurs.
 
-**Prédateur** (ecosim::Predator) :
+**Loups et renards** (ecosim::Predator, la base commune des chasseurs) :
 
-- il voit à 3 cases et **fonce** sur la proie la plus proche, cerf ou lapin ;
+- chacun **fonce** sur la proie la plus proche **parmi celles qu'il mange** ;
 - il capture une proie qu'il approche à moins de 0,45 case, **une fois par génération** au plus ;
 - sans proie en vue, il **erre**.
+
+| Caractéristique fixe | Loup (ecosim::Wolf) | Renard (ecosim::Fox) |
+| --- | --- | --- |
+| Proies | cerfs et lapins | lapins seulement |
+| Distance de vue, avant l'instinct | 3 cases | 1,5 case |
+| Vitesse (% de case par génération) | 80 | 110 |
+| Énergie par proie entière | 25 | 40 |
+| Énergie perdue par génération | 2 | 2 |
+| Âge maximum | 80 | 100 |
+| Énergie pour se reproduire | 80 | 70 |
+| En groupe | peut chasser en meute | toujours seul |
+
+Un lapin ne vaut qu'une demi-proie : un renard en tire 20 points d'énergie, un loup 12.
 
 ## Ce qui se règle
 
@@ -87,7 +101,8 @@ son **instinct** (ces deux derniers forment ecosim::AnimalOptions).
 | Instinct | Effet |
 | --- | --- |
 | Chance de fuir (cerfs et lapins) | Tirée à chaque génération : l'herbivore est sur ses gardes, ou non. |
-| Esprit de meute (prédateurs) | Voit plus loin, vise les côtés de la proie quand un congénère est proche, rejoint le groupe et partage son repas. |
+| Esprit de meute (loups) | Voit plus loin, vise les côtés de la proie quand un autre loup est proche, rejoint le groupe et partage son repas. |
+| Flair (renards) | La valeur s'ajoute à la distance de vue. |
 
 La valeur 0 désactive l'instinct.
 

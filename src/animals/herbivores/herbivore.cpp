@@ -2,8 +2,6 @@
  * @file
  * @brief Décisions de l'herbivore : fuir, flâner ou chercher de l'herbe.
  */
-module;
-#include <cstdlib>
 module ecosim.herbivore;
 
 import std;
@@ -11,8 +9,9 @@ import std;
 namespace ecosim {
     Herbivore::Herbivore(const std::uint64_t id, const Position cell, const int energy,
                          const SpeciesTraits& traits, const AnimalOptions& options,
-                         const int grazingVegetation)
-        : Animal{id, cell, energy, traits, options}, grazingVegetation{grazingVegetation} {}
+                         const int grazingVegetation, const int ungrazableVegetation)
+        : Animal{id, cell, energy, traits, options}, grazingVegetation{grazingVegetation},
+          ungrazableVegetation{ungrazableVegetation} {}
 
     bool Herbivore::IsPrey() const { return true; }
 
@@ -67,10 +66,8 @@ namespace ecosim {
         if (tick != TicksPerGeneration - 1) return;
         Cell& cell = habitat.GetWorld().GetCell(GetPosition());
         if (!cell.IsAccessible()) return;
-        static const char* floorText = std::getenv("DEERFLOOR");
-        const int floor = floorText && GetKind() == AnimalKind::Deer ? std::atoi(floorText) : 0;
-        const int consumed = std::min({GetTraits().foodEnergy, std::max(0, cell.GetVegetation() - floor),
-                                       MaxEnergy - GetEnergy()});
+        const int reachable = std::max(0, cell.GetVegetation() - ungrazableVegetation);
+        const int consumed = std::min({GetTraits().foodEnergy, reachable, MaxEnergy - GetEnergy()});
         cell.SetVegetation(cell.GetVegetation() - consumed);
         ReceiveMeal(consumed);
     }

@@ -68,7 +68,7 @@ TEST_CASE("Chaque espece se nourrit a sa facon", "[species]") {
     herbivore.Act(habitat, 0);
     REQUIRE(herbivore.GetEnergy() == 50); // il ne mange qu'au dernier petit pas
     herbivore.Act(habitat, TicksPerGeneration - 1);
-    REQUIRE(herbivore.GetEnergy() == 60);
+    REQUIRE(herbivore.GetEnergy() == 62);
 
     predator.Act(habitat, 3);
     predator.Act(habitat, 4); // une seule capture par generation
@@ -103,6 +103,18 @@ TEST_CASE("Sur une herbe rase, le lapin reste et le cerf repart", "[species]") {
     const Deer deer{1, {6, 6}};
     const Rabbit rabbit{2, {6, 6}};
     REQUIRE(rabbit.Steer(habitat, rng).pace < deer.Steer(habitat, rng).pace);
+}
+
+TEST_CASE("L'herbe au ras du sol reste aux lapins", "[species]") {
+    FakeHabitat habitat;
+    habitat.world.GetCell({6, 6}).SetVegetation(Deer::UngrazableVegetation);
+    Deer deer{1, {6, 6}};
+    Rabbit rabbit{2, {6, 6}};
+    deer.Act(habitat, TicksPerGeneration - 1);
+    REQUIRE(deer.GetEnergy() == Animal::StartingEnergy);
+    rabbit.Act(habitat, TicksPerGeneration - 1);
+    REQUIRE(rabbit.GetEnergy() == Animal::StartingEnergy + Deer::UngrazableVegetation);
+    REQUIRE(habitat.world.GetCell({6, 6}).GetVegetation() == 0);
 }
 
 TEST_CASE("Le petit d'un lapin est un lapin", "[species]") {

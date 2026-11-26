@@ -17,7 +17,7 @@ namespace {
     }
 }
 
-TEST_CASE("Equilibre : les trois especes sont encore la apres 400 generations", "[preset]") {
+TEST_CASE("Equilibre : les quatre especes sont encore la apres 400 generations", "[preset]") {
     for (const std::uint32_t seed : {1u, 2u, 3u}) {
         const Simulation simulation = Run(Preset::Balance, seed, 400);
         for (const SpeciesInfo& species : SpeciesCatalog()) {

@@ -67,12 +67,19 @@ nommer chaque classe.
 
 ### 1. L'héritage pour les espèces
 
-ecosim::Simulation manipule des ecosim::Animal sans savoir s'il s'agit d'un cerf, d'un lapin
-ou d'un prédateur. Chaque animal choisit sa direction (ecosim::Animal::Steer) et agit
+ecosim::Simulation manipule des ecosim::Animal sans savoir s'il s'agit d'un cerf, d'un lapin,
+d'un loup ou d'un renard. Chaque animal choisit sa direction (ecosim::Animal::Steer) et agit
 (ecosim::Animal::Act) à sa façon. C'est le **polymorphisme**.
 
-L'héritage a deux niveaux. ecosim::Herbivore réunit ce que les herbivores font de la même
-manière, fuir et brouter ; ecosim::Deer et ecosim::Rabbit ne gardent que leurs différences.
+L'héritage a deux niveaux, et deux familles :
+
+- ecosim::Herbivore réunit ce que les herbivores font de la même manière, fuir et brouter ;
+  ecosim::Deer et ecosim::Rabbit ne gardent que leurs différences ;
+- ecosim::Predator réunit la poursuite et la capture ; ecosim::Wolf y ajoute la meute, et
+  ecosim::Fox son régime.
+
+Chaque chasseur dit ce qu'il mange avec ecosim::Animal::Eats. La simulation s'en sert pour
+trouver ses proies, et pour qu'un herbivore ne fuie que ceux qui le mangent.
 
 Ce qui définit une espèce est rangé dans sa classe, en constantes (ecosim::SpeciesTraits). Ce
 que l'utilisateur règle est à part (ecosim::AnimalOptions), et chaque petit en hérite.
@@ -110,7 +117,7 @@ plus loin au plus proche** (algorithme du peintre) : les objets proches recouvre
 - La vitesse d'un animal ne coûte pas d'énergie.
 - Les obstacles ne bloquent pas la vue des animaux.
 - La 3D n'a ni textures ni éclairage dynamique.
-- Les préréglages sont conçus pour les trois espèces actuelles.
+- Les préréglages sont conçus pour les quatre espèces actuelles.
 
 ## Compilation
 

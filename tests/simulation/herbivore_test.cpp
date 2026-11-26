@@ -16,11 +16,13 @@ TEST_CASE("Deux herbivores partagent une case et mangent la végétation disponi
 
     REQUIRE(simulation.GetGeneration() == 1);
     REQUIRE(simulation.Count(AnimalKind::Deer) == 2);
-    REQUIRE(simulation.GetWorld().GetCell({0, 0}).GetVegetation() == 1);
-    for (const auto& animal : simulation.Animals()) {
+    // 21 points d'herbe : un cerf en mange 12, l'autre 4, et les 5 derniers restent au sol.
+    REQUIRE(simulation.GetWorld().GetCell({0, 0}).GetVegetation() == 5);
+    const auto animals = simulation.Animals();
+    REQUIRE(animals[0].energy + animals[1].energy == 60 + 52);
+    for (const auto& animal : animals) {
         REQUIRE(animal.position == Position{0, 0});
         REQUIRE(animal.age == 1);
-        REQUIRE(animal.energy == 58);
     }
 }
 

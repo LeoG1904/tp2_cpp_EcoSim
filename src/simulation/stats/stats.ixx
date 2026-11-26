@@ -51,7 +51,7 @@ export namespace ecosim {
     enum class DeathCause {
         Starvation, ///< Plus d'énergie.
         OldAge, ///< Âge maximum atteint.
-        Predation ///< Capturé par un prédateur.
+        Predation ///< Capturé par un chasseur.
     };
 
     /// @brief Conserve l'historique d'une simulation.

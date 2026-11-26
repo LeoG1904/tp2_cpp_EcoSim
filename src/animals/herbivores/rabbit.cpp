@@ -9,7 +9,7 @@ import std;
 namespace ecosim {
     Rabbit::Rabbit(const std::uint64_t id, const Position cell, const int energy,
                    const AnimalOptions& options)
-        : Herbivore{id, cell, energy, Traits, options, GrazingThreshold} {}
+        : Herbivore{id, cell, energy, Traits, options, GrazingThreshold, 0} {}
 
     AnimalKind Rabbit::GetKind() const { return AnimalKind::Rabbit; }
 

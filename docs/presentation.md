@@ -1,7 +1,7 @@
 # EcoSim en bref {#mainpage}
 
 EcoSim simule un petit écosystème : **l'herbe pousse**, des **cerfs** et des **lapins** la
-mangent et des **prédateurs** les chassent. Chaque animal a un âge et une énergie ; il se déplace, se nourrit,
+mangent, et des **loups** et des **renards** les chassent. Chaque animal a un âge et une énergie ; il se déplace, se nourrit,
 se reproduit et meurt. Personne ne dirige les populations : leur évolution vient des règles
 appliquées à chaque individu.
 
@@ -34,7 +34,7 @@ de lui donner un autre rendu.
 | Classe | Son rôle en une phrase |
 | --- | --- |
 | ecosim::World | La carte : une grille de cases avec leur terrain et leur herbe. |
-| ecosim::Animal | Ce que tout animal sait faire ; ecosim::Deer, ecosim::Rabbit et ecosim::Predator précisent comment. |
+| ecosim::Animal | Ce que tout animal sait faire ; ecosim::Deer, ecosim::Rabbit, ecosim::Wolf et ecosim::Fox précisent comment. |
 | ecosim::Simulation | Fait avancer le monde d'une génération. |
 | ecosim::Application | Relie les commandes de l'utilisateur, la simulation et l'affichage. |
 | ecosim::Win32Renderer | Dessine l'écran à partir de l'état de la simulation. |

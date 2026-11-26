@@ -2,8 +2,6 @@
  * @file
  * @brief Le cycle d'une génération et la recherche des voisins.
  */
-module;
-#include <cstdlib>
 module ecosim.simulation;
 
 import std;
@@ -114,12 +112,9 @@ namespace {
             ecosim::Animal* closest = nullptr;
             double best = std::numeric_limits<double>::infinity();
             ForEachNear(from, radius, [&](ecosim::Animal& other, const double distance) {
-                static const char* mode = std::getenv("WOLFDIET");
-                const double penalty = mode && mode[0] == '2' && hunter.GetKind() == ecosim::AnimalKind::Wolf
-                                       && other.GetKind() == ecosim::AnimalKind::Rabbit ? 100.0 : 0.0;
-                if (hunter.Eats(other.GetKind()) && distance + penalty < best + 0.0) {
+                if (hunter.Eats(other.GetKind()) && distance < best) {
                     closest = &other;
-                    best = distance + penalty;
+                    best = distance;
                 }
             });
             return closest;

@@ -16,7 +16,7 @@ TEST_CASE("Un prédateur chasse une proie présente sur sa case", "[predator]") 
 
     REQUIRE(simulation.Count(AnimalKind::Deer) == 0);
     REQUIRE(simulation.Count(AnimalKind::Wolf) == 1);
-    REQUIRE(simulation.Animals().front().energy == 72); // 50 + 35 pour la proie - 2 pour le temps
+    REQUIRE(simulation.Animals().front().energy == 73); // 50 + 25 pour la proie - 2 pour le temps
     // Capturée en chemin, la proie n'a pas eu le temps de manger.
     REQUIRE(simulation.GetWorld().GetCell({0, 0}).GetVegetation() == 11);
 }
@@ -32,8 +32,8 @@ TEST_CASE("Une proie ne peut être capturée qu'une fois", "[predator]") {
     REQUIRE(simulation.Count(AnimalKind::Deer) == 0);
     REQUIRE(simulation.Count(AnimalKind::Wolf) == 2);
     const auto animals = simulation.Animals();
-    REQUIRE(animals[0].energy == 72);
-    REQUIRE(animals[1].energy == 47);
+    REQUIRE(animals[0].energy == 73);
+    REQUIRE(animals[1].energy == 48);
 }
 
 TEST_CASE("Un prédateur se dirige vers une proie sur la case voisine", "[predator]") {
@@ -86,7 +86,7 @@ TEST_CASE("Un descendant prédateur est un individu distinct", "[predator]") {
     REQUIRE(offspring->GetKind() == AnimalKind::Wolf);
     REQUIRE(offspring->GetAge() == 0);
     REQUIRE(offspring->GetEnergy() == 30);
-    REQUIRE(adult.GetEnergy() == 45);
+    REQUIRE(adult.GetEnergy() == 50);
 }
 
 TEST_CASE("Un renard ne capture pas un cerf, mais un lapin", "[predator]") {

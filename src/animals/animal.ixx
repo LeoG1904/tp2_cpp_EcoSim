@@ -61,7 +61,7 @@ export namespace ecosim {
         int energyLoss;
         /// @brief Âge auquel l'animal meurt.
         int maxAge;
-        /// @brief Herbe mangée au maximum (herbivore) ou énergie par proie (prédateur).
+        /// @brief Herbe mangée au maximum (herbivore) ou énergie par proie (chasseur).
         int foodEnergy;
         /// @brief Énergie minimale pour se reproduire.
         int reproductionEnergy;
@@ -81,7 +81,7 @@ export namespace ecosim {
         int birthPercent{20};
         /// @brief Instinct de l'espèce, 0 pour le désactiver.
         ///
-        /// Proie : chance, en %, d'être sur ses gardes. Prédateur : esprit de meute, qui ajoute autant de cases à sa vue.
+        /// Proie : chance, en %, d'être sur ses gardes. Chasseur : ajoute autant de cases à sa vue ; pour le loup, c'est aussi l'esprit de meute.
         int instinct{0};
 
         /// @brief Vrai si les deux valeurs sont identiques.

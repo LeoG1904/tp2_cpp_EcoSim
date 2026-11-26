@@ -35,9 +35,11 @@ namespace ecosim {
         SpeciesSettings& foxes = settings.species[AnimalKind::Fox];
         switch (preset) {
             case Preset::Balance:
-                // Des cerfs souvent sur leurs gardes, face à des prédateurs qui chassent seuls.
+                // Des proies souvent sur leurs gardes, face à des chasseurs sans bonus de vue ni meute.
                 deer.options.instinct = 50;
+                rabbits.options.instinct = 50;
                 wolves.options.instinct = 0;
+                foxes.options.instinct = 0;
                 break;
             case Preset::Famine:
                 // Plus de repousse et un seul chasseur de chaque espèce : la faim domine.

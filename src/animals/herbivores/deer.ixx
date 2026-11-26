@@ -13,12 +13,14 @@ export namespace ecosim {
     class Deer final : public Herbivore {
     public:
         /// @brief Les caractéristiques fixes du cerf.
-        static inline SpeciesTraits Traits{.energyLoss = 2, .maxAge = 80, .foodEnergy = 10,
-                                              .reproductionEnergy = 80, .speed = 110};
+        static constexpr SpeciesTraits Traits{.energyLoss = 2, .maxAge = 80, .foodEnergy = 12,
+                                              .reproductionEnergy = 80, .speed = 120};
         /// @brief Chance de naissance, en %, proposée au départ.
-        static constexpr int DefaultBirthPercent{20};
+        static constexpr int DefaultBirthPercent{25};
         /// @brief À partir de cette quantité d'herbe sous lui, il reste brouter.
-        static inline int GrazingThreshold{30};
+        static constexpr int GrazingThreshold{30};
+        /// @brief Herbe qu'il ne peut pas brouter : le ras du sol reste aux lapins.
+        static constexpr int UngrazableVegetation{5};
 
         /// @brief Crée un cerf au centre d'une case.
         /// @throws std::invalid_argument si l'énergie n'est pas entre 1 et 100.

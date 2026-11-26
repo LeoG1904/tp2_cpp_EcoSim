@@ -13,12 +13,12 @@ export namespace ecosim {
     class Fox final : public Predator {
     public:
         /// @brief Les caractéristiques fixes du renard.
-        static inline SpeciesTraits Traits{.energyLoss = 2, .maxAge = 60, .foodEnergy = 40,
+        static constexpr SpeciesTraits Traits{.energyLoss = 2, .maxAge = 100, .foodEnergy = 40,
                                               .reproductionEnergy = 70, .speed = 110};
         /// @brief Chance de naissance, en %, proposée au départ.
-        static constexpr int DefaultBirthPercent{10};
+        static constexpr int DefaultBirthPercent{6};
         /// @brief Distance de vue, en cases, avant le bonus de flair.
-        static inline double Sight{2.0};
+        static constexpr double Sight{1.5};
 
         /// @brief Crée un renard au centre d'une case.
         /// @throws std::invalid_argument si l'énergie n'est pas entre 1 et 100.

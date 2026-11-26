@@ -13,12 +13,12 @@ export namespace ecosim {
     class Wolf final : public Predator {
     public:
         /// @brief Les caractéristiques fixes du loup.
-        static inline SpeciesTraits Traits{.energyLoss = 3, .maxAge = 70, .foodEnergy = 25,
-                                              .reproductionEnergy = 70, .speed = 80};
+        static constexpr SpeciesTraits Traits{.energyLoss = 2, .maxAge = 80, .foodEnergy = 25,
+                                              .reproductionEnergy = 80, .speed = 80};
         /// @brief Chance de naissance, en %, proposée au départ.
-        static constexpr int DefaultBirthPercent{10};
+        static constexpr int DefaultBirthPercent{6};
         /// @brief Distance de vue, en cases, avant le bonus de meute.
-        static inline double Sight{3.0};
+        static constexpr double Sight{3.0};
         /// @brief Distance dans laquelle les loups partagent le repas.
         static constexpr double SharingDistance{1.5};
 

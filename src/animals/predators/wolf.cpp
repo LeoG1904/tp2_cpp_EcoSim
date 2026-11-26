@@ -2,8 +2,6 @@
  * @file
  * @brief Ce qui est propre au loup : la meute.
  */
-module;
-#include <cstdlib>
 module ecosim.wolf;
 
 import std;
@@ -16,8 +14,6 @@ namespace ecosim {
     AnimalKind Wolf::GetKind() const { return AnimalKind::Wolf; }
 
     bool Wolf::Eats(const AnimalKind kind) const {
-        static const char* mode = std::getenv("WOLFDIET");
-        if (mode && mode[0] == '1') return kind == AnimalKind::Deer;
         return kind == AnimalKind::Deer || kind == AnimalKind::Rabbit;
     }
 
