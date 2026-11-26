@@ -44,10 +44,15 @@ export namespace ecosim {
         };
 
     private:
+        /// @brief Largeur de la fenêtre, en pixels.
         int width{0};
+        /// @brief Hauteur de la fenêtre, en pixels.
         int height{0};
+        /// @brief Identifiant Windows de la fenêtre.
         void* handle{};
+        /// @brief Vrai après la demande de fermeture.
         bool closed{false};
+        /// @brief Messages reçus et pas encore lus.
         Events events;
     };
 }

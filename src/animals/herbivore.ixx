@@ -41,7 +41,7 @@ export namespace ecosim {
         std::unique_ptr<Animal> MakeOffspring(std::uint64_t id) const override;
 
     private:
-        // La fuite n'est pas automatique : elle est tirée au sort à chaque génération.
+        /// @brief Vrai si l'herbivore fuira les prédateurs pendant cette génération. Tiré au sort : la fuite n'est pas automatique.
         bool alert{false};
     };
 }

@@ -1,0 +1,17 @@
+# Contrôle complet de la documentation, éléments privés et aides internes compris.
+# À lancer depuis la racine du projet :  doxygen Doxyfile.verification
+# Tout élément oublié apparaît dans docs/doxygen-verification.log, qui doit rester vide.
+
+@INCLUDE               = Doxyfile
+
+# Sortie à part, pour ne pas remplacer le site de la documentation.
+OUTPUT_DIRECTORY       = docs/doxygen-verification
+GENERATE_HTML          = YES
+WARN_LOGFILE           = docs/doxygen-verification.log
+WARN_IF_UNDOC_ENUM_VAL = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_PRIV_VIRTUAL   = YES
+EXTRACT_STATIC         = YES
+EXTRACT_ANON_NSPACES   = YES
+SOURCE_BROWSER         = NO
+GENERATE_TREEVIEW      = NO

@@ -63,8 +63,11 @@ export namespace ecosim {
         bool IsSelected() const;
 
     private:
+        /// @brief Réglage en cours de saisie ; vide s'il n'y en a pas.
         std::optional<std::size_t> field;
+        /// @brief Chiffres tapés.
         std::string text;
+        /// @brief Vrai tant que le premier chiffre doit remplacer la valeur.
         bool selected{false};
     };
 }

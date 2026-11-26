@@ -12,15 +12,28 @@ export import ecosim.camera;
 export namespace ecosim {
     /// @brief Ce que l'utilisateur demande à l'application.
     /// @ingroup interface
-    enum class UiAction { None, StartOrRestart, TogglePause, NextGeneration,
-                          CycleSpeed, ResetSettings,
-                          CancelExit, ReturnHome, Quit };
+    enum class UiAction {
+        None, ///< Aucune action.
+        StartOrRestart, ///< Démarrer, ou recommencer avec une nouvelle carte.
+        TogglePause, ///< Mettre en pause ou reprendre.
+        NextGeneration, ///< Avancer d'une génération pendant la pause.
+        CycleSpeed, ///< Passer à la vitesse suivante.
+        ResetSettings, ///< Rétablir les réglages d'origine.
+        CancelExit, ///< Fermer la confirmation de sortie.
+        ReturnHome, ///< Revenir à l'accueil.
+        Quit ///< Fermer l'application.
+    };
 
     /// @brief Une touche utile à la saisie d'un réglage.
     /// @ingroup interface
     struct KeyStroke {
         /// @brief Nature de la touche : chiffre, effacement, validation ou case suivante.
-        enum class Kind { Digit, Erase, Confirm, Next };
+        enum class Kind {
+            Digit, ///< Un chiffre.
+            Erase, ///< Effacer.
+            Confirm, ///< Valider la saisie.
+            Next ///< Valider et passer à la case suivante.
+        };
         /// @brief Nature de cette touche.
         Kind kind;
         /// @brief Chiffre tapé, pour la nature Digit.
@@ -102,26 +115,44 @@ export namespace ecosim {
         bool IsCellPanelOnLeft() const;
 
     private:
+        /// @brief Transmet les touches tapées à la saisie en cours.
         void Type(const std::vector<KeyStroke>& typed, SimulationSettings& settings);
+        /// @brief Tourne et zoome la caméra avec la souris.
         void MoveCamera(const RawInput& input);
+        /// @brief Traite un clic sur l'accueil : case de saisie, préréglage ou bouton.
         UiAction ClickHome(PointerPosition mouse, SimulationSettings& settings);
+        /// @brief Traite un clic dans la confirmation de sortie.
         UiAction ClickExitDialog(PointerPosition mouse);
+        /// @brief Traite un clic pendant la simulation : commandes du temps, puis carte ou graphiques.
         UiAction ClickSimulation(PointerPosition mouse, bool paused);
+        /// @brief Coche ou décoche les choix de l'écran des graphiques.
         void ClickStats(PointerPosition mouse);
+        /// @brief Change de vue, recentre la caméra ou choisit une case.
         void ClickMap(PointerPosition mouse);
 
+        /// @brief Largeur de l'écran, en pixels.
         int width;
+        /// @brief Hauteur de l'écran, en pixels.
         int height;
+        /// @brief Côté d'une case de la carte 2D, en pixels.
         int cellSize;
+        /// @brief Saisie d'un réglage sur l'accueil.
         SettingEditor editor;
+        /// @brief Vrai si la confirmation de sortie est affichée.
         bool exitDialogOpen{false};
+        /// @brief Vrai sur l'écran des graphiques.
         bool showingStats{false};
+        /// @brief Vrai si la carte est en 3D ; conservé d'une simulation à l'autre.
         bool showing3D{false};
-        // La vue, la caméra et les graphiques choisis sont conservés d'une simulation à l'autre.
+        /// @brief Caméra 3D ; sa position est conservée d'une simulation à l'autre.
         OrbitCamera camera;
+        /// @brief Graphiques choisis ; conservés d'une simulation à l'autre.
         ChartSelection charts;
+        /// @brief Case dont le panneau est ouvert.
         std::optional<Position> selectedCell;
+        /// @brief Dernière position connue de la souris.
         std::optional<PointerPosition> pointer;
+        /// @brief Position précédente de la souris pendant une rotation ; vide hors rotation.
         std::optional<PointerPosition> dragOrigin;
     };
 }

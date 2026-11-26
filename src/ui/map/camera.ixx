@@ -71,18 +71,29 @@ export namespace ecosim {
         std::optional<Position> PickCell(ScreenPoint screen, Viewport viewport) const;
 
     private:
+        /// @brief Les trois axes de la caméra, de longueur 1.
         struct Basis {
+            /// @brief Direction du regard.
             Vec3 forward;
+            /// @brief Droite de l'image.
             Vec3 right;
+            /// @brief Haut de l'image.
             Vec3 up;
         };
+        /// @brief Calcule les axes de la caméra, qui regarde le centre de la carte.
         Basis Axes() const;
+        /// @brief Distance focale en pixels, d'après le champ de vision et la hauteur de l'image.
         static double FocalLength(Viewport viewport);
 
+        /// @brief Largeur de la carte, en cases.
         int mapWidth;
+        /// @brief Profondeur de la carte, en cases.
         int mapHeight;
+        /// @brief Angle autour de la carte, en radians.
         double yaw{0.0};
+        /// @brief Inclinaison au-dessus du sol, en radians.
         double pitch{0.0};
+        /// @brief Distance au centre de la carte.
         double distance{0.0};
     };
 }

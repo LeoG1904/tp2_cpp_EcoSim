@@ -39,8 +39,11 @@ export namespace ecosim {
         void SetProgress(double fraction);
 
     private:
+        /// @brief Multiplicateur de vitesse actuel.
         int speed{1};
+        /// @brief Vrai pendant la pause.
         bool paused{false};
+        /// @brief Fraction de génération déjà écoulée et pas encore simulée.
         double accumulator{0.0};
     };
 }

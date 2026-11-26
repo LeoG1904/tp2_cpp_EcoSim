@@ -11,7 +11,15 @@ import ecosim.species;
 export namespace ecosim {
     /// @brief Les statistiques que l'on peut afficher.
     /// @ingroup interface
-    enum class ChartMetric { Population, Births, Starved, OldAge, Eaten, Energy, Vegetation };
+    enum class ChartMetric {
+        Population, ///< Effectifs.
+        Births, ///< Naissances.
+        Starved, ///< Morts de faim.
+        OldAge, ///< Morts de vieillesse.
+        Eaten, ///< Proies mangées.
+        Energy, ///< Énergie moyenne.
+        Vegetation ///< Herbe totale des prairies.
+    };
     /// @brief Nombre de statistiques.
     /// @ingroup interface
     inline constexpr std::size_t MetricCount{7};

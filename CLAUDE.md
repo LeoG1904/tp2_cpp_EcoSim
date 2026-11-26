@@ -23,9 +23,12 @@ Une tâche n'est terminée que si ces deux règles sont respectées.
 - Classes, structures et fonctions libres publiques : ajouter `@ingroup moteur`, `interface`
   ou `affichage`.
 - Un changement de comportement met aussi à jour les commentaires et les pages de `docs/`.
-- `doxygen Doxyfile` doit produire **zéro avertissement** (journal :
-  `docs/doxygen-warnings.log`). Doxygen ne contrôle pas les membres privés : les vérifier
-  à la relecture. Si la commande est introuvable : `C:\Program Files\doxygen\bin\doxygen.exe`.
+- Les valeurs d'énumération sont écrites une par ligne, avec leur commentaire `///<`.
+- Les deux contrôles doivent produire **zéro avertissement** :
+  `doxygen Doxyfile` (site, journal `docs/doxygen-warnings.log`) et
+  `doxygen Doxyfile.verification` (privés et aides internes compris, journal
+  `docs/doxygen-verification.log`).
+  Si la commande est introuvable : `C:\Program Files\doxygen\bin\doxygen.exe`.
 
 ### 2. Les diagrammes de classes sont toujours à jour
 
@@ -47,6 +50,7 @@ cmake -S . -B build/claude -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILE
 cmake --build build/claude
 .\build\claude\tests.exe
 doxygen Doxyfile
+doxygen Doxyfile.verification
 ```
 
 La première configuration télécharge Catch2. `EcoSim.exe` ouvre une fenêtre en plein écran.

@@ -12,7 +12,13 @@ export import ecosim.species_style;
 export namespace ecosim {
     /// @brief Ce que représente un polygone de la scène.
     /// @ingroup interface
-    enum class FaceKind { Ground, Selection, Obstacle, Grass, Animal };
+    enum class FaceKind {
+        Ground, ///< Sol d'une case.
+        Selection, ///< Cadre de la case choisie.
+        Obstacle, ///< Bloc d'un obstacle.
+        Grass, ///< Touffe d'herbe.
+        Animal ///< Partie d'un animal.
+    };
 
     /// @brief Nombre maximal de sommets d'un polygone (une touffe d'herbe).
     /// @ingroup interface

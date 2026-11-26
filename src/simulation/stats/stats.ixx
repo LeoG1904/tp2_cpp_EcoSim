@@ -48,7 +48,11 @@ export namespace ecosim {
 
     /// @brief Les causes de mort : faim, vieillesse ou capture.
     /// @ingroup moteur
-    enum class DeathCause { Starvation, OldAge, Predation };
+    enum class DeathCause {
+        Starvation, ///< Plus d'énergie.
+        OldAge, ///< Âge maximum atteint.
+        Predation ///< Capturé par un prédateur.
+    };
 
     /// @brief Conserve l'historique d'une simulation.
     /// @ingroup moteur
@@ -71,8 +75,11 @@ export namespace ecosim {
         const LifeEvents& Total(AnimalKind kind) const;
 
     private:
+        /// @brief Une mesure par génération, dans l'ordre.
         std::vector<PopulationSample> history;
+        /// @brief Événements de la génération en cours.
         PerSpecies<LifeEvents> lastGeneration{};
+        /// @brief Événements cumulés depuis le début.
         PerSpecies<LifeEvents> total{};
     };
 }

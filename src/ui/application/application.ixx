@@ -81,22 +81,32 @@ export namespace ecosim {
         const SimulationSettings& Settings() const;
 
     private:
+        /// @brief Exécute l'action demandée : démarrer, revenir au menu, pause, vitesse ou pas à pas.
         void Apply(UiAction action);
+        /// @brief Remet l'horloge et l'animation à zéro.
         void ResetPlayback();
+        /// @brief Fait passer le temps et calcule les générations dues.
         void Advance(const FrameInput& frame, double elapsedSeconds);
+        /// @brief Crée une simulation avec les réglages choisis et une nouvelle graine.
         Simulation CreateSimulation();
 
+        /// @brief Source des commandes.
         InputSource& input;
+        /// @brief Affichage utilisé.
         View& view;
+        /// @brief Largeur des cartes, en cases.
         int mapWidth;
+        /// @brief Hauteur des cartes, en cases.
         int mapHeight;
+        /// @brief Fournit la graine de chaque nouvelle simulation.
         std::mt19937 seeds;
-        // Choisis sur l'accueil, conservés au retour au menu et par Recommencer.
+        /// @brief Réglages de l'accueil, conservés au retour au menu.
         SimulationSettings settings;
-        // La simulation n'existe qu'après le clic sur Démarrer.
+        /// @brief La simulation en cours ; vide sur l'accueil.
         std::optional<Simulation> simulation;
+        /// @brief Vitesse, pause et temps écoulé.
         SimulationClock clock;
-        // Vrai pendant l'animation d'un pas avancé à la main.
+        /// @brief Vrai pendant l'animation d'un pas avancé à la main.
         bool animatingStep{false};
     };
 }

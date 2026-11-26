@@ -10,7 +10,10 @@ export import ecosim.world;
 export namespace ecosim {
     /// @brief Les espèces du projet.
     /// @ingroup moteur
-    enum class AnimalKind { Herbivore, Predator };
+    enum class AnimalKind {
+        Herbivore, ///< Mange l'herbe et sert de proie.
+        Predator ///< Chasse les herbivores.
+    };
     /// @brief Nombre d'espèces.
     /// @ingroup moteur
     inline constexpr std::size_t SpeciesCount{2};
@@ -188,13 +191,21 @@ export namespace ecosim {
         virtual std::unique_ptr<Animal> MakeOffspring(std::uint64_t id) const = 0;
 
     private:
+        /// @brief Identifiant unique, attribué par la simulation.
         std::uint64_t id;
+        /// @brief Identifiant du parent ; vide pour un animal placé au départ.
         std::optional<std::uint64_t> parentId;
+        /// @brief Position libre actuelle, en cases.
         Point location;
+        /// @brief Direction actuelle, en radians.
         double heading;
+        /// @brief Trajet de la génération en cours ou de la dernière calculée.
         Path path{};
+        /// @brief Âge, en générations.
         int age{0};
+        /// @brief Énergie restante ; l'animal meurt à 0.
         int energy;
+        /// @brief Statistiques propres à l'individu, transmises à ses petits.
         AnimalTraits traits;
     };
 }

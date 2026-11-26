@@ -7,10 +7,12 @@ module ecosim.simulation;
 import std;
 
 namespace {
-    // Vue offerte aux animaux pendant une génération. Ils sont rangés par case,
-    // pour ne chercher leurs voisins que dans les cases proches.
+    /// @brief L'habitat réel d'une génération.
+    ///
+    /// Les animaux sont rangés par case : chercher ses voisins ne demande de parcourir que les cases proches.
     class GridHabitat final : public ecosim::Habitat {
     public:
+        /// @brief Range les animaux vivants dans leur case.
         GridHabitat(ecosim::World& world, std::vector<std::unique_ptr<ecosim::Animal>>& animals,
                     ecosim::SimulationStats& stats)
             : world{world}, stats{stats},
@@ -20,7 +22,9 @@ namespace {
             }
         }
 
-        // À appeler après le déplacement d'un animal.
+        /// @brief Change un animal de rangement après son déplacement.
+        /// @param animal Animal déplacé.
+        /// @param from Case qu'il occupait.
         void Moved(ecosim::Animal& animal, const ecosim::Position from) {
             if (animal.GetPosition() == from) return;
             std::erase(buckets[Index(from)], &animal);
@@ -66,12 +70,14 @@ namespace {
         }
 
     private:
+        /// @brief Rang d'une case dans le tableau des rangements.
         std::size_t Index(const ecosim::Position position) const {
             return static_cast<std::size_t>(position.y) * world.GetWidth()
                  + static_cast<std::size_t>(position.x);
         }
 
-        // Appelle visit pour chaque animal vivant à moins de radius.
+        /// @brief Appelle visit pour chaque animal vivant à une distance inférieure ou égale à radius.
+        /// @tparam Visit Fonction recevant l'animal et sa distance.
         template <typename Visit>
         void ForEachNear(const ecosim::Point from, const double radius, const Visit& visit) const {
             const ecosim::Position low = ecosim::CellAt({from.x - radius, from.y - radius});
@@ -87,6 +93,7 @@ namespace {
             }
         }
 
+        /// @brief La proie vivante la plus proche dans le rayon, ou nullptr.
         ecosim::Animal* ClosestPrey(const ecosim::Point from, const double radius) const {
             ecosim::Animal* closest = nullptr;
             double best = std::numeric_limits<double>::infinity();
@@ -99,8 +106,11 @@ namespace {
             return closest;
         }
 
+        /// @brief La carte, partagée avec la simulation.
         ecosim::World& world;
+        /// @brief Statistiques où sont comptées les captures.
         ecosim::SimulationStats& stats;
+        /// @brief Pour chaque case, les animaux qui s'y trouvent (références non possédées).
         std::vector<std::vector<ecosim::Animal*>> buckets;
     };
 }

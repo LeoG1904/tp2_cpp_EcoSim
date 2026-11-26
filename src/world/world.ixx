@@ -47,7 +47,11 @@ export namespace ecosim {
 
     /// @brief La nature d'une case. Seule la prairie est accessible aux animaux.
     /// @ingroup moteur
-    enum class Terrain { Prairie, Eau, Obstacle };
+    enum class Terrain {
+        Prairie, ///< Accessible aux animaux ; l'herbe y pousse.
+        Eau, ///< Inaccessible.
+        Obstacle ///< Inaccessible.
+    };
 
     /// @brief Une case : son terrain et sa quantité d'herbe.
     /// @ingroup moteur
@@ -71,7 +75,9 @@ export namespace ecosim {
         bool IsAccessible() const;
 
     private:
+        /// @brief Nature de la case.
         Terrain terrain{Terrain::Prairie};
+        /// @brief Quantité d'herbe, de 0 à MaxVegetation.
         int vegetation{0};
     };
 
@@ -103,11 +109,19 @@ export namespace ecosim {
         std::vector<Position> Neighbors(Position position) const;
 
     private:
+        /// @brief Vérifie qu'une dimension est strictement positive.
+        /// @return La valeur reçue.
+        /// @throws std::invalid_argument sinon.
         static int ValidDimension(int value);
+        /// @brief Rang d'une case dans le tableau, rangé ligne par ligne.
+        /// @throws std::out_of_range si la position est hors de la grille.
         std::size_t Index(Position position) const;
 
+        /// @brief Nombre de colonnes.
         int width;
+        /// @brief Nombre de lignes.
         int height;
+        /// @brief Toutes les cases, ligne par ligne.
         std::vector<Cell> cells;
     };
 

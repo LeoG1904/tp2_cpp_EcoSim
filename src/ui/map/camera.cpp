@@ -7,19 +7,25 @@ module ecosim.camera;
 import std;
 
 namespace {
-    constexpr double FieldOfView{0.78}; // environ 45 degrés, en vertical
+    /// @brief Champ de vision vertical, en radians (environ 45 degrés).
+    constexpr double FieldOfView{0.78};
+    /// @brief Profondeur minimale : un point plus proche n'est pas projeté.
     constexpr double NearPlane{0.2};
 
+    /// @brief Différence de deux vecteurs.
     ecosim::Vec3 Minus(const ecosim::Vec3 a, const ecosim::Vec3 b) {
         return {a.x - b.x, a.y - b.y, a.z - b.z};
     }
 
+    /// @brief Produit scalaire.
     double Dot(const ecosim::Vec3 a, const ecosim::Vec3 b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
 
+    /// @brief Produit vectoriel.
     ecosim::Vec3 Cross(const ecosim::Vec3 a, const ecosim::Vec3 b) {
         return {a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};
     }
 
+    /// @brief Le même vecteur ramené à la longueur 1.
     ecosim::Vec3 Normalize(const ecosim::Vec3 v) {
         const double length = std::sqrt(Dot(v, v));
         return {v.x / length, v.y / length, v.z / length};

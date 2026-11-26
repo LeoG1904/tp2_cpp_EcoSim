@@ -13,8 +13,7 @@ module ecosim.render;
 import std;
 
 namespace {
-    // Le projet manipule des textes UTF-8 ; Windows attend des caractères larges.
-    // C'est le seul endroit où la conversion est faite.
+    /// @brief Convertit un texte UTF-8 en caractères larges pour Windows ; seul endroit où cette conversion est faite.
     std::wstring Widen(const std::string& text) {
         if (text.empty()) return {};
         const int bytes = static_cast<int>(text.size());

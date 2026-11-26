@@ -7,10 +7,11 @@ module ecosim.animal;
 import std;
 
 namespace {
-    // Distance gardée devant soi : les animaux ne se dessinent pas dans les murs.
+    /// @brief Distance libre exigée devant l'animal, en cases, pour qu'il ne soit pas dessiné dans un mur.
     constexpr double BodyMargin{0.12};
 
-    // Un pas en diagonale ne passe pas entre deux obstacles qui se touchent par un coin.
+    /// @brief Interdit à un pas en diagonale de passer entre deux cases fermées qui se touchent par un coin.
+    /// @return Vrai si le pas est permis.
     bool CanCross(const ecosim::World& world, const ecosim::Point from, const ecosim::Point to) {
         const ecosim::Position a = ecosim::CellAt(from);
         const ecosim::Position b = ecosim::CellAt(to);

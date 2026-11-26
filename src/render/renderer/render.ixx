@@ -36,12 +36,19 @@ namespace ecosim {
         void Present() const;
 
     private:
+        /// @brief Fenêtre de destination.
         void* window;
+        /// @brief Largeur de l'image.
         int width;
+        /// @brief Hauteur de l'image.
         int height;
+        /// @brief Surface de la fenêtre.
         void* screen;
+        /// @brief Surface en mémoire où l'on dessine.
         void* buffer;
+        /// @brief Image associée à la surface en mémoire.
         void* bitmap;
+        /// @brief Image à restaurer avant de libérer les ressources.
         void* previous;
     };
 
@@ -104,12 +111,18 @@ export namespace ecosim {
         void DrawSimulation(const Simulation& simulation, const PlaybackState& playback) override;
 
     private:
+        /// @brief Affiche l'image, puis attend un court instant avant la suivante.
         static void Finish(const Canvas& canvas);
 
+        /// @brief Navigation à afficher.
         const UiController& controller;
+        /// @brief Identifiant de la fenêtre.
         void* window;
+        /// @brief Largeur de l'écran.
         int width;
+        /// @brief Hauteur de l'écran.
         int height;
+        /// @brief Côté d'une case de la carte 2D, en pixels.
         int cellSize;
     };
 }

@@ -41,6 +41,7 @@ export namespace ecosim {
         std::unique_ptr<Animal> MakeOffspring(std::uint64_t id) const override;
 
     private:
+        /// @brief Vrai après une capture : une seule est permise par génération.
         bool hasEaten{false};
     };
 }

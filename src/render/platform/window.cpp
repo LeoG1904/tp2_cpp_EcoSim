@@ -13,6 +13,7 @@ module ecosim.window;
 import std;
 
 namespace {
+    /// @brief Reçoit les messages de Windows : touches, molette et fermeture.
     LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wp, LPARAM lp) {
         // La fenêtre range les messages dans l'objet qui la possède.
         auto* events = reinterpret_cast<ecosim::Win32Window::Events*>(

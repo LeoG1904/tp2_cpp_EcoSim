@@ -16,6 +16,7 @@ import ecosim.species_style;
 import ecosim.species;
 
 namespace {
+    /// @brief Couleur d'une case en 2D, selon le terrain et l'herbe.
     COLORREF ColorOf(const ecosim::Cell& cell) {
         switch (cell.GetTerrain()) {
             case ecosim::Terrain::Eau: return RGB(60, 120, 200);

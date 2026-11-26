@@ -20,28 +20,38 @@ import ecosim.species_style;
 namespace {
     using ecosim::UiRect;
 
+    /// @brief Couleur de la courbe de l'herbe.
     constexpr COLORREF VegetationColor{RGB(120, 200, 130)};
+    /// @brief Couleur du texte principal.
     constexpr COLORREF PrimaryInk{RGB(255, 255, 255)};
+    /// @brief Couleur du texte secondaire.
     constexpr COLORREF MutedInk{RGB(160, 175, 195)};
+    /// @brief Fond d'un graphique.
     constexpr COLORREF PanelColor{RGB(31, 37, 48)};
+    /// @brief Fond d'un bouton.
     constexpr COLORREF ButtonColor{RGB(55, 64, 77)};
+    /// @brief Couleur du repère de survol et des cases cochées.
     constexpr COLORREF CursorColor{RGB(125, 183, 235)};
 
+    /// @brief Convertit une couleur du projet en couleur Windows.
     COLORREF ToColorRef(const ecosim::Color color) { return RGB(color.red, color.green, color.blue); }
 
-    // Une série sans espèce est une mesure du monde : la végétation.
+    /// @brief Couleur d'une courbe : celle de l'espèce, ou celle de l'herbe.
     COLORREF ColorOf(const std::optional<ecosim::AnimalKind> species) {
         return species ? ToColorRef(ecosim::StyleOf(*species).color) : VegetationColor;
     }
 
+    /// @brief Nom d'une courbe dans la légende.
     std::string NameOf(const std::optional<ecosim::AnimalKind> species) {
         return species ? ecosim::SpeciesOf(*species).pluralName : std::string{"Total"};
     }
 
+    /// @brief Remplit un rectangle.
     void Fill(const HDC dc, const UiRect area, const COLORREF color) {
         ecosim_gdi::FillArea(dc, area.x, area.y, area.width, area.height, color);
     }
 
+    /// @brief Trace un trait fin.
     void Line(const HDC dc, const int x1, const int y1, const int x2, const int y2,
               const COLORREF color) {
         const HPEN pen = CreatePen(PS_SOLID, 1, color);
@@ -52,17 +62,19 @@ namespace {
         DeleteObject(pen);
     }
 
+    /// @brief Position horizontale d'une génération dans la zone de tracé.
     int PointX(const UiRect plot, const std::size_t index, const std::size_t count) {
         if (count < 2) return plot.x;
         return plot.x + static_cast<int>(static_cast<long long>(index) * plot.width
                                          / static_cast<long long>(count - 1));
     }
 
+    /// @brief Position verticale d'une valeur, 0 en bas et maximum en haut.
     int PointY(const UiRect plot, const double value, const long long maximum) {
         return plot.y + plot.height - static_cast<int>(value / static_cast<double>(maximum) * plot.height);
     }
 
-    // Une valeur absente coupe la courbe au lieu de la faire tomber à zéro.
+    /// @brief Trace une courbe, interrompue là où la valeur n'existe pas.
     void DrawCurve(const HDC dc, const UiRect plot, const ecosim::ChartSeries& series,
                    const long long maximum) {
         const HPEN pen = CreatePen(PS_SOLID, 2, ColorOf(series.species));
@@ -83,6 +95,7 @@ namespace {
         DeleteObject(pen);
     }
 
+    /// @brief Dessine un point rond sur une courbe.
     void DrawPoint(const HDC dc, const int x, const int y, const COLORREF color) {
         const HBRUSH brush = CreateSolidBrush(color);
         const HGDIOBJ previousBrush = SelectObject(dc, brush);
@@ -93,10 +106,18 @@ namespace {
         DeleteObject(brush);
     }
 
-    // Écrit avec les polices et couleurs de l'écran des statistiques.
+    /// @brief Fonction qui écrit un texte d'une couleur donnée à une position.
     using Write = std::function<void(int, int, const std::string&, COLORREF)>;
-    // Un graphique : titre, légende, axes puis courbes.
-    // WriteText et MeasureText sont les outils de texte du rendu.
+    /// @brief Dessine un graphique complet : titre, légende, axes et courbes.
+    /// @param shown Génération dont la légende donne les valeurs.
+    /// @param hovered Vrai pour tracer le repère de survol.
+    /// @param textWidth Mesure la largeur d'un texte.
+    /// @param buffer Surface de dessin.
+    /// @param write Fonction d'écriture.
+    /// @param panel Emplacement du graphique.
+    /// @param history Mesures de toutes les générations.
+    /// @param metric Statistique à tracer.
+    /// @param selection Choix de l'utilisateur.
     void DrawPanel(const HDC buffer, const Write& write, const UiRect panel,
                    const std::vector<ecosim::PopulationSample>& history,
                    const ecosim::ChartMetric metric, const ecosim::ChartSelection& selection,

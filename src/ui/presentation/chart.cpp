@@ -10,22 +10,29 @@ import ecosim.species;
 namespace {
     using ecosim::PopulationSample;
     using ecosim::SpeciesSample;
+    /// @brief Une mesure, qui peut ne pas exister.
     using Reading = std::optional<double>;
 
-    // Tout ce qui définit une statistique : l'ajouter revient à ajouter une ligne.
+    /// @brief Tout ce qui définit une statistique : en ajouter une revient à ajouter une entrée.
     struct MetricInfo {
+        /// @brief Nom sur la case à cocher.
         std::string button;
+        /// @brief Titre du graphique.
         std::string title;
-        bool isEvent;      // les naissances et les morts peuvent se cumuler
-        bool onlyEaten;    // n'a de sens que pour les espèces qui sont des proies
-        // Mesure d'une espèce, ou nullptr pour une mesure du monde.
+        /// @brief Vrai pour les naissances et les morts, que l'on peut cumuler.
+        bool isEvent;
+        /// @brief Vrai si la mesure ne concerne que les proies.
+        bool onlyEaten;
+        /// @brief Lit la mesure d'une espèce ; nul pour une mesure du monde.
         Reading (*ofSpecies)(const SpeciesSample&);
+        /// @brief Lit la mesure du monde ; nul pour une mesure par espèce.
         Reading (*ofWorld)(const PopulationSample&);
     };
 
+    /// @brief Transforme un compteur en mesure.
     Reading Number(const std::size_t value) { return static_cast<double>(value); }
 
-    // Dans l'ordre de ChartMetric.
+    /// @brief La définition d'une statistique.
     const MetricInfo& InfoOf(const ecosim::ChartMetric metric) {
         static const std::vector<MetricInfo> metrics{
             {"Effectifs", "Effectifs", false, false,

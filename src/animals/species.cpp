@@ -7,6 +7,8 @@ module ecosim.species;
 import std;
 
 namespace {
+    /// @brief Crée un animal de la classe demandée ; sert de fabrique au catalogue.
+    /// @tparam Species Classe dérivée d'Animal.
     template <typename Species>
     std::unique_ptr<ecosim::Animal> Create(const std::uint64_t id, const ecosim::Position position,
                                            const int energy, const ecosim::AnimalTraits& traits) {

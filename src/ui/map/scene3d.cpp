@@ -13,45 +13,69 @@ namespace {
     using ecosim::FaceKind;
     using ecosim::Vec3;
 
-    // Bloc posé à plat, orientable autour de la verticale.
+    /// @brief Un bloc posé à plat, orientable autour de la verticale.
     struct Box {
-        double x;          // centre au sol
+        /// @brief Centre, sur l'axe des colonnes.
+        double x;
+        /// @brief Centre, sur l'axe des lignes.
         double z;
-        double halfAlong;  // demi-longueur dans le sens de heading
+        /// @brief Demi-longueur dans la direction heading.
+        double halfAlong;
+        /// @brief Demi-largeur perpendiculaire à heading.
         double halfAcross;
+        /// @brief Hauteur du dessous.
         double bottom;
+        /// @brief Hauteur du dessus.
         double top;
+        /// @brief Orientation, en radians.
         double heading;
+        /// @brief Couleur du dessus ; les côtés sont assombris.
         Color color;
+        /// @brief Ce que représente le bloc.
         FaceKind kind;
+        /// @brief Espèce, si le bloc fait partie d'un animal.
         std::optional<ecosim::AnimalKind> species;
     };
 
-    // Une touffe d'herbe : trois pointes, toujours tournées vers la caméra.
+    /// @brief Une touffe d'herbe à trois pointes, tournée vers la caméra.
     struct Tuft {
+        /// @brief Sommets de la touffe dans l'espace.
         std::array<Vec3, ecosim::MaxFacePoints> corners;
+        /// @brief Couleur de la touffe.
         Color color;
     };
 
-    // Un élément posé au sol : un obstacle, un animal fait de deux blocs, ou une touffe d'herbe.
+    /// @brief Un élément posé au sol, trié par distance avant le dessin.
     struct Object {
+        /// @brief Carré de la distance à la caméra.
         double distance;
+        /// @brief Blocs d'un obstacle ou d'un animal.
         std::vector<Box> boxes;
+        /// @brief Touffe d'herbe, le cas échéant.
         std::optional<Tuft> tuft{};
     };
 
+    /// @brief Ce que partagent les fonctions qui ajoutent des polygones.
     struct Context {
+        /// @brief Caméra utilisée pour la projection.
         const ecosim::OrbitCamera& camera;
+        /// @brief Taille de l'image.
         ecosim::Viewport viewport;
+        /// @brief Position de la caméra.
         Vec3 eye;
+        /// @brief Liste de polygones à remplir, dans l'ordre de dessin.
         std::vector<Face>& faces;
     };
 
+    /// @brief Assombrit une couleur.
+    /// @param light Part de lumière conservée, de 0 à 1.
+    /// @param color Couleur de départ.
     Color Shade(const Color color, const double light) {
         return {static_cast<int>(color.red * light), static_cast<int>(color.green * light),
                 static_cast<int>(color.blue * light)};
     }
 
+    /// @brief Carré de la distance entre deux points ; suffit pour les comparer.
     double SquaredDistance(const Vec3 a, const Vec3 b) {
         const double x = a.x - b.x;
         const double y = a.y - b.y;
@@ -59,7 +83,8 @@ namespace {
         return x * x + y * y + z * z;
     }
 
-    // Une face dont un sommet passe derrière la caméra est ignorée.
+    /// @brief Projette un polygone et l'ajoute ; il est ignoré si un sommet passe derrière la caméra.
+    /// @tparam Count Nombre de sommets.
     template <std::size_t Count>
     void AddFace(const Context& context, const std::array<Vec3, Count>& corners, const Color color,
                  const FaceKind kind, const std::optional<ecosim::AnimalKind> species = std::nullopt) {
@@ -73,6 +98,13 @@ namespace {
         context.faces.push_back(face);
     }
 
+    /// @brief Ajoute une dalle du sol.
+    /// @param margin Retrait sur les bords, qui dessine le quadrillage.
+    /// @param context Caméra, image et liste à remplir.
+    /// @param x Bord de la case sur l'axe des colonnes.
+    /// @param z Bord de la case sur l'axe des lignes.
+    /// @param color Couleur de la dalle.
+    /// @param kind Ce que représente la dalle.
     void AddTile(const Context& context, const double x, const double z, const double margin,
                  const Color color, const FaceKind kind) {
         const double left = x + margin;
@@ -83,7 +115,7 @@ namespace {
                 color, kind);
     }
 
-    // Seules les faces tournées vers la caméra sont ajoutées ; le dessous n'est jamais visible.
+    /// @brief Ajoute le dessus et les côtés d'un bloc tournés vers la caméra.
     void AddBox(const Context& context, const Box& box) {
         const double alongX = std::cos(box.heading);
         const double alongZ = std::sin(box.heading);
@@ -114,6 +146,7 @@ namespace {
         }
     }
 
+    /// @brief Couleur du sol selon le terrain et l'herbe.
     Color GroundColor(const ecosim::Cell& cell) {
         switch (cell.GetTerrain()) {
             case ecosim::Terrain::Eau: return {55, 112, 190};
@@ -124,7 +157,7 @@ namespace {
         return {static_cast<int>(150 - ratio * 90), static_cast<int>(110 + ratio * 90), 70};
     }
 
-    // Nombre pseudo-aléatoire stable de 0 à 1 : l'herbe ne bouge pas d'une image à l'autre.
+    /// @brief Nombre pseudo-aléatoire stable, de 0 à 1 : l'herbe ne bouge pas d'une image à l'autre.
     double Noise(const int x, const int z, const int index) {
         std::uint32_t value = static_cast<std::uint32_t>(x) * 73856093u
                             ^ static_cast<std::uint32_t>(z) * 19349663u
@@ -135,6 +168,7 @@ namespace {
         return (value % 1000u) / 999.0;
     }
 
+    /// @brief Ajoute les touffes d'herbe d'une prairie.
     void AddGrass(const Context& context, std::vector<Object>& objects, const int x, const int z,
                   const int vegetation) {
         // Places des touffes dans la case ; un petit décalage évite l'effet de quadrillage.
@@ -163,7 +197,7 @@ namespace {
         }
     }
 
-    // Corps et tête, orientés dans le sens de la marche.
+    /// @brief Construit le corps et la tête d'un animal, orientés dans le sens de sa marche.
     std::vector<Box> AnimalModel(const ecosim::AnimalKind kind, const double x, const double z,
                                  const double heading) {
         const ecosim::SpeciesStyle& style = ecosim::StyleOf(kind);

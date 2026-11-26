@@ -42,7 +42,11 @@ export namespace ecosim {
 
     /// @brief Scénarios prêts à l'emploi : équilibre, famine et invasion.
     /// @ingroup moteur
-    enum class Preset { Balance, Famine, Invasion };
+    enum class Preset {
+        Balance, ///< Les deux espèces coexistent longtemps.
+        Famine, ///< L'herbe ne repousse plus.
+        Invasion ///< Les prédateurs arrivent en masse.
+    };
     /// @brief Les préréglages, dans l'ordre des boutons.
     /// @ingroup moteur
     inline constexpr std::array<Preset, 3> Presets{Preset::Balance, Preset::Famine, Preset::Invasion};

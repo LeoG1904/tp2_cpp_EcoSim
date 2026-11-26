@@ -78,18 +78,26 @@ export namespace ecosim {
         void Step();
 
     private:
+        /// @brief La carte et son herbe.
         World world;
+        /// @brief Réglages fixés à la création.
         SimulationSettings settings;
+        /// @brief Les animaux vivants, possédés par la simulation.
         std::vector<std::unique_ptr<Animal>> animals;
+        /// @brief Générateur de hasard : il rend le déroulement reproductible.
         std::mt19937 rng;
+        /// @brief Identifiant du prochain animal créé.
         std::uint64_t nextId{1};
+        /// @brief Numéro de la dernière génération calculée.
         int generation{0};
+        /// @brief Historique et événements.
         SimulationStats stats;
 
-        // Les petits pas d'une génération : se déplacer, manger, chasser.
+        /// @brief Joue les petits pas d'une génération : se déplacer, manger et chasser.
         void MoveAndInteract();
-        // Naissances, métabolisme et morts de la génération.
+        /// @brief Fait vieillir les animaux, gère les naissances, puis retire les morts.
         void LiveAndReproduce();
+        /// @brief Mesure les effectifs, l'énergie moyenne et l'herbe à cet instant.
         PopulationSample Measure() const;
     };
 

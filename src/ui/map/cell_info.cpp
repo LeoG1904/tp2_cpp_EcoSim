@@ -7,6 +7,7 @@ module ecosim.cell_info;
 import std;
 
 namespace {
+    /// @brief Le nom français d'un terrain.
     std::string TerrainName(const ecosim::Terrain terrain) {
         switch (terrain) {
             case ecosim::Terrain::Eau: return "Eau";

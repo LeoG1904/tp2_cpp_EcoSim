@@ -180,6 +180,12 @@ doxygen Doxyfile
 
 Ouvrez ensuite `docs/doxygen/html/index.html`. Les pages d'explication se trouvent dans `docs/` : vue d'ensemble, fonctionnement, architecture et notions de C++. Les commentaires des fichiers `.ixx` décrivent chaque classe et fonction visible ; les éléments oubliés sont signalés dans `docs/doxygen-warnings.log`.
 
+Les membres privés et les aides internes sont eux aussi commentés, sans apparaître dans le site. Un second contrôle les vérifie ; son journal, `docs/doxygen-verification.log`, doit rester vide :
+
+```powershell
+doxygen Doxyfile.verification
+```
+
 ## Conventions de code
 
 Pour garder le code facile à lire dans le cadre du TP, on évite `std::span` et `std::string_view`. On utilise `std::string` pour les textes et des références à `std::vector` pour accéder aux collections sans les copier : `const std::vector<T>&` en lecture, `std::vector<T>&` si une modification est nécessaire.

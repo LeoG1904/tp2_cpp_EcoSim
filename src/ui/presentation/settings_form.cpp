@@ -10,7 +10,7 @@ namespace {
     using ecosim::SettingField;
     using ecosim::SimulationSettings;
 
-    // Les mêmes lignes sont créées pour chaque espèce du catalogue.
+    /// @brief Construit la liste des réglages : le terrain, puis les mêmes lignes pour chaque espèce.
     std::vector<SettingField> BuildFields() {
         std::vector<SettingField> fields{
             {0, "Eau (%)", 0, 50, [](SimulationSettings& s) -> int& { return s.waterPercent; }},

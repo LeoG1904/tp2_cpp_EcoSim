@@ -13,7 +13,9 @@ module ecosim.win32_input;
 import std;
 
 namespace {
-    // Un appui ne compte qu'une fois, même si la touche reste enfoncée.
+    /// @brief Vrai seulement à l'image où la touche vient d'être enfoncée.
+    /// @param key Code Windows de la touche.
+    /// @param wasDown État précédent, mis à jour.
     bool JustPressed(const int key, bool& wasDown) {
         const bool down = (GetAsyncKeyState(key) & 0x8000) != 0;
         const bool result = down && !wasDown;
@@ -21,7 +23,7 @@ namespace {
         return result;
     }
 
-    // Les codes de touche évitent d'avoir à maintenir Maj sur un clavier AZERTY.
+    /// @brief Convertit un code Windows en touche de saisie ; vide pour les autres touches. Les chiffres fonctionnent sans Maj en AZERTY.
     std::optional<ecosim::KeyStroke> ToKeyStroke(const int key) {
         using Kind = ecosim::KeyStroke::Kind;
         if (key >= '0' && key <= '9') return ecosim::KeyStroke{Kind::Digit, key - '0'};

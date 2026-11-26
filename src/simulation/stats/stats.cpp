@@ -7,6 +7,8 @@ module ecosim.stats;
 import std;
 
 namespace {
+    /// @brief Le compteur correspondant à une cause de mort.
+    /// @throws std::invalid_argument si la cause est inconnue.
     std::size_t& Counter(ecosim::LifeEvents& events, const ecosim::DeathCause cause) {
         switch (cause) {
             case ecosim::DeathCause::Starvation: return events.starved;
