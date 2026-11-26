@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief Le prédateur : il poursuit et capture les proies.
+ * @brief La famille des chasseurs : ils poursuivent et capturent les proies.
  */
 export module ecosim.predator;
 
@@ -8,40 +8,51 @@ import std;
 export import ecosim.animal;
 
 export namespace ecosim {
-    /// @brief Un animal qui chasse les proies, au plus une capture par génération.
+    /// @brief Base des animaux qui chassent, avec au plus une capture par génération.
+    ///
+    /// Elle réunit la poursuite et la capture ; Wolf et Fox en sont les espèces. Chacune donne son régime (Animal::Eats).
     /// @ingroup moteur
-    class Predator final : public Animal {
+    class Predator : public Animal {
     public:
-        /// @brief Les caractéristiques fixes du prédateur.
-        static constexpr SpeciesTraits Traits{.energyLoss = 3, .maxAge = 70, .foodEnergy = 25,
-                                              .reproductionEnergy = 70, .speed = 80};
-        /// @brief Chance de naissance, en %, proposée au départ.
-        static constexpr int DefaultBirthPercent{10};
-        /// @brief Distance de vue, en cases, avant le bonus de meute.
-        static constexpr double Sight{3.0};
         /// @brief Distance à laquelle une proie est capturée.
         static constexpr double Reach{0.45};
-        /// @brief Distance dans laquelle les congénères partagent le repas.
-        static constexpr double SharingDistance{1.5};
 
-        /// @brief Crée un prédateur au centre d'une case.
-        /// @throws std::invalid_argument si l'énergie n'est pas entre 1 et 100.
-        Predator(std::uint64_t id, Position cell, int energy = StartingEnergy,
-                 const AnimalOptions& options = {DefaultBirthPercent});
-        /// @copydoc Animal::GetKind
-        AnimalKind GetKind() const override;
         /// @brief Redevient affamé.
         void BeginGeneration(std::mt19937& rng) override;
-        /// @brief Fonce sur la proie la plus proche ; en meute, vise un côté ou rejoint le groupe ; sinon erre.
+        /// @brief Flâne s'il a mangé ; sinon poursuit une proie en vue, ou en cherche une.
         Steering Steer(const Habitat& habitat, std::mt19937& rng) const override;
         /// @brief Capture une proie à portée s'il n'a pas encore mangé.
         void Act(Habitat& habitat, int tick) override;
 
     protected:
-        /// @brief Crée un petit prédateur.
-        std::unique_ptr<Animal> MakeOffspring(std::uint64_t id) const override;
+        /// @brief Crée un chasseur au centre d'une case.
+        /// @param id Identifiant unique.
+        /// @param cell Case de départ.
+        /// @param energy Énergie de départ.
+        /// @param traits Caractéristiques de l'espèce.
+        /// @param options Réglages de l'individu.
+        /// @param sight Distance de vue, en cases ; l'instinct s'y ajoute.
+        /// @throws std::invalid_argument si l'énergie n'est pas entre 1 et 100.
+        Predator(std::uint64_t id, Position cell, int energy, const SpeciesTraits& traits,
+                 const AnimalOptions& options, double sight);
+        /// @brief Direction à prendre vers une proie en vue : droit dessus, par défaut.
+        /// @param habitat Entourage de l'animal.
+        /// @param prey Position de la proie.
+        /// @param range Distance de vue actuelle.
+        virtual Steering Chase(const Habitat& habitat, Point prey, double range) const;
+        /// @brief Direction à prendre sans proie en vue : errer, par défaut.
+        /// @param habitat Entourage de l'animal.
+        /// @param range Distance de vue actuelle.
+        /// @param rng Générateur de hasard.
+        virtual Steering Search(const Habitat& habitat, double range, std::mt19937& rng) const;
+        /// @brief La part du repas que le chasseur garde : tout, par défaut.
+        /// @param habitat Entourage de l'animal.
+        /// @param meal Énergie du repas.
+        virtual int KeptMeal(Habitat& habitat, int meal) const;
 
     private:
+        /// @brief Distance de vue de l'espèce, en cases.
+        double sight;
         /// @brief Vrai après une capture : une seule est permise par génération.
         bool hasEaten{false};
     };

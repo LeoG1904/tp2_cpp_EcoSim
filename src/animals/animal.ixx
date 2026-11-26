@@ -13,11 +13,12 @@ export namespace ecosim {
     enum class AnimalKind {
         Deer, ///< Le cerf : le grand herbivore.
         Rabbit, ///< Le lapin : le petit herbivore, qui se contente d'une herbe rase.
-        Predator ///< Chasse les cerfs et les lapins.
+        Wolf, ///< Le loup : chasse les cerfs et les lapins, parfois en meute.
+        Fox ///< Le renard : ne chasse que les lapins, toujours seul.
     };
     /// @brief Nombre d'espèces.
     /// @ingroup moteur
-    inline constexpr std::size_t SpeciesCount{3};
+    inline constexpr std::size_t SpeciesCount{4};
 
     /// @brief Une valeur pour chaque espèce, désignée par son nom plutôt que par un numéro.
     /// @tparam T Type de la valeur.
@@ -100,17 +101,27 @@ export namespace ecosim {
         virtual World& GetWorld() = 0;
         /// @brief La carte, en lecture.
         virtual const World& GetWorld() const = 0;
-        /// @brief La proie vivante la plus proche dans le rayon, s'il y en a une.
-        virtual std::optional<Point> NearestPrey(Point from, double radius) const = 0;
-        /// @brief Les positions des prédateurs vivants dans le rayon.
+        /// @brief La proie la plus proche que ce chasseur mange (Animal::Eats), s'il y en a une dans le rayon.
+        /// @param hunter Chasseur qui cherche.
         /// @param from Centre de la recherche.
         /// @param radius Rayon, en cases.
-        /// @param except Animal à ne pas compter.
-        virtual std::vector<Point> HuntersNear(Point from, double radius,
-                                               const Animal* except) const = 0;
-        /// @brief Capture la proie la plus proche à portée.
+        virtual std::optional<Point> NearestPrey(const Animal& hunter, Point from,
+                                                 double radius) const = 0;
+        /// @brief Les positions des chasseurs qui mangent cette proie, dans le rayon.
+        /// @param prey Animal menacé.
+        /// @param from Centre de la recherche.
+        /// @param radius Rayon, en cases.
+        virtual std::vector<Point> ThreatsNear(const Animal& prey, Point from,
+                                               double radius) const = 0;
+        /// @brief Les positions des autres animaux vivants de la même espèce, dans le rayon.
+        /// @param animal Animal qui cherche ; il n'est pas compté.
+        /// @param from Centre de la recherche.
+        /// @param radius Rayon, en cases.
+        virtual std::vector<Point> MatesNear(const Animal& animal, Point from,
+                                             double radius) const = 0;
+        /// @brief Capture la proie à portée la plus proche parmi celles que ce chasseur mange.
         /// @return La taille du repas qu'offre la proie (SpeciesTraits::mealPercent), ou rien sans capture.
-        virtual std::optional<int> CatchPrey(Point from, double reach) = 0;
+        virtual std::optional<int> CatchPrey(const Animal& hunter, Point from, double reach) = 0;
         /// @brief Partage un repas avec les congénères proches.
         /// @return La part qui reste au chasseur.
         virtual int ShareMeal(const Animal& hunter, int energy) = 0;
@@ -183,6 +194,8 @@ export namespace ecosim {
         virtual AnimalKind GetKind() const = 0;
         /// @brief Vrai pour une proie. Les proies jouent avant les chasseurs.
         virtual bool IsPrey() const;
+        /// @brief Vrai si les animaux de cette espèce font partie de son régime ; faux par défaut.
+        virtual bool Eats(AnimalKind kind) const;
         /// @brief Décisions prises une seule fois au début d'une génération.
         virtual void BeginGeneration(std::mt19937& rng);
         /// @brief Choisit la direction et l'allure du prochain petit pas.

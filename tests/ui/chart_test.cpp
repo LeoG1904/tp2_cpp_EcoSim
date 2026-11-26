@@ -14,7 +14,7 @@ namespace {
         const std::array<std::size_t, 3> predators{2, 2, 1};
         for (std::size_t i = 0; i < history.size(); ++i) {
             history[i].species[AnimalKind::Deer].population = herbivores[i];
-            history[i].species[AnimalKind::Predator].population = predators[i];
+            history[i].species[AnimalKind::Wolf].population = predators[i];
         }
         history[0].species[AnimalKind::Deer].energy = 50.0;
         history[1].species[AnimalKind::Deer].energy = 55.5;
@@ -56,11 +56,13 @@ TEST_CASE("Le filtre d'espece, les mangés et la vegetation", "[chart]") {
     selection.hidden[AnimalKind::Deer] = true;
     selection.hidden[AnimalKind::Rabbit] = true;
     const auto population = BuildSeries(History(), ChartMetric::Population, selection);
-    REQUIRE(population.size() == 1);
-    REQUIRE(population[0].species == AnimalKind::Predator);
+    REQUIRE(population.size() == 2);
+    REQUIRE(population[0].species == AnimalKind::Wolf);
+    REQUIRE(population[1].species == AnimalKind::Fox);
     REQUIRE(BuildSeries(History(), ChartMetric::Eaten, selection).empty());
 
-    selection.hidden[AnimalKind::Predator] = true;
+    selection.hidden[AnimalKind::Wolf] = true;
+    selection.hidden[AnimalKind::Fox] = true;
     const auto vegetation = BuildSeries(History(), ChartMetric::Vegetation, selection);
     REQUIRE(vegetation.size() == 1);
     REQUIRE(vegetation[0].values.back() == 900.0);
@@ -105,9 +107,9 @@ TEST_CASE("Les cases a cocher choisissent les graphiques", "[chart]") {
     REQUIRE(controller.Charts().VisibleMetrics().size() == MetricCount - 1);
     REQUIRE_FALSE(controller.Charts().metrics[1]);
 
-    controller.Handle(Click(SpeciesChip(static_cast<int>(AnimalKind::Predator))), false, false, settings);
+    controller.Handle(Click(SpeciesChip(static_cast<int>(AnimalKind::Wolf))), false, false, settings);
     controller.Handle(Click(CumulativeButton()), false, false, settings);
-    REQUIRE(controller.Charts().hidden[AnimalKind::Predator]);
+    REQUIRE(controller.Charts().hidden[AnimalKind::Wolf]);
     REQUIRE_FALSE(controller.Charts().cumulative);
 
     // Le choix est conserve apres un redemarrage.

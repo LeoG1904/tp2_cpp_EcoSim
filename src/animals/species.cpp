@@ -23,8 +23,10 @@ namespace ecosim {
              &Create<Deer>},
             {AnimalKind::Rabbit, "Lapin", "Lapins", Rabbit::DefaultBirthPercent, 15, 12, true, 25,
              &Create<Rabbit>},
-            {AnimalKind::Predator, "Prédateur", "Prédateurs", Predator::DefaultBirthPercent, 150, 3,
-             false, 2, &Create<Predator>},
+            {AnimalKind::Wolf, "Loup", "Loups", Wolf::DefaultBirthPercent, 150, 3, false, 2,
+             &Create<Wolf>},
+            {AnimalKind::Fox, "Renard", "Renards", Fox::DefaultBirthPercent, 150, 3, false, 1,
+             &Create<Fox>},
         };
         return catalog;
     }

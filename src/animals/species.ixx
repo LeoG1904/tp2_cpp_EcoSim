@@ -7,7 +7,8 @@ export module ecosim.species;
 import std;
 export import ecosim.deer;
 export import ecosim.rabbit;
-export import ecosim.predator;
+export import ecosim.wolf;
+export import ecosim.fox;
 
 export namespace ecosim {
     /// @brief La fiche d'une espèce.

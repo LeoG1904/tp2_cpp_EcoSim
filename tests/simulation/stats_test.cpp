@@ -19,7 +19,7 @@ TEST_CASE("La generation 0 mesure les animaux et la vegetation des prairies", "[
     REQUIRE(history.back().vegetation == 50);
     REQUIRE(history.back().species[AnimalKind::Deer].population == 2);
     REQUIRE(history.back().species[AnimalKind::Deer].energy == 50.0);
-    REQUIRE(history.back().species[AnimalKind::Predator].energy == 0.0);
+    REQUIRE(history.back().species[AnimalKind::Wolf].energy == 0.0);
     // Les animaux placés au départ ne sont pas des naissances.
     REQUIRE(simulation.Stats().Total(AnimalKind::Deer).births == 0);
 }
@@ -27,7 +27,7 @@ TEST_CASE("La generation 0 mesure les animaux et la vegetation des prairies", "[
 TEST_CASE("Une proie capturee est comptee comme mangee", "[stats]") {
     Simulation simulation{World{1, 1}, std::mt19937{2}};
     simulation.AddAnimal(AnimalKind::Deer, {0, 0});
-    simulation.AddAnimal(AnimalKind::Predator, {0, 0});
+    simulation.AddAnimal(AnimalKind::Wolf, {0, 0});
     simulation.Step();
 
     const LifeEvents& events = simulation.Stats().Total(AnimalKind::Deer);
@@ -56,7 +56,7 @@ TEST_CASE("La faim et la vieillesse sont distinguees", "[stats]") {
 TEST_CASE("Les evenements de la derniere generation sont remis a zero", "[stats]") {
     Simulation simulation{World{1, 1}, std::mt19937{5}};
     simulation.AddAnimal(AnimalKind::Deer, {0, 0}, 1);
-    simulation.AddAnimal(AnimalKind::Predator, {0, 0}, 100);
+    simulation.AddAnimal(AnimalKind::Wolf, {0, 0}, 100);
     simulation.Step();
     REQUIRE(simulation.Stats().LastGeneration(AnimalKind::Deer).Deaths() == 1);
 
@@ -71,19 +71,19 @@ TEST_CASE("A chaque generation, effectifs = anciens + naissances - morts", "[sta
         World world = GenerateRandomWorld(24, 14, rng);
         Simulation simulation{std::move(world), std::mt19937{rng()}};
         simulation.Seed(AnimalKind::Deer, 60);
-        simulation.Seed(AnimalKind::Predator, 8);
+        simulation.Seed(AnimalKind::Wolf, 8);
         while (!simulation.IsFinished() && simulation.GetGeneration() < 300) {
             const std::size_t herbivores = simulation.Count(AnimalKind::Deer);
-            const std::size_t predators = simulation.Count(AnimalKind::Predator);
+            const std::size_t predators = simulation.Count(AnimalKind::Wolf);
             simulation.Step();
             const LifeEvents& h = simulation.Stats().LastGeneration(AnimalKind::Deer);
-            const LifeEvents& p = simulation.Stats().LastGeneration(AnimalKind::Predator);
+            const LifeEvents& p = simulation.Stats().LastGeneration(AnimalKind::Wolf);
             REQUIRE(simulation.Count(AnimalKind::Deer) == herbivores + h.births - h.Deaths());
-            REQUIRE(simulation.Count(AnimalKind::Predator) == predators + p.births - p.Deaths());
+            REQUIRE(simulation.Count(AnimalKind::Wolf) == predators + p.births - p.Deaths());
             REQUIRE(p.eaten == 0);
             // L'historique garde les evenements de chaque generation pour les graphiques.
             REQUIRE(simulation.Stats().History().back().species[AnimalKind::Deer].events.births == h.births);
-            REQUIRE(simulation.Stats().History().back().species[AnimalKind::Predator].events.Deaths() == p.Deaths());
+            REQUIRE(simulation.Stats().History().back().species[AnimalKind::Wolf].events.Deaths() == p.Deaths());
         }
     }
 }

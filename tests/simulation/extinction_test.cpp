@@ -14,10 +14,10 @@ TEST_CASE("La simulation s'arrete a la generation ou le dernier animal meurt", "
     REQUIRE(simulation.IsFinished());
     REQUIRE(simulation.GetGeneration() == 1);
     REQUIRE(simulation.Count(AnimalKind::Deer) == 0);
-    REQUIRE(simulation.Count(AnimalKind::Predator) == 0);
+    REQUIRE(simulation.Count(AnimalKind::Wolf) == 0);
     REQUIRE(simulation.Stats().History().size() == 2);
     REQUIRE(simulation.Stats().History().back().species[AnimalKind::Deer].population == 0);
-    REQUIRE(simulation.Stats().History().back().species[AnimalKind::Predator].population == 0);
+    REQUIRE(simulation.Stats().History().back().species[AnimalKind::Wolf].population == 0);
 
     const int vegetation = simulation.GetWorld().GetCell({0, 0}).GetVegetation();
     for (int i = 0; i < 10; ++i) simulation.Step();

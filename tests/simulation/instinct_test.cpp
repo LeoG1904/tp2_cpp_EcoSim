@@ -17,7 +17,11 @@ namespace {
 
         World& GetWorld() override { return world; }
         const World& GetWorld() const override { return world; }
-        std::optional<Point> NearestPrey(const Point from, const double radius) const override {
+        std::optional<Point> NearestPrey(const Animal&, const Point from,
+                                         const double radius) const override {
+            return Closest(from, radius);
+        }
+        std::optional<Point> Closest(const Point from, const double radius) const {
             std::optional<Point> best;
             for (const Point point : prey) {
                 if (Distance(from, point) <= radius
@@ -27,16 +31,23 @@ namespace {
             }
             return best;
         }
-        std::vector<Point> HuntersNear(const Point from, const double radius,
-                                       const Animal*) const override {
+        std::vector<Point> ThreatsNear(const Animal&, const Point from,
+                                       const double radius) const override {
+            return HuntersWithin(from, radius);
+        }
+        std::vector<Point> MatesNear(const Animal&, const Point from,
+                                     const double radius) const override {
+            return HuntersWithin(from, radius);
+        }
+        std::vector<Point> HuntersWithin(const Point from, const double radius) const {
             std::vector<Point> result;
             for (const Point point : hunters) {
                 if (Distance(from, point) <= radius) result.push_back(point);
             }
             return result;
         }
-        std::optional<int> CatchPrey(const Point from, const double reach) override {
-            if (!NearestPrey(from, reach)) return std::nullopt;
+        std::optional<int> CatchPrey(const Animal&, const Point from, const double reach) override {
+            if (!Closest(from, reach)) return std::nullopt;
             ++captures;
             return mealPercent;
         }
@@ -63,7 +74,7 @@ namespace {
         FakeHabitat habitat;
         habitat.prey = prey;
         habitat.hunters = mates;
-        Predator predator{id, {2, 6}, 50, Instinct(pack)};
+        Wolf predator{id, {2, 6}, 50, Instinct(pack)};
         predator.Place({2.5, 6.5}, 0.0);
         std::mt19937 rng{2};
         return predator.Steer(habitat, rng);
@@ -84,7 +95,7 @@ TEST_CASE("Un chasseur trop loin n'est pas repere", "[instinct]") {
 }
 
 TEST_CASE("L'esprit de meute fait voir les proies de plus loin", "[instinct]") {
-    const std::vector<Point> prey{{2.5 + Predator::Sight + 2.0, 6.5}};
+    const std::vector<Point> prey{{2.5 + Wolf::Sight + 2.0, 6.5}};
     REQUIRE(PredatorSteering(0, 1, prey, {}).pace < 1.0);
     const Steering pack = PredatorSteering(3, 1, prey, {});
     REQUIRE(pack.pace == 1.0);
@@ -110,11 +121,11 @@ TEST_CASE("Sans proie, un predateur en meute rejoint un congenere", "[instinct]"
 
 TEST_CASE("La meute partage le repas sans creer d'energie", "[instinct]") {
     SimulationSettings settings;
-    settings.species[AnimalKind::Predator].options.instinct = 2;
+    settings.species[AnimalKind::Wolf].options.instinct = 2;
     Simulation simulation{World{1, 1}, std::mt19937{4}, settings};
     simulation.AddAnimal(AnimalKind::Deer, {0, 0});
-    simulation.AddAnimal(AnimalKind::Predator, {0, 0});
-    simulation.AddAnimal(AnimalKind::Predator, {0, 0});
+    simulation.AddAnimal(AnimalKind::Wolf, {0, 0});
+    simulation.AddAnimal(AnimalKind::Wolf, {0, 0});
     simulation.Step();
 
     // 25 points : 13 pour le chasseur et 12 pour son voisin, moins 3 pour la génération.
@@ -126,7 +137,7 @@ TEST_CASE("La meute partage le repas sans creer d'energie", "[instinct]") {
 TEST_CASE("L'application active la fuite et les meutes, le moteur seul non", "[instinct]") {
     const SimulationSettings application = DefaultSettings(42, 26);
     REQUIRE(application.species[AnimalKind::Deer].options.instinct == 25);
-    REQUIRE(application.species[AnimalKind::Predator].options.instinct == 2);
+    REQUIRE(application.species[AnimalKind::Wolf].options.instinct == 2);
     for (const SpeciesSettings& species : SimulationSettings{}.species.values) {
         REQUIRE(species.options.instinct == 0);
     }

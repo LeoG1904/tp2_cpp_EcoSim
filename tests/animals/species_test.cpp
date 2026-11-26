@@ -3,7 +3,8 @@
 import std;
 import ecosim.deer;
 import ecosim.rabbit;
-import ecosim.predator;
+import ecosim.wolf;
+import ecosim.fox;
 
 using namespace ecosim;
 
@@ -19,7 +20,11 @@ namespace {
 
         World& GetWorld() override { return world; }
         const World& GetWorld() const override { return world; }
-        std::optional<Point> NearestPrey(const Point from, const double radius) const override {
+        std::optional<Point> NearestPrey(const Animal&, const Point from,
+                                         const double radius) const override {
+            return Closest(from, radius);
+        }
+        std::optional<Point> Closest(const Point from, const double radius) const {
             std::optional<Point> best;
             for (const Point point : prey) {
                 if (Distance(from, point) <= radius
@@ -29,16 +34,23 @@ namespace {
             }
             return best;
         }
-        std::vector<Point> HuntersNear(const Point from, const double radius,
-                                       const Animal*) const override {
+        std::vector<Point> ThreatsNear(const Animal&, const Point from,
+                                       const double radius) const override {
+            return HuntersWithin(from, radius);
+        }
+        std::vector<Point> MatesNear(const Animal&, const Point from,
+                                     const double radius) const override {
+            return HuntersWithin(from, radius);
+        }
+        std::vector<Point> HuntersWithin(const Point from, const double radius) const {
             std::vector<Point> result;
             for (const Point point : hunters) {
                 if (Distance(from, point) <= radius) result.push_back(point);
             }
             return result;
         }
-        std::optional<int> CatchPrey(const Point from, const double reach) override {
-            if (!NearestPrey(from, reach)) return std::nullopt;
+        std::optional<int> CatchPrey(const Animal&, const Point from, const double reach) override {
+            if (!Closest(from, reach)) return std::nullopt;
             ++captures;
             return mealPercent;
         }
@@ -51,7 +63,7 @@ TEST_CASE("Chaque espece se nourrit a sa facon", "[species]") {
     habitat.world.GetCell({6, 6}).SetVegetation(80);
     habitat.prey = {{6.7, 6.5}};
     Deer herbivore{1, {6, 6}};
-    Predator predator{2, {6, 6}};
+    Wolf predator{2, {6, 6}};
 
     herbivore.Act(habitat, 0);
     REQUIRE(herbivore.GetEnergy() == 50); // il ne mange qu'au dernier petit pas
@@ -73,10 +85,10 @@ TEST_CASE("Un lapin offre un repas deux fois plus petit qu'un cerf", "[species]"
     FakeHabitat habitat;
     habitat.prey = {{6.7, 6.5}};
     habitat.mealPercent = rabbit.GetTraits().mealPercent;
-    Predator predator{3, {6, 6}};
+    Wolf predator{3, {6, 6}};
     predator.Act(habitat, 0);
     REQUIRE(predator.GetEnergy()
-            == 50 + Predator::Traits.foodEnergy * Rabbit::Traits.mealPercent / 100);
+            == 50 + Wolf::Traits.foodEnergy * Rabbit::Traits.mealPercent / 100);
 }
 
 TEST_CASE("Sur une herbe rase, le lapin reste et le cerf repart", "[species]") {
@@ -100,10 +112,30 @@ TEST_CASE("Le petit d'un lapin est un lapin", "[species]") {
     REQUIRE(child->GetTraits() == Rabbit::Traits);
 }
 
-TEST_CASE("Les cerfs et les lapins sont des proies, pas les predateurs", "[species]") {
+TEST_CASE("Le loup mange cerfs et lapins, le renard seulement les lapins", "[species]") {
+    const Wolf wolf{1, {0, 0}};
+    const Fox fox{2, {0, 0}};
+    REQUIRE(wolf.Eats(AnimalKind::Deer));
+    REQUIRE(wolf.Eats(AnimalKind::Rabbit));
+    REQUIRE_FALSE(wolf.Eats(AnimalKind::Fox));
+    REQUIRE(fox.Eats(AnimalKind::Rabbit));
+    REQUIRE_FALSE(fox.Eats(AnimalKind::Deer));
+    REQUIRE_FALSE(fox.Eats(AnimalKind::Wolf));
+    REQUIRE_FALSE(fox.IsPrey());
+    REQUIRE_FALSE(Deer{3, {0, 0}}.Eats(AnimalKind::Rabbit));
+}
+
+TEST_CASE("Le petit d'un renard est un renard", "[species]") {
+    const Fox parent{4, {0, 0}, 90};
+    const auto child = parent.CreateOffspring(5);
+    REQUIRE(child->GetKind() == AnimalKind::Fox);
+    REQUIRE(child->GetTraits() == Fox::Traits);
+}
+
+TEST_CASE("Les cerfs et les lapins sont des proies, pas les chasseurs", "[species]") {
     const Deer deer{1, {0, 0}};
     const Rabbit rabbit{3, {0, 0}};
-    const Predator predator{2, {0, 0}};
+    const Wolf predator{2, {0, 0}};
     REQUIRE(deer.IsPrey());
     REQUIRE(rabbit.IsPrey());
     REQUIRE_FALSE(predator.IsPrey());

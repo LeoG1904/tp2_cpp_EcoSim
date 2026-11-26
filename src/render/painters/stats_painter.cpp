@@ -130,11 +130,18 @@ namespace {
         write(panel.x + 12, panel.y + 6, ecosim::ChartTitle(metric, selection.cumulative), PrimaryInk);
 
         // Légende avec la valeur actuelle, ou celle de la génération survolée.
+        const auto entry = [&](const ecosim::ChartSeries& one, const bool named) {
+            const std::string value = ecosim::FormatValue(metric, one.values[shown]);
+            return named ? std::format("{} : {}", NameOf(one.species), value) : value;
+        };
+        // Sur un graphique étroit, les noms sont omis : la couleur désigne l'espèce.
+        int needed = 12;
+        for (const ecosim::ChartSeries& one : series) needed += 17 + textWidth(entry(one, true)) + 22;
+        const bool named = needed - 22 <= panel.width;
         int legendX = panel.x + 12;
         for (const ecosim::ChartSeries& one : series) {
             Fill(buffer, {legendX, panel.y + 35, 11, 11}, ColorOf(one.species));
-            const std::string text = std::format("{} : {}", NameOf(one.species),
-                                                 ecosim::FormatValue(metric, one.values[shown]));
+            const std::string text = entry(one, named);
             write(legendX + 17, panel.y + 30, text, MutedInk);
             legendX += 17 + textWidth(text) + 22;
         }

@@ -12,25 +12,25 @@ TEST_CASE("L'historique des populations suit les générations et les ajouts", "
 
     simulation.AddAnimal(AnimalKind::Deer, {0, 0});
     simulation.AddAnimal(AnimalKind::Deer, {0, 0});
-    simulation.AddAnimal(AnimalKind::Predator, {0, 0});
+    simulation.AddAnimal(AnimalKind::Wolf, {0, 0});
     REQUIRE(simulation.Stats().History().front().species[AnimalKind::Deer].population == 2);
-    REQUIRE(simulation.Stats().History().front().species[AnimalKind::Predator].population == 1);
+    REQUIRE(simulation.Stats().History().front().species[AnimalKind::Wolf].population == 1);
 
     simulation.Step();
     REQUIRE(simulation.Stats().History().size() == 2);
     REQUIRE(simulation.Stats().History().back().generation == 1);
     REQUIRE(simulation.Stats().History().back().species[AnimalKind::Deer].population == simulation.Count(AnimalKind::Deer));
-    REQUIRE(simulation.Stats().History().back().species[AnimalKind::Predator].population == simulation.Count(AnimalKind::Predator));
+    REQUIRE(simulation.Stats().History().back().species[AnimalKind::Wolf].population == simulation.Count(AnimalKind::Wolf));
 
-    simulation.AddAnimal(AnimalKind::Predator, {0, 0});
-    REQUIRE(simulation.Stats().History().back().species[AnimalKind::Predator].population == 2);
-    REQUIRE(simulation.Stats().History().front().species[AnimalKind::Predator].population == 1);
+    simulation.AddAnimal(AnimalKind::Wolf, {0, 0});
+    REQUIRE(simulation.Stats().History().back().species[AnimalKind::Wolf].population == 2);
+    REQUIRE(simulation.Stats().History().front().species[AnimalKind::Wolf].population == 1);
 
     simulation.Step();
     REQUIRE(simulation.Stats().History().size() == 3);
     REQUIRE(simulation.Stats().History().back().generation == 2);
     REQUIRE(simulation.Stats().History().back().species[AnimalKind::Deer].population == simulation.Count(AnimalKind::Deer));
-    REQUIRE(simulation.Stats().History().back().species[AnimalKind::Predator].population == simulation.Count(AnimalKind::Predator));
+    REQUIRE(simulation.Stats().History().back().species[AnimalKind::Wolf].population == simulation.Count(AnimalKind::Wolf));
 
     for (int i = 0; i < 8; ++i) simulation.Step();
     const auto& history = simulation.Stats().History();

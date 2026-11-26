@@ -35,7 +35,7 @@ TEST_CASE("Chaque proie nourrit le predateur selon sa taille", "[settings]") {
     const auto energyAfterHunt = [](const AnimalKind prey) {
         Simulation hunt{World{1, 1}, std::mt19937{4}};
         hunt.AddAnimal(prey, {0, 0});
-        hunt.AddAnimal(AnimalKind::Predator, {0, 0});
+        hunt.AddAnimal(AnimalKind::Wolf, {0, 0});
         hunt.Step();
         return hunt.Animals().front().energy;
     };

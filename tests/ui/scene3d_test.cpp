@@ -34,7 +34,7 @@ TEST_CASE("Chaque animal a son modele, meme sur une case partagee", "[scene3d]")
     const auto count = [&world](const int herbivores, const int predators) {
         std::vector<AnimalSnapshot> animals;
         for (int i = 0; i < herbivores + predators; ++i) {
-            const AnimalKind kind = i < herbivores ? AnimalKind::Deer : AnimalKind::Predator;
+            const AnimalKind kind = i < herbivores ? AnimalKind::Deer : AnimalKind::Wolf;
             Path path;
             path.fill({1.2 + 0.1 * i, 1.5});
             animals.push_back({static_cast<std::uint64_t>(i + 1), {1, 1}, kind, 1, 50, path,
@@ -44,7 +44,7 @@ TEST_CASE("Chaque animal a son modele, meme sur une case partagee", "[scene3d]")
     };
     const auto shared = count(1, 1);
     REQUIRE(std::ranges::count(shared, AnimalKind::Deer, &Face::species) > 0);
-    REQUIRE(std::ranges::count(shared, AnimalKind::Predator, &Face::species) > 0);
+    REQUIRE(std::ranges::count(shared, AnimalKind::Wolf, &Face::species) > 0);
     REQUIRE(count(9, 0).size() > count(4, 0).size());
 }
 

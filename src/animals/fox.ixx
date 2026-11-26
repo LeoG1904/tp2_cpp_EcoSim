@@ -1,0 +1,36 @@
+/**
+ * @file
+ * @brief Le renard : un petit chasseur solitaire.
+ */
+export module ecosim.fox;
+
+import std;
+export import ecosim.predator;
+
+export namespace ecosim {
+    /// @brief Un petit chasseur rapide qui ne mange que les lapins ; son instinct, le flair, étend sa vue.
+    /// @ingroup moteur
+    class Fox final : public Predator {
+    public:
+        /// @brief Les caractéristiques fixes du renard.
+        static inline SpeciesTraits Traits{.energyLoss = 2, .maxAge = 60, .foodEnergy = 40,
+                                              .reproductionEnergy = 70, .speed = 110};
+        /// @brief Chance de naissance, en %, proposée au départ.
+        static constexpr int DefaultBirthPercent{10};
+        /// @brief Distance de vue, en cases, avant le bonus de flair.
+        static inline double Sight{2.0};
+
+        /// @brief Crée un renard au centre d'une case.
+        /// @throws std::invalid_argument si l'énergie n'est pas entre 1 et 100.
+        Fox(std::uint64_t id, Position cell, int energy = StartingEnergy,
+            const AnimalOptions& options = {DefaultBirthPercent});
+        /// @copydoc Animal::GetKind
+        AnimalKind GetKind() const override;
+        /// @brief Vrai pour les lapins seulement.
+        bool Eats(AnimalKind kind) const override;
+
+    protected:
+        /// @brief Crée un petit renard.
+        std::unique_ptr<Animal> MakeOffspring(std::uint64_t id) const override;
+    };
+}

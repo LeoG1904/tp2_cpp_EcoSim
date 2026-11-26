@@ -2,7 +2,7 @@
 
 import std;
 import ecosim.deer;
-import ecosim.predator;
+import ecosim.wolf;
 
 using namespace ecosim;
 
@@ -19,7 +19,7 @@ namespace {
 
 TEST_CASE("La vitesse et l'allure fixent la distance parcourue", "[movement]") {
     REQUIRE(Travel<Deer>(1.0) == Catch::Approx(Deer::Traits.speed / 100.0));
-    REQUIRE(Travel<Predator>(1.0) == Catch::Approx(Predator::Traits.speed / 100.0));
+    REQUIRE(Travel<Wolf>(1.0) == Catch::Approx(Wolf::Traits.speed / 100.0));
     REQUIRE(Travel<Deer>(0.5) == Catch::Approx(Deer::Traits.speed / 200.0));
     REQUIRE(Travel<Deer>(0.0) == 0.0);
 }
@@ -35,7 +35,7 @@ TEST_CASE("Un animal tourne progressivement", "[movement]") {
 TEST_CASE("Un animal contourne un obstacle sans jamais y entrer", "[movement]") {
     World world{5, 3};
     world.GetCell({2, 1}) = Cell{Terrain::Obstacle};
-    Predator animal{1, {0, 1}};
+    Wolf animal{1, {0, 1}};
     animal.Place({1.5, 1.5}, 0.0);
     for (int generation = 0; generation < 3; ++generation) {
         animal.StartPath();

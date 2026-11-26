@@ -95,6 +95,7 @@ namespace ecosim {
     void Animal::ReceiveMeal(const int amount) { energy = std::min(MaxEnergy, energy + amount); }
 
     bool Animal::IsPrey() const { return false; }
+    bool Animal::Eats(AnimalKind) const { return false; }
     void Animal::BeginGeneration(std::mt19937&) {}
 
     double Animal::HeadingTo(const Point from, const Point to) {

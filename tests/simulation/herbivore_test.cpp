@@ -77,7 +77,7 @@ TEST_CASE("Le trajet d'une generation est continu et reste sur les prairies", "[
     World world = GenerateRandomWorld(20, 14, rng);
     Simulation simulation{std::move(world), std::mt19937{10}};
     simulation.Seed(AnimalKind::Deer, 30);
-    simulation.Seed(AnimalKind::Predator, 6);
+    simulation.Seed(AnimalKind::Wolf, 6);
     std::map<std::uint64_t, Point> previous;
     for (const auto& animal : simulation.Animals()) previous[animal.id] = animal.path.back();
 

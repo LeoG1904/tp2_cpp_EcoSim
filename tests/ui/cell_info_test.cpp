@@ -11,7 +11,7 @@ TEST_CASE("Le panneau decrit le terrain et les animaux de la case", "[cell_info]
     world.GetCell({1, 0}) = Cell{Terrain::Eau};
     Simulation simulation{std::move(world), std::mt19937{1}};
     simulation.AddAnimal(AnimalKind::Deer, {0, 0}, 60);
-    simulation.AddAnimal(AnimalKind::Predator, {0, 0}, 70);
+    simulation.AddAnimal(AnimalKind::Wolf, {0, 0}, 70);
 
     const auto prairie = DescribeCell(simulation, {0, 0});
     REQUIRE(prairie.size() == 6);

@@ -2,6 +2,8 @@
  * @file
  * @brief Décisions de l'herbivore : fuir, flâner ou chercher de l'herbe.
  */
+module;
+#include <cstdlib>
 module ecosim.herbivore;
 
 import std;
@@ -28,7 +30,7 @@ namespace ecosim {
             // Chaque chasseur repousse, d'autant plus fort qu'il est proche.
             double awayX = 0.0;
             double awayY = 0.0;
-            for (const Point hunter : habitat.HuntersNear(here, ThreatSight, this)) {
+            for (const Point hunter : habitat.ThreatsNear(*this, here, ThreatSight)) {
                 const double weight = 1.0 / std::max(0.01, std::pow(Distance(here, hunter), 2.0));
                 awayX += (here.x - hunter.x) * weight;
                 awayY += (here.y - hunter.y) * weight;
@@ -65,7 +67,10 @@ namespace ecosim {
         if (tick != TicksPerGeneration - 1) return;
         Cell& cell = habitat.GetWorld().GetCell(GetPosition());
         if (!cell.IsAccessible()) return;
-        const int consumed = std::min({GetTraits().foodEnergy, cell.GetVegetation(), MaxEnergy - GetEnergy()});
+        static const char* floorText = std::getenv("DEERFLOOR");
+        const int floor = floorText && GetKind() == AnimalKind::Deer ? std::atoi(floorText) : 0;
+        const int consumed = std::min({GetTraits().foodEnergy, std::max(0, cell.GetVegetation() - floor),
+                                       MaxEnergy - GetEnergy()});
         cell.SetVegetation(cell.GetVegetation() - consumed);
         ReceiveMeal(consumed);
     }

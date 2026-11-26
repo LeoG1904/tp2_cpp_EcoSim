@@ -2,6 +2,8 @@
  * @file
  * @brief Le cycle d'une génération et la recherche des voisins.
  */
+module;
+#include <cstdlib>
 module ecosim.simulation;
 
 import std;
@@ -34,24 +36,37 @@ namespace {
         ecosim::World& GetWorld() override { return world; }
         const ecosim::World& GetWorld() const override { return world; }
 
-        std::optional<ecosim::Point> NearestPrey(const ecosim::Point from,
+        std::optional<ecosim::Point> NearestPrey(const ecosim::Animal& hunter,
+                                                 const ecosim::Point from,
                                                  const double radius) const override {
-            const ecosim::Animal* prey = ClosestPrey(from, radius);
+            const ecosim::Animal* prey = ClosestPrey(hunter, from, radius);
             if (!prey) return std::nullopt;
             return prey->GetLocation();
         }
 
-        std::vector<ecosim::Point> HuntersNear(const ecosim::Point from, const double radius,
-                                               const ecosim::Animal* except) const override {
+        std::vector<ecosim::Point> ThreatsNear(const ecosim::Animal& prey, const ecosim::Point from,
+                                               const double radius) const override {
             std::vector<ecosim::Point> result;
             ForEachNear(from, radius, [&](ecosim::Animal& other, double) {
-                if (&other != except && !other.IsPrey()) result.push_back(other.GetLocation());
+                if (other.Eats(prey.GetKind())) result.push_back(other.GetLocation());
             });
             return result;
         }
 
-        std::optional<int> CatchPrey(const ecosim::Point from, const double reach) override {
-            ecosim::Animal* prey = ClosestPrey(from, reach);
+        std::vector<ecosim::Point> MatesNear(const ecosim::Animal& animal, const ecosim::Point from,
+                                             const double radius) const override {
+            std::vector<ecosim::Point> result;
+            ForEachNear(from, radius, [&](ecosim::Animal& other, double) {
+                if (&other != &animal && other.GetKind() == animal.GetKind()) {
+                    result.push_back(other.GetLocation());
+                }
+            });
+            return result;
+        }
+
+        std::optional<int> CatchPrey(const ecosim::Animal& hunter, const ecosim::Point from,
+                                     const double reach) override {
+            ecosim::Animal* prey = ClosestPrey(hunter, from, reach);
             if (!prey) return std::nullopt;
             prey->Die();
             stats.RecordDeath(prey->GetKind(), ecosim::DeathCause::Predation);
@@ -60,7 +75,7 @@ namespace {
 
         int ShareMeal(const ecosim::Animal& hunter, const int energy) override {
             std::vector<ecosim::Animal*> mates;
-            ForEachNear(hunter.GetLocation(), ecosim::Predator::SharingDistance,
+            ForEachNear(hunter.GetLocation(), ecosim::Wolf::SharingDistance,
                         [&](ecosim::Animal& other, double) {
                 if (&other != &hunter && other.GetKind() == hunter.GetKind()) mates.push_back(&other);
             });
@@ -93,14 +108,18 @@ namespace {
             }
         }
 
-        /// @brief La proie vivante la plus proche dans le rayon, ou nullptr.
-        ecosim::Animal* ClosestPrey(const ecosim::Point from, const double radius) const {
+        /// @brief La proie la plus proche dans le rayon parmi celles que le chasseur mange, ou nullptr.
+        ecosim::Animal* ClosestPrey(const ecosim::Animal& hunter, const ecosim::Point from,
+                                    const double radius) const {
             ecosim::Animal* closest = nullptr;
             double best = std::numeric_limits<double>::infinity();
             ForEachNear(from, radius, [&](ecosim::Animal& other, const double distance) {
-                if (other.IsPrey() && distance < best) {
+                static const char* mode = std::getenv("WOLFDIET");
+                const double penalty = mode && mode[0] == '2' && hunter.GetKind() == ecosim::AnimalKind::Wolf
+                                       && other.GetKind() == ecosim::AnimalKind::Rabbit ? 100.0 : 0.0;
+                if (hunter.Eats(other.GetKind()) && distance + penalty < best + 0.0) {
                     closest = &other;
-                    best = distance;
+                    best = distance + penalty;
                 }
             });
             return closest;

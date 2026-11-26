@@ -31,25 +31,27 @@ namespace ecosim {
         SimulationSettings settings = DefaultSettings(width, height);
         SpeciesSettings& deer = settings.species[AnimalKind::Deer];
         SpeciesSettings& rabbits = settings.species[AnimalKind::Rabbit];
-        SpeciesSettings& predators = settings.species[AnimalKind::Predator];
+        SpeciesSettings& wolves = settings.species[AnimalKind::Wolf];
+        SpeciesSettings& foxes = settings.species[AnimalKind::Fox];
         switch (preset) {
             case Preset::Balance:
                 // Des cerfs souvent sur leurs gardes, face à des prédateurs qui chassent seuls.
                 deer.options.instinct = 50;
-                predators.options.instinct = 0;
+                wolves.options.instinct = 0;
                 break;
             case Preset::Famine:
-                // Plus de repousse et un seul chasseur : la faim domine.
+                // Plus de repousse et un seul chasseur de chaque espèce : la faim domine.
                 settings.vegetationGrowth = 0;
-                predators.initialCount = 1;
+                wolves.initialCount = 1;
+                foxes.initialCount = 1;
                 break;
             case Preset::Invasion:
-                // Les prédateurs sont bien plus nombreux au départ que les herbivores.
-                predators.initialCount = std::clamp(width * height / 11, 10, 200);
+                // Les loups sont bien plus nombreux au départ que les herbivores.
+                wolves.initialCount = std::clamp(width * height / 11, 10, 200);
                 // Les proies sont prises par surprise face à de larges meutes.
                 deer.options.instinct = 0;
                 rabbits.options.instinct = 0;
-                predators.options.instinct = 3;
+                wolves.options.instinct = 3;
                 break;
         }
         return settings;

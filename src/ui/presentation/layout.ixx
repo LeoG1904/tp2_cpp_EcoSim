@@ -60,8 +60,8 @@ export namespace ecosim {
     }
     /// @brief Case de saisie d'un réglage.
     UiRect ValueBox(const int width, const int height, const int column, const int row) {
-        return {SettingColumnX(width, column) + SettingColumnWidth(width) - 108,
-                SettingsTop(height) + row * SettingRowHeight, 92, 32};
+        return {SettingColumnX(width, column) + SettingColumnWidth(width) - 82,
+                SettingsTop(height) + row * SettingRowHeight, 66, 32};
     }
     /// @brief Bouton d'un préréglage.
     UiRect PresetButton(const int width, const int height, const int index) {
