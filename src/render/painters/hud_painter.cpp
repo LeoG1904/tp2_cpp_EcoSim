@@ -2,26 +2,15 @@
  * @file
  * @brief Dessin des compteurs et des boutons.
  */
-module;
-
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-
-#include "../gdi/gdi.hpp"
-
 module ecosim.render;
 
 import std;
 import ecosim.layout;
 import ecosim.species;
 
-using namespace ecosim_gdi;
-
 namespace ecosim {
     void DrawHud(Canvas& canvas, const Simulation& simulation, const PlaybackState& playback,
                  const bool threeD) {
-        const HDC buffer = static_cast<HDC>(canvas.Context());
         const int width = canvas.Width();
         const std::string help = threeD ? "clic droit : tourner ; molette : zoom ; clic : détails d'une case"
                                         : "Échap : options ; clic : détails d'une case";
@@ -38,14 +27,11 @@ namespace ecosim {
         for (const SpeciesInfo& species : SpeciesCatalog()) {
             counts += std::format("   {} {}", species.pluralName, simulation.Count(species.kind));
         }
-        SetBkMode(buffer, TRANSPARENT);
-        SetTextColor(buffer, RGB(255, 255, 255));
-        WriteText(buffer, 10, 10, counts);
-        WriteText(buffer, 10, 30, status);
+        canvas.Write(10, 10, counts, WhiteText);
+        canvas.Write(10, 30, status, WhiteText);
 
         const auto button = [&](const UiRect area, const std::string& label) {
-            FillArea(buffer, area.x, area.y, area.width, area.height, RGB(55, 64, 77));
-            WriteText(buffer, area.x + 20, area.y + 9, label);
+            canvas.SideButton(area, label, 9);
         };
         button(GraphButton(width), "Courbes");
         button(RestartButton(width), "Recommencer");

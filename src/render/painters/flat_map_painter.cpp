@@ -12,20 +12,20 @@ module ecosim.render;
 
 import std;
 import ecosim.animation;
+import ecosim.layout;
 import ecosim.species_style;
 import ecosim.species;
 
 namespace {
     /// @brief Couleur d'une case en 2D, selon le terrain et l'herbe.
-    COLORREF ColorOf(const ecosim::Cell& cell) {
+    ecosim::Color ColorOf(const ecosim::Cell& cell) {
         switch (cell.GetTerrain()) {
-            case ecosim::Terrain::Eau: return RGB(60, 120, 200);
-            case ecosim::Terrain::Obstacle: return RGB(90, 90, 90);
+            case ecosim::Terrain::Eau: return {60, 120, 200};
+            case ecosim::Terrain::Obstacle: return {90, 90, 90};
             case ecosim::Terrain::Prairie: break;
         }
         const double ratio = static_cast<double>(cell.GetVegetation()) / ecosim::Cell::MaxVegetation;
-        return RGB(static_cast<int>(150 - ratio * 90),
-                   static_cast<int>(110 + ratio * 90), 70);
+        return {static_cast<int>(150 - ratio * 90), static_cast<int>(110 + ratio * 90), 70};
     }
 }
 
@@ -36,26 +36,18 @@ namespace ecosim {
         std::vector<AnimalSnapshot> animals = simulation.Animals();
         AttachNewbornsToParents(animals);
         const HDC buffer = static_cast<HDC>(canvas.Context());
-        const int windowWidth = canvas.Width();
-        const int windowHeight = canvas.Height();
-        const RECT bounds{0, 0, windowWidth, windowHeight};
-        const HBRUSH background = CreateSolidBrush(RGB(30, 30, 30));
-        FillRect(buffer, &bounds, background);
-        DeleteObject(background);
+        canvas.Fill({0, 0, canvas.Width(), canvas.Height()}, {30, 30, 30});
 
         for (int y = 0; y < world.GetHeight(); ++y) {
             for (int x = 0; x < world.GetWidth(); ++x) {
-                const HBRUSH brush = CreateSolidBrush(ColorOf(world.GetCell(Position{x, y})));
-                const RECT cell{x * cellSize, y * cellSize,
-                                (x + 1) * cellSize - 1, (y + 1) * cellSize - 1};
-                FillRect(buffer, &cell, brush);
-                DeleteObject(brush);
+                // Un pixel de retrait dessine le quadrillage.
+                canvas.Fill({x * cellSize, y * cellSize, cellSize - 1, cellSize - 1},
+                            ColorOf(world.GetCell(Position{x, y})));
             }
         }
 
         // Chaque animal est dessiné là où il se trouve : un corps, et une tête vers l'avant.
         const HGDIOBJ previousPen = SelectObject(buffer, GetStockObject(NULL_PEN));
-        SetBkMode(buffer, TRANSPARENT);
         const auto disc = [buffer](const double x, const double y, const double radius) {
             Ellipse(buffer, static_cast<int>(std::lround(x - radius)),
                     static_cast<int>(std::lround(y - radius)),

@@ -10,12 +10,40 @@ export import ecosim.window;
 import ecosim.camera;
 import ecosim.chart;
 import ecosim.settings_form;
+import ecosim.layout;
 
 // Outils internes au rendu (non exportés).
 namespace ecosim {
+    /// @brief Texte blanc, sur la carte et les courbes.
+    inline constexpr Color WhiteText{255, 255, 255};
+    /// @brief Texte clair, sur l'accueil et les panneaux.
+    inline constexpr Color LightText{239, 246, 242};
+    /// @brief Texte secondaire de l'accueil.
+    inline constexpr Color SoftText{177, 203, 198};
+    /// @brief Fond d'un panneau.
+    inline constexpr Color PanelColor{32, 45, 53};
+    /// @brief Fond d'un bouton.
+    inline constexpr Color ButtonColor{55, 64, 77};
+    /// @brief Fond d'un élément choisi.
+    inline constexpr Color ActiveColor{52, 96, 140};
+    /// @brief Fond du bouton qui lance ou confirme.
+    inline constexpr Color ConfirmColor{62, 148, 105};
+    /// @brief Contour de saisie, repère de survol et cases cochées.
+    inline constexpr Color HighlightColor{125, 183, 235};
+
+    /// @brief Dimensions d'un texte, en pixels.
+    /// @ingroup affichage
+    struct TextSize {
+        /// @brief Largeur.
+        int cx;
+        /// @brief Hauteur.
+        int cy;
+    };
+
     /// @brief Une image préparée en mémoire puis copiée d'un coup dans la fenêtre, pour éviter le scintillement.
     ///
-    /// Ses ressources sont libérées avec l'objet (RAII).
+    /// Elle réunit les dessins courants : fonds, textes et boutons. Ses ressources, polices comprises,
+    /// sont libérées avec l'objet (RAII).
     /// @ingroup affichage
     class Canvas {
     public:
@@ -35,6 +63,26 @@ namespace ecosim {
         /// @brief Affiche l'image dans la fenêtre.
         void Present() const;
 
+        /// @brief Remplit un rectangle d'une couleur.
+        void Fill(UiRect area, Color color);
+        /// @brief Choisit la police de l'interface pour les textes suivants.
+        /// @param size Hauteur des caractères, en pixels.
+        /// @param bold Vrai pour des caractères gras.
+        void SetFont(int size, bool bold = false);
+        /// @brief Écrit un texte UTF-8, sans fond.
+        void Write(int x, int y, const std::string& text, Color color);
+        /// @brief Écrit un texte centré horizontalement sur une abscisse.
+        void WriteCentered(int centerX, int y, const std::string& text, Color color);
+        /// @brief Mesure un texte UTF-8 avec la police choisie.
+        TextSize Measure(const std::string& text) const;
+        /// @brief Un bouton au texte centré.
+        void Button(UiRect area, const std::string& label, Color background, Color ink = LightText);
+        /// @brief Un bouton de commande, au texte blanc aligné à gauche.
+        /// @param area Emplacement.
+        /// @param label Texte.
+        /// @param textTop Distance entre le haut du bouton et celui du texte.
+        void SideButton(UiRect area, const std::string& label, int textTop);
+
     private:
         /// @brief Fenêtre de destination.
         void* window;
@@ -50,23 +98,11 @@ namespace ecosim {
         void* bitmap;
         /// @brief Image à restaurer avant de libérer les ressources.
         void* previous;
+        /// @brief Police présente avant le premier choix, à restaurer à la fin.
+        void* initialFont{nullptr};
+        /// @brief Polices créées pour cette image.
+        std::vector<void*> fonts;
     };
-
-    /// @brief Dimensions d'un texte, en pixels.
-    /// @ingroup affichage
-    struct TextSize {
-        /// @brief Largeur.
-        int cx;
-        /// @brief Hauteur.
-        int cy;
-    };
-
-    /// @brief Écrit un texte UTF-8.
-    /// @ingroup affichage
-    void WriteText(void* context, int x, int y, const std::string& text);
-    /// @brief Mesure un texte UTF-8.
-    /// @ingroup affichage
-    TextSize MeasureText(void* context, const std::string& text);
 
     /// @brief Dessine l'accueil et ses réglages.
     /// @ingroup affichage

@@ -8,8 +8,6 @@ module;
 #define NOMINMAX
 #include <windows.h>
 
-#include "../gdi/gdi.hpp"
-
 module ecosim.render;
 
 import std;
@@ -19,47 +17,26 @@ import ecosim.species_style;
 
 namespace {
     using ecosim::UiRect;
+    using ecosim::Color;
 
     /// @brief Couleur de la courbe de l'herbe.
-    constexpr COLORREF VegetationColor{RGB(120, 200, 130)};
-    /// @brief Couleur du texte principal.
-    constexpr COLORREF PrimaryInk{RGB(255, 255, 255)};
+    constexpr Color VegetationColor{120, 200, 130};
     /// @brief Couleur du texte secondaire.
-    constexpr COLORREF MutedInk{RGB(160, 175, 195)};
+    constexpr Color MutedInk{160, 175, 195};
     /// @brief Fond d'un graphique.
-    constexpr COLORREF PanelColor{RGB(31, 37, 48)};
-    /// @brief Fond d'un bouton.
-    constexpr COLORREF ButtonColor{RGB(55, 64, 77)};
-    /// @brief Couleur du repère de survol et des cases cochées.
-    constexpr COLORREF CursorColor{RGB(125, 183, 235)};
+    constexpr Color ChartColor{31, 37, 48};
 
-    /// @brief Convertit une couleur du projet en couleur Windows.
-    COLORREF ToColorRef(const ecosim::Color color) { return RGB(color.red, color.green, color.blue); }
+    /// @brief Convertit une couleur du projet en couleur Windows, pour les traits et les points.
+    COLORREF ToColorRef(const Color color) { return RGB(color.red, color.green, color.blue); }
 
     /// @brief Couleur d'une courbe : celle de l'espèce, ou celle de l'herbe.
-    COLORREF ColorOf(const std::optional<ecosim::AnimalKind> species) {
-        return species ? ToColorRef(ecosim::StyleOf(*species).color) : VegetationColor;
+    Color ColorOf(const std::optional<ecosim::AnimalKind> species) {
+        return species ? ecosim::StyleOf(*species).color : VegetationColor;
     }
 
     /// @brief Nom d'une courbe dans la légende.
     std::string NameOf(const std::optional<ecosim::AnimalKind> species) {
         return species ? ecosim::SpeciesOf(*species).pluralName : std::string{"Total"};
-    }
-
-    /// @brief Remplit un rectangle.
-    void Fill(const HDC dc, const UiRect area, const COLORREF color) {
-        ecosim_gdi::FillArea(dc, area.x, area.y, area.width, area.height, color);
-    }
-
-    /// @brief Trace un trait fin.
-    void Line(const HDC dc, const int x1, const int y1, const int x2, const int y2,
-              const COLORREF color) {
-        const HPEN pen = CreatePen(PS_SOLID, 1, color);
-        const HGDIOBJ previous = SelectObject(dc, pen);
-        MoveToEx(dc, x1, y1, nullptr);
-        LineTo(dc, x2, y2);
-        SelectObject(dc, previous);
-        DeleteObject(pen);
     }
 
     /// @brief Position horizontale d'une génération dans la zone de tracé.
@@ -77,7 +54,7 @@ namespace {
     /// @brief Trace une courbe, interrompue là où la valeur n'existe pas.
     void DrawCurve(const HDC dc, const UiRect plot, const ecosim::ChartSeries& series,
                    const long long maximum) {
-        const HPEN pen = CreatePen(PS_SOLID, 2, ColorOf(series.species));
+        const HPEN pen = CreatePen(PS_SOLID, 2, ToColorRef(ColorOf(series.species)));
         const HGDIOBJ previous = SelectObject(dc, pen);
         bool drawing = false;
         for (std::size_t i = 0; i < series.values.size(); ++i) {
@@ -96,8 +73,8 @@ namespace {
     }
 
     /// @brief Dessine un point rond sur une courbe.
-    void DrawPoint(const HDC dc, const int x, const int y, const COLORREF color) {
-        const HBRUSH brush = CreateSolidBrush(color);
+    void DrawPoint(const HDC dc, const int x, const int y, const Color color) {
+        const HBRUSH brush = CreateSolidBrush(ToColorRef(color));
         const HGDIOBJ previousBrush = SelectObject(dc, brush);
         const HGDIOBJ previousPen = SelectObject(dc, GetStockObject(NULL_PEN));
         Ellipse(dc, x - 5, y - 5, x + 6, y + 6);
@@ -106,28 +83,25 @@ namespace {
         DeleteObject(brush);
     }
 
-    /// @brief Fonction qui écrit un texte d'une couleur donnée à une position.
-    using Write = std::function<void(int, int, const std::string&, COLORREF)>;
     /// @brief Dessine un graphique complet : titre, légende, axes et courbes.
-    /// @param shown Génération dont la légende donne les valeurs.
-    /// @param hovered Vrai pour tracer le repère de survol.
-    /// @param textWidth Mesure la largeur d'un texte.
-    /// @param buffer Surface de dessin.
-    /// @param write Fonction d'écriture.
+    /// @param canvas Image à compléter.
     /// @param panel Emplacement du graphique.
     /// @param history Mesures de toutes les générations.
     /// @param metric Statistique à tracer.
     /// @param selection Choix de l'utilisateur.
-    void DrawPanel(const HDC buffer, const Write& write, const UiRect panel,
+    /// @param shown Génération dont la légende donne les valeurs.
+    /// @param hovered Vrai pour tracer le repère de survol.
+    void DrawPanel(ecosim::Canvas& canvas, const UiRect panel,
                    const std::vector<ecosim::PopulationSample>& history,
                    const ecosim::ChartMetric metric, const ecosim::ChartSelection& selection,
-                   const std::size_t shown, const bool hovered,
-                   const std::function<int(const std::string&)>& textWidth) {
+                   const std::size_t shown, const bool hovered) {
+        const HDC buffer = static_cast<HDC>(canvas.Context());
         const UiRect plot = ecosim::ChartPlot(panel);
         const std::vector<ecosim::ChartSeries> series = ecosim::BuildSeries(history, metric, selection);
         const long long maximum = ecosim::AxisMaximum(series);
-        Fill(buffer, panel, PanelColor);
-        write(panel.x + 12, panel.y + 6, ecosim::ChartTitle(metric, selection.cumulative), PrimaryInk);
+        canvas.Fill(panel, ChartColor);
+        canvas.Write(panel.x + 12, panel.y + 6, ecosim::ChartTitle(metric, selection.cumulative),
+                     ecosim::WhiteText);
 
         // Légende avec la valeur actuelle, ou celle de la génération survolée.
         const auto entry = [&](const ecosim::ChartSeries& one, const bool named) {
@@ -136,35 +110,35 @@ namespace {
         };
         // Sur un graphique étroit, les noms sont omis : la couleur désigne l'espèce.
         int needed = 12;
-        for (const ecosim::ChartSeries& one : series) needed += 17 + textWidth(entry(one, true)) + 22;
+        for (const ecosim::ChartSeries& one : series) needed += 17 + canvas.Measure(entry(one, true)).cx + 22;
         const bool named = needed - 22 <= panel.width;
         int legendX = panel.x + 12;
         for (const ecosim::ChartSeries& one : series) {
-            Fill(buffer, {legendX, panel.y + 35, 11, 11}, ColorOf(one.species));
-            const std::string text = entry(one, named);
-            write(legendX + 17, panel.y + 30, text, MutedInk);
-            legendX += 17 + textWidth(text) + 22;
+            canvas.Fill({legendX, panel.y + 35, 11, 11}, ColorOf(one.species));
+            const std::string label = entry(one, named);
+            canvas.Write(legendX + 17, panel.y + 30, label, MutedInk);
+            legendX += 17 + canvas.Measure(label).cx + 22;
         }
-        if (series.empty()) write(legendX, panel.y + 30, "Aucune espèce à afficher", MutedInk);
+        if (series.empty()) canvas.Write(legendX, panel.y + 30, "Aucune espèce à afficher", MutedInk);
 
         for (int tick = 0; tick <= 4; ++tick) {
             const int y = plot.y + tick * plot.height / 4;
-            Line(buffer, plot.x, y, plot.x + plot.width, y, RGB(57, 66, 80));
+            canvas.Fill({plot.x, y, plot.width, 1}, {57, 66, 80});
             // Sur un petit graphique, une graduation sur deux évite les chevauchements.
             if (plot.height < 100 && tick % 2 != 0) continue;
             const std::string label = std::to_string(maximum * (4 - tick) / 4);
-            write(plot.x - 8 - textWidth(label), y - 9, label, MutedInk);
+            canvas.Write(plot.x - 8 - canvas.Measure(label).cx, y - 9, label, MutedInk);
         }
         const std::string first = std::to_string(history.front().generation);
         const std::string last = std::format("génération {}", history.back().generation);
-        write(plot.x, plot.y + plot.height + 5, first, MutedInk);
-        write(plot.x + plot.width - textWidth(last), plot.y + plot.height + 5, last,
-              MutedInk);
+        canvas.Write(plot.x, plot.y + plot.height + 5, first, MutedInk);
+        canvas.Write(plot.x + plot.width - canvas.Measure(last).cx, plot.y + plot.height + 5, last,
+                     MutedInk);
 
         for (const ecosim::ChartSeries& one : series) DrawCurve(buffer, plot, one, maximum);
         if (hovered) {
             const int x = PointX(plot, shown, history.size());
-            Line(buffer, x, plot.y, x, plot.y + plot.height, CursorColor);
+            canvas.Fill({x, plot.y, 1, plot.height}, ecosim::HighlightColor);
         }
         for (const ecosim::ChartSeries& one : series) {
             if (!one.values[shown]) continue;
@@ -178,62 +152,47 @@ namespace ecosim {
     void DrawStatsScreen(Canvas& canvas, const Simulation& simulation, const PlaybackState& playback,
                          const ChartSelection& selection, const std::optional<PointerPosition> pointer) {
         const std::vector<PopulationSample>& history = simulation.Stats().History();
-        const HDC buffer = static_cast<HDC>(canvas.Context());
         const int windowWidth = canvas.Width();
         const int windowHeight = canvas.Height();
-        const int speed = playback.speed;
-        const bool paused = playback.paused;
-        Fill(buffer, {0, 0, windowWidth, windowHeight}, RGB(24, 29, 38));
-        SetBkMode(buffer, TRANSPARENT);
-        const HFONT headingFont = ecosim_gdi::UiFont(30, FW_BOLD);
-        const HFONT labelFont = ecosim_gdi::UiFont(20, FW_NORMAL);
-        const HFONT chartFont = ecosim_gdi::UiFont(17, FW_NORMAL);
-        const HGDIOBJ previousFont = SelectObject(buffer, labelFont);
-        const Write write = [&](const int x, const int y, const std::string& value,
-                                const COLORREF color) {
-            SetTextColor(buffer, color);
-            WriteText(buffer, x, y, value);
-        };
-        const auto textWidth = [buffer](const std::string& value) {
-            return MeasureText(buffer, value).cx;
-        };
+        canvas.Fill({0, 0, windowWidth, windowHeight}, {24, 29, 38});
+        canvas.SetFont(20);
+
         const auto button = [&](const UiRect area, const std::string& label) {
-            Fill(buffer, area, ButtonColor);
-            write(area.x + 20, area.y + 7, label, PrimaryInk);
+            canvas.SideButton(area, label, 7);
         };
         // Case à cocher : pleine et de la couleur de la série quand elle est affichée.
         const auto toggle = [&](const UiRect area, const std::string& label, const bool selected,
-                                const COLORREF color) {
-            Fill(buffer, area, selected ? ButtonColor : PanelColor);
+                                const Color color) {
+            canvas.Fill(area, selected ? ButtonColor : ChartColor);
             const UiRect box{area.x + 10, area.y + 10, 14, 14};
-            Fill(buffer, box, selected ? color : MutedInk);
-            if (!selected) Fill(buffer, {box.x + 2, box.y + 2, 10, 10}, PanelColor);
-            write(area.x + 32, area.y + 7, label, selected ? PrimaryInk : MutedInk);
+            canvas.Fill(box, selected ? color : MutedInk);
+            if (!selected) canvas.Fill({box.x + 2, box.y + 2, 10, 10}, ChartColor);
+            canvas.Write(area.x + 32, area.y + 7, label, selected ? WhiteText : MutedInk);
         };
 
         button(BackButton(), "Retour");
         button(RestartButton(windowWidth), "Recommencer");
         if (!simulation.IsFinished()) {
-            button(PauseButton(windowWidth, true), paused ? "Reprendre" : "Pause");
-            if (paused) button(NextButton(windowWidth, true), "Génération +1");
+            button(PauseButton(windowWidth, true), playback.paused ? "Reprendre" : "Pause");
+            if (playback.paused) button(NextButton(windowWidth, true), "Génération +1");
         }
-        SelectObject(buffer, headingFont);
-        write(155, 25, "Statistiques", PrimaryInk);
-        SelectObject(buffer, labelFont);
+        canvas.SetFont(30, true);
+        canvas.Write(155, 25, "Statistiques", WhiteText);
+        canvas.SetFont(20);
         std::string status;
         if (simulation.IsFinished()) status = "Fin de la simulation : plus aucun animal";
-        else if (paused) status = std::format("En pause   Vitesse x{}", speed);
-        else status = std::format("Vitesse x{}", speed);
+        else if (playback.paused) status = std::format("En pause   Vitesse x{}", playback.speed);
+        else status = std::format("Vitesse x{}", playback.speed);
         std::string counts = std::format("Génération {}", simulation.GetGeneration());
         for (const SpeciesInfo& species : SpeciesCatalog()) {
             counts += std::format("    {} {}", species.pluralName, simulation.Count(species.kind));
         }
-        write(20, 78, std::format("{}    {}", counts, status), PrimaryInk);
+        canvas.Write(20, 78, std::format("{}    {}", counts, status), WhiteText);
 
-        SelectObject(buffer, chartFont);
+        canvas.SetFont(17);
         for (std::size_t i = 0; i < MetricCount; ++i) {
             toggle(MetricChip(windowWidth, static_cast<int>(i)), MetricNames()[i],
-                   selection.metrics[i], CursorColor);
+                   selection.metrics[i], HighlightColor);
         }
         for (const SpeciesInfo& species : SpeciesCatalog()) {
             toggle(SpeciesChip(static_cast<int>(species.kind)), species.pluralName,
@@ -246,8 +205,8 @@ namespace ecosim {
         const int count = static_cast<int>(visible.size());
         if (count == 0) {
             const UiRect area = ChartArea(windowWidth, windowHeight);
-            write(area.x + 20, area.y + 40, "Aucune statistique sélectionnée : cochez-en une ci-dessus.",
-                  MutedInk);
+            canvas.Write(area.x + 20, area.y + 40,
+                         "Aucune statistique sélectionnée : cochez-en une ci-dessus.", MutedInk);
         }
 
         // La génération survolée est la même sur tous les graphiques.
@@ -262,19 +221,14 @@ namespace ecosim {
         }
         const std::size_t shown = hovered.value_or(history.size() - 1);
         if (hovered) {
-            write(CumulativeButton().x + CumulativeButton().width + 24, CumulativeButton().y + 7,
-                  std::format("Valeurs à la génération {}", history[shown].generation), CursorColor);
+            canvas.Write(CumulativeButton().x + CumulativeButton().width + 24, CumulativeButton().y + 7,
+                         std::format("Valeurs à la génération {}", history[shown].generation),
+                         HighlightColor);
         }
 
         for (int i = 0; i < count; ++i) {
-            DrawPanel(buffer, write, ChartPanel(windowWidth, windowHeight, i, count), history,
-                      visible[static_cast<std::size_t>(i)], selection, shown, hovered.has_value(),
-                      textWidth);
+            DrawPanel(canvas, ChartPanel(windowWidth, windowHeight, i, count), history,
+                      visible[static_cast<std::size_t>(i)], selection, shown, hovered.has_value());
         }
-
-        SelectObject(buffer, previousFont);
-        DeleteObject(headingFont);
-        DeleteObject(labelFont);
-        DeleteObject(chartFont);
     }
 }

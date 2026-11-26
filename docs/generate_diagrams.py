@@ -105,7 +105,7 @@ d.band(604, 160, "MOTEUR (C++ pur)", "#eefaf0", "#2c7a3f")
 d.box("Win32Input", 60, 55, 220, ["Read()"])
 d.box("Win32Window", 350, 55, 220, ["ProcessEvents()", "TakeKeys(), TakeWheel()"])
 d.box("Win32Renderer", 780, 55, 220, ["DrawHome()", "DrawSimulation()"])
-d.box("Canvas", 1070, 55, 130, ["image en mémoire", "Present()"])
+d.box("Canvas", 1070, 55, 130, ["Fill(), Write()", "Button(), Present()"])
 
 d.box("InputSource", 60, 232, 220, ["Read()"], "interface", "interface")
 d.box("UiController", 450, 232, 240, ["Handle() : UiAction", "écran affiché, case choisie"])

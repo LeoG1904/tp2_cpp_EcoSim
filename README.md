@@ -170,7 +170,7 @@ Les fichiers `.ixx` exposent les modules C++ ; leurs implémentations sont dans 
 | `src/render/platform/` | Fenêtre Windows, clavier et souris. |
 | `src/render/renderer/` | Classe `Win32Renderer` : choisit ce qu'il faut dessiner. |
 | `src/render/painters/` | Une fonction de dessin par écran ou élément. |
-| `src/render/gdi/` | Image en mémoire, texte et aides GDI. |
+| `src/render/gdi/` | Classe `Canvas` : image en mémoire, fonds, textes, boutons et polices. |
 | `src/app/main.cpp` | Assemblage des objets et boucle principale. |
 | `tests/` | Tests du monde, des animaux, de la simulation et de la logique d'interface. |
 

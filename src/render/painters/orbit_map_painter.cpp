@@ -8,15 +8,12 @@ module;
 #define NOMINMAX
 #include <windows.h>
 
-#include "../gdi/gdi.hpp"
-
 module ecosim.render;
 
 import std;
 import ecosim.animation;
 import ecosim.scene3d;
-
-using namespace ecosim_gdi;
+import ecosim.layout;
 
 namespace ecosim {
     void DrawOrbitMap(Canvas& canvas, const Simulation& simulation, const double progress,
@@ -26,7 +23,7 @@ namespace ecosim {
         const std::vector<Face> faces = BuildScene(simulation.GetWorld(), animals, progress, camera,
                                                    {canvas.Width(), canvas.Height()}, selected);
         const HDC buffer = static_cast<HDC>(canvas.Context());
-        FillArea(buffer, 0, 0, canvas.Width(), canvas.Height(), RGB(22, 30, 42));
+        canvas.Fill({0, 0, canvas.Width(), canvas.Height()}, {22, 30, 42});
 
         // Le pinceau système change de couleur sans créer un objet par face.
         const HGDIOBJ previousBrush = SelectObject(buffer, GetStockObject(DC_BRUSH));
