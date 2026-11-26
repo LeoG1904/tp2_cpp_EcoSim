@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief Le prédateur : il poursuit et capture les herbivores.
+ * @brief Le prédateur : il poursuit et capture les proies.
  */
 export module ecosim.predator;
 
@@ -12,10 +12,11 @@ export namespace ecosim {
     /// @ingroup moteur
     class Predator final : public Animal {
     public:
-        /// @brief Énergie de départ par défaut.
-        static constexpr int StartingEnergy{50};
-        /// @brief Statistiques d'origine des prédateurs.
-        static constexpr AnimalTraits DefaultTraits{.foodEnergy = 35, .speed = 120};
+        /// @brief Les caractéristiques fixes du prédateur.
+        static constexpr SpeciesTraits Traits{.energyLoss = 3, .maxAge = 70, .foodEnergy = 25,
+                                              .reproductionEnergy = 70, .speed = 80};
+        /// @brief Chance de naissance, en %, proposée au départ.
+        static constexpr int DefaultBirthPercent{10};
         /// @brief Distance de vue, en cases, avant le bonus de meute.
         static constexpr double Sight{3.0};
         /// @brief Distance à laquelle une proie est capturée.
@@ -26,7 +27,7 @@ export namespace ecosim {
         /// @brief Crée un prédateur au centre d'une case.
         /// @throws std::invalid_argument si l'énergie n'est pas entre 1 et 100.
         Predator(std::uint64_t id, Position cell, int energy = StartingEnergy,
-                 const AnimalTraits& traits = DefaultTraits);
+                 const AnimalOptions& options = {DefaultBirthPercent});
         /// @copydoc Animal::GetKind
         AnimalKind GetKind() const override;
         /// @brief Redevient affamé.

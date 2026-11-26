@@ -9,13 +9,13 @@ TEST_CASE("Deux herbivores partagent une case et mangent la végétation disponi
     World world{1, 1};
     world.GetCell({0, 0}).SetVegetation(20);
     Simulation simulation{std::move(world), std::mt19937{1}};
-    simulation.AddAnimal(AnimalKind::Herbivore, {0, 0});
-    simulation.AddAnimal(AnimalKind::Herbivore, {0, 0});
+    simulation.AddAnimal(AnimalKind::Deer, {0, 0});
+    simulation.AddAnimal(AnimalKind::Deer, {0, 0});
 
     simulation.Step();
 
     REQUIRE(simulation.GetGeneration() == 1);
-    REQUIRE(simulation.Count(AnimalKind::Herbivore) == 2);
+    REQUIRE(simulation.Count(AnimalKind::Deer) == 2);
     REQUIRE(simulation.GetWorld().GetCell({0, 0}).GetVegetation() == 1);
     for (const auto& animal : simulation.Animals()) {
         REQUIRE(animal.position == Position{0, 0});
@@ -28,7 +28,7 @@ TEST_CASE("Un herbivore rejoint une prairie voisine plus riche", "[herbivore]") 
     World world{2, 1};
     world.GetCell({1, 0}).SetVegetation(50);
     Simulation simulation{std::move(world), std::mt19937{2}};
-    simulation.AddAnimal(AnimalKind::Herbivore, {0, 0});
+    simulation.AddAnimal(AnimalKind::Deer, {0, 0});
 
     for (int i = 0; i < 4 && simulation.Animals().front().position != Position{1, 0}; ++i) {
         simulation.Step();
@@ -39,11 +39,11 @@ TEST_CASE("Un herbivore rejoint une prairie voisine plus riche", "[herbivore]") 
 
 TEST_CASE("Un herbivore meurt quand son énergie est épuisée", "[herbivore]") {
     Simulation simulation{World{1, 1}, std::mt19937{3}};
-    simulation.AddAnimal(AnimalKind::Herbivore, {0, 0}, 1);
+    simulation.AddAnimal(AnimalKind::Deer, {0, 0}, 1);
 
     simulation.Step();
 
-    REQUIRE(simulation.Count(AnimalKind::Herbivore) == 0);
+    REQUIRE(simulation.Count(AnimalKind::Deer) == 0);
 }
 
 TEST_CASE("La case doit être accessible même si plusieurs animaux peuvent l'occuper", "[herbivore]") {
@@ -51,21 +51,21 @@ TEST_CASE("La case doit être accessible même si plusieurs animaux peuvent l'oc
     world.GetCell({0, 0}) = Cell{Terrain::Eau};
     Simulation simulation{std::move(world), std::mt19937{4}};
 
-    REQUIRE_THROWS_AS(simulation.AddAnimal(AnimalKind::Herbivore, {0, 0}), std::invalid_argument);
-    REQUIRE_THROWS_AS(simulation.AddAnimal(AnimalKind::Herbivore, {2, 0}), std::invalid_argument);
+    REQUIRE_THROWS_AS(simulation.AddAnimal(AnimalKind::Deer, {0, 0}), std::invalid_argument);
+    REQUIRE_THROWS_AS(simulation.AddAnimal(AnimalKind::Deer, {2, 0}), std::invalid_argument);
 }
 
 TEST_CASE("La naissance crée un animal distinct qui attend la génération suivante", "[herbivore]") {
     World world{1, 1};
     world.GetCell({0, 0}).SetVegetation(100);
     Simulation simulation{std::move(world), std::mt19937{7}};
-    simulation.AddAnimal(AnimalKind::Herbivore, {0, 0}, 95);
+    simulation.AddAnimal(AnimalKind::Deer, {0, 0}, 95);
 
-    for (int i = 0; i < 30 && simulation.Count(AnimalKind::Herbivore) == 1; ++i) {
+    for (int i = 0; i < 30 && simulation.Count(AnimalKind::Deer) == 1; ++i) {
         simulation.Step();
     }
 
-    REQUIRE(simulation.Count(AnimalKind::Herbivore) > 1);
+    REQUIRE(simulation.Count(AnimalKind::Deer) > 1);
     const auto animals = simulation.Animals();
     REQUIRE(animals[0].id != animals[1].id);
     REQUIRE(animals[1].age == 0);
@@ -76,7 +76,7 @@ TEST_CASE("Le trajet d'une generation est continu et reste sur les prairies", "[
     std::mt19937 rng{9};
     World world = GenerateRandomWorld(20, 14, rng);
     Simulation simulation{std::move(world), std::mt19937{10}};
-    simulation.Seed(AnimalKind::Herbivore, 30);
+    simulation.Seed(AnimalKind::Deer, 30);
     simulation.Seed(AnimalKind::Predator, 6);
     std::map<std::uint64_t, Point> previous;
     for (const auto& animal : simulation.Animals()) previous[animal.id] = animal.path.back();
@@ -98,7 +98,7 @@ TEST_CASE("Le trajet d'une generation est continu et reste sur les prairies", "[
 
 TEST_CASE("Les animaux ne partent pas tous du centre des cases", "[herbivore]") {
     Simulation simulation{World{6, 6}, std::mt19937{12}};
-    simulation.Seed(AnimalKind::Herbivore, 10);
+    simulation.Seed(AnimalKind::Deer, 10);
     const auto animals = simulation.Animals();
     REQUIRE(std::ranges::any_of(animals, [](const auto& animal) {
         return animal.path.back() != CenterOf(animal.position);

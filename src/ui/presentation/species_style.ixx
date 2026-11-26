@@ -26,12 +26,6 @@ export namespace ecosim {
         Color color;
         /// @brief Population de départ maximale.
         int initialMaximum;
-        /// @brief Nom du réglage de nourriture.
-        std::string foodLabel;
-        /// @brief Limite basse de ce réglage.
-        int foodMinimum;
-        /// @brief Limite haute de ce réglage.
-        int foodMaximum;
         /// @brief Nom du réglage d'instinct.
         std::string instinctLabel;
         /// @brief Limite haute de l'instinct.

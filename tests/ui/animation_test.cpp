@@ -35,9 +35,9 @@ TEST_CASE("A l'ecran, un nouveau-ne accompagne son parent", "[animation]") {
     const Path parentTrip = Straight({0.5, 0.5}, {1.5, 0.5});
     const Path still = Straight({1.5, 0.5}, {1.5, 0.5});
     std::vector<AnimalSnapshot> animals{
-        {1, {1, 0}, AnimalKind::Herbivore, 9, 50, parentTrip, std::nullopt},
-        {2, {1, 0}, AnimalKind::Herbivore, 0, 30, still, 1},
-        {3, {1, 0}, AnimalKind::Herbivore, 4, 40, still, 1},
+        {1, {1, 0}, AnimalKind::Deer, 9, 50, parentTrip, std::nullopt},
+        {2, {1, 0}, AnimalKind::Deer, 0, 30, still, 1},
+        {3, {1, 0}, AnimalKind::Deer, 4, 40, still, 1},
     };
 
     AttachNewbornsToParents(animals);

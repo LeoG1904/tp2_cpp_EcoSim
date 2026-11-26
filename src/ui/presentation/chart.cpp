@@ -85,7 +85,7 @@ namespace ecosim {
             // Le titre nomme les proies d'après le catalogue.
             std::string prey;
             for (const SpeciesInfo& species : SpeciesCatalog()) {
-                if (species.canBeEaten) prey += (prey.empty() ? "" : ", ") + species.pluralName;
+                if (species.canBeEaten) prey += (prey.empty() ? "" : " et ") + species.pluralName;
             }
             title = prey + " " + title;
         }

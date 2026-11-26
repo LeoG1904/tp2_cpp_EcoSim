@@ -11,12 +11,13 @@ export namespace ecosim {
     /// @brief Les espèces du projet.
     /// @ingroup moteur
     enum class AnimalKind {
-        Herbivore, ///< Mange l'herbe et sert de proie.
-        Predator ///< Chasse les herbivores.
+        Deer, ///< Le cerf : le grand herbivore.
+        Rabbit, ///< Le lapin : le petit herbivore, qui se contente d'une herbe rase.
+        Predator ///< Chasse les cerfs et les lapins.
     };
     /// @brief Nombre d'espèces.
     /// @ingroup moteur
-    inline constexpr std::size_t SpeciesCount{2};
+    inline constexpr std::size_t SpeciesCount{3};
 
     /// @brief Une valeur pour chaque espèce, désignée par son nom plutôt que par un numéro.
     /// @tparam T Type de la valeur.
@@ -52,32 +53,38 @@ export namespace ecosim {
         double pace{0.0};
     };
 
-    /// @brief Les statistiques réglables d'une espèce.
-    ///
-    /// Les valeurs initiales sont celles des herbivores.
+    /// @brief Ce qui fait une espèce : des caractéristiques fixes, que l'utilisateur ne règle pas.
     /// @ingroup moteur
-    struct AnimalTraits {
-        /// @brief Énergie d'un animal placé au départ.
-        int startingEnergy{50};
+    struct SpeciesTraits {
         /// @brief Énergie perdue à chaque génération.
-        int energyLoss{2};
+        int energyLoss;
         /// @brief Âge auquel l'animal meurt.
-        int maxAge{80};
+        int maxAge;
         /// @brief Herbe mangée au maximum (herbivore) ou énergie par proie (prédateur).
-        int foodEnergy{10};
+        int foodEnergy;
         /// @brief Énergie minimale pour se reproduire.
-        int reproductionEnergy{80};
+        int reproductionEnergy;
+        /// @brief Distance par génération à pleine allure, en % de case.
+        int speed;
+        /// @brief Taille du repas offert au chasseur, en % de son énergie par proie.
+        int mealPercent{100};
+
+        /// @brief Vrai si les deux valeurs sont identiques.
+        bool operator==(const SpeciesTraits&) const = default;
+    };
+
+    /// @brief Ce que l'utilisateur peut régler sur les animaux d'une espèce.
+    /// @ingroup moteur
+    struct AnimalOptions {
         /// @brief Chance de naissance, en %, quand les conditions sont réunies.
-        int reproductionPercent{20};
+        int birthPercent{20};
         /// @brief Instinct de l'espèce, 0 pour le désactiver.
         ///
         /// Proie : chance, en %, d'être sur ses gardes. Prédateur : esprit de meute, qui ajoute autant de cases à sa vue.
         int instinct{0};
-        /// @brief Distance par génération à pleine allure, en % de case.
-        int speed{100};
 
         /// @brief Vrai si les deux valeurs sont identiques.
-        bool operator==(const AnimalTraits&) const = default;
+        bool operator==(const AnimalOptions&) const = default;
     };
 
     class Animal;
@@ -102,8 +109,8 @@ export namespace ecosim {
         virtual std::vector<Point> HuntersNear(Point from, double radius,
                                                const Animal* except) const = 0;
         /// @brief Capture la proie la plus proche à portée.
-        /// @return Vrai si une proie a été capturée.
-        virtual bool CatchPrey(Point from, double reach) = 0;
+        /// @return La taille du repas qu'offre la proie (SpeciesTraits::mealPercent), ou rien sans capture.
+        virtual std::optional<int> CatchPrey(Point from, double reach) = 0;
         /// @brief Partage un repas avec les congénères proches.
         /// @return La part qui reste au chasseur.
         virtual int ShareMeal(const Animal& hunter, int energy) = 0;
@@ -117,6 +124,8 @@ export namespace ecosim {
     public:
         /// @brief Énergie maximale.
         static constexpr int MaxEnergy{100};
+        /// @brief Énergie d'un animal placé au départ.
+        static constexpr int StartingEnergy{50};
         /// @brief Virage maximal par petit pas, en radians : les trajectoires restent courbes.
         static constexpr double MaxTurnPerTick{0.65};
 
@@ -140,8 +149,10 @@ export namespace ecosim {
         int GetAge() const;
         /// @brief Énergie restante.
         int GetEnergy() const;
-        /// @brief Statistiques de cet individu.
-        const AnimalTraits& GetTraits() const;
+        /// @brief Les caractéristiques de son espèce.
+        const SpeciesTraits& GetTraits() const;
+        /// @brief Les réglages de cet individu, transmis à ses petits.
+        const AnimalOptions& GetOptions() const;
         /// @brief Vrai s'il lui reste de l'énergie et qu'il n'a pas atteint l'âge maximum.
         bool IsAlive() const;
 
@@ -182,7 +193,8 @@ export namespace ecosim {
     protected:
         /// @brief Crée un animal au centre d'une case.
         /// @throws std::invalid_argument si l'énergie n'est pas entre 1 et MaxEnergy.
-        Animal(std::uint64_t id, Position cell, int energy, const AnimalTraits& traits);
+        Animal(std::uint64_t id, Position cell, int energy, const SpeciesTraits& traits,
+               const AnimalOptions& options);
         /// @brief La direction qui mène d'un point à un autre, en radians.
         static double HeadingTo(Point from, Point to);
         /// @brief Un écart aléatoire entre -spread et +spread radians.
@@ -205,7 +217,9 @@ export namespace ecosim {
         int age{0};
         /// @brief Énergie restante ; l'animal meurt à 0.
         int energy;
-        /// @brief Statistiques propres à l'individu, transmises à ses petits.
-        AnimalTraits traits;
+        /// @brief Caractéristiques fixes de l'espèce.
+        SpeciesTraits traits;
+        /// @brief Réglages propres à l'individu, transmis à ses petits.
+        AnimalOptions options;
     };
 }

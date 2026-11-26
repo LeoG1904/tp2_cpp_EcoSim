@@ -1,12 +1,17 @@
-"""Produit les deux diagrammes de classes (notation UML) au format SVG.
+"""Produit les diagrammes de classes et de modules (notation UML) au format SVG.
 
-Les classes et les liens sont décrits à la main à la fin de ce fichier : les modifier dès que
-le code change, puis lancer depuis la racine du projet :  python docs/generate_diagrams.py
+Les deux vues d'ensemble sont décrites à la main à la fin de ce fichier : les modifier dès que
+les classes ou leurs liens changent. Les diagrammes détaillés, des données et des modules sont
+lus dans le code par uml_details.py. Dans tous les cas, lancer depuis la racine du projet :
+python docs/generate_diagrams.py
 """
-import io, os
+import io, os, sys
 from xml.sax.saxutils import escape
 
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images", "")
+sys.dont_write_bytecode = True
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))).replace(os.sep, "/")
+OUT = ROOT + "/docs/images/"
 LINE = "#3b4a5a"
 
 class Diagram:
@@ -18,7 +23,7 @@ class Diagram:
     def band(self, y, h, title, fill, stroke):
         self.bands.append(
             f'<rect x="10" y="{y}" width="{self.width - 20}" height="{h}" rx="10" fill="{fill}" stroke="{stroke}"/>'
-            f'<text x="24" y="{y + 22}" class="band" fill="{stroke}">{escape(title)}</text>')
+            f'<text x="52" y="{y + 22}" class="band" fill="{stroke}">{escape(title)}</text>')
 
     def box(self, name, x, y, w, lines=(), stereotype=None, kind="class"):
         header = 44 if stereotype else 30
@@ -92,76 +97,116 @@ class Diagram:
         io.open(OUT + filename, "w", encoding="utf-8", newline="\n").write(svg)
 
 # ====================================================== 1. de l'application au moteur
-d = Diagram(1100, 815, "Diagramme de classes : affichage, interface et lien avec le moteur")
+d = Diagram(1400, 835, "Diagramme de classes : affichage, interface et lien avec le moteur")
 d.band(10, 170, "AFFICHAGE (Windows)", "#fff6ea", "#a8641a")
 d.band(192, 400, "INTERFACE (C++ pur)", "#f0f6ff", "#2b5f99")
-d.band(604, 140, "MOTEUR (C++ pur)", "#eefaf0", "#2c7a3f")
+d.band(604, 160, "MOTEUR (C++ pur)", "#eefaf0", "#2c7a3f")
 
-d.box("Win32Input", 40, 55, 220, ["Read()"])
-d.box("Win32Window", 330, 55, 220, ["ProcessEvents()", "TakeKeys(), TakeWheel()"])
-d.box("Win32Renderer", 760, 55, 220, ["DrawHome()", "DrawSimulation()"])
+d.box("Win32Input", 60, 55, 220, ["Read()"])
+d.box("Win32Window", 350, 55, 220, ["ProcessEvents()", "TakeKeys(), TakeWheel()"])
+d.box("Win32Renderer", 780, 55, 220, ["DrawHome()", "DrawSimulation()"])
+d.box("Canvas", 1070, 55, 130, ["image en mémoire", "Present()"])
 
-d.box("InputSource", 40, 232, 220, ["Read()"], "interface", "interface")
-d.box("UiController", 430, 232, 240, ["Handle() : UiAction", "écran affiché, case choisie"])
-d.box("View", 840, 232, 220, ["DrawHome()", "DrawSimulation()"], "interface", "interface")
-d.box("SettingEditor", 290, 370, 160, ["saisie d'un réglage"])
-d.box("OrbitCamera", 470, 370, 160, ["vue 3D"])
-d.box("ChartSelection", 650, 370, 160, ["graphiques choisis"])
-d.box("Application", 430, 490, 240, ["RunFrame()", "applique les actions"])
+d.box("InputSource", 60, 232, 220, ["Read()"], "interface", "interface")
+d.box("UiController", 450, 232, 240, ["Handle() : UiAction", "écran affiché, case choisie"])
+d.box("View", 900, 232, 220, ["DrawHome()", "DrawSimulation()"], "interface", "interface")
+d.box("SettingEditor", 310, 370, 160, ["saisie d'un réglage"])
+d.box("OrbitCamera", 490, 370, 160, ["vue 3D"])
+d.box("ChartSelection", 670, 370, 160, ["graphiques choisis"], "structure")
+d.box("Application", 450, 490, 240, ["RunFrame()", "applique les actions"])
 
-d.box("SimulationClock", 90, 640, 220, ["vitesse et pause"])
-d.box("Simulation", 430, 640, 240, ["Step() : une génération"])
-d.box("SimulationSettings", 780, 640, 230, ["réglages choisis"])
+d.box("SimulationClock", 150, 640, 220, ["vitesse et pause"])
+d.box("Simulation", 450, 640, 240, ["Step() : une génération"])
+d.box("SimulationSettings", 1040, 640, 240, ["réglages choisis"], "structure")
 
 # affichage -> interfaces et objets partagés
-d.edge("implement", [(100, 113), (100, 232)])
-d.edge("implement", [(950, 131), (950, 232)])
-d.edge("assoc", [(260, 80), (330, 80)])
-d.edge("assoc", [(200, 113), (200, 160), (460, 160), (460, 232)], "commande", (272, 153))
-d.edge("assoc", [(810, 131), (810, 160), (640, 160), (640, 232)], "lit l'état", (700, 153))
-d.edge("depend", [(760, 80), (550, 80)], "prend sa taille et son identifiant", (655, 72), "middle")
+d.edge("implement", [(210, 113), (210, 232)])
+d.edge("implement", [(960, 131), (960, 232)])
+d.edge("assoc", [(280, 80), (350, 80)])
+d.edge("assoc", [(250, 113), (250, 160), (480, 160), (480, 232)], "commande", (292, 153))
+d.edge("assoc", [(830, 131), (830, 160), (660, 160), (660, 232)], "lit l'état", (720, 153))
+d.edge("depend", [(780, 80), (570, 80)], "prend sa taille et son identifiant", (675, 72), "middle")
+d.edge("depend", [(1000, 80), (1070, 80)], "crée", (1035, 72), "middle")
+d.edge("depend", [(60, 95), (18, 95), (18, 668), (150, 668)], "lit les vitesses", (46, 660))
 # parties du contrôleur
-d.edge("compose", [(490, 316), (490, 340), (370, 340), (370, 370)])
-d.edge("compose", [(550, 316), (550, 370)])
-d.edge("compose", [(610, 316), (610, 340), (730, 340), (730, 370)])
+d.edge("compose", [(510, 308), (510, 340), (390, 340), (390, 370)])
+d.edge("compose", [(570, 308), (570, 370)])
+d.edge("compose", [(630, 308), (630, 340), (750, 340), (750, 370)])
 # application
-d.edge("assoc", [(430, 515), (150, 515), (150, 308)], "reçoit les commandes", (162, 507))
-d.edge("assoc", [(670, 515), (950, 515), (950, 326)], "fait dessiner", (938, 507), "end")
-d.edge("compose", [(480, 564), (480, 590), (200, 590), (200, 640)], "1", (208, 630))
-d.edge("compose", [(550, 564), (550, 640)], "0..1", (558, 630))
-d.edge("compose", [(620, 564), (620, 590), (895, 590), (895, 640)], "1", (903, 630))
-d.legend(765)
+d.edge("assoc", [(450, 515), (170, 515), (170, 304)], "reçoit les commandes", (182, 507))
+d.edge("assoc", [(690, 515), (1010, 515), (1010, 322)], "fait dessiner", (998, 507), "end")
+d.edge("compose", [(500, 564), (500, 590), (260, 590), (260, 640)], "1", (268, 630))
+d.edge("compose", [(570, 564), (570, 640)], "0..1", (578, 630))
+d.edge("compose", [(640, 564), (640, 578), (1100, 578), (1100, 640)], "1", (1108, 630))
+# la simulation et les réglages ; ce que l'interface fait des objets du moteur
+d.edge("compose", [(690, 668), (1040, 668)], "1", (1024, 660), "end")
+d.edge("depend", [(900, 290), (875, 290), (875, 610), (660, 610), (660, 640)], "dessine", (700, 603))
+d.edge("depend", [(1120, 280), (1220, 280), (1220, 640)], "dessine", (1228, 440))
+d.edge("depend", [(690, 262), (855, 262), (855, 625), (1065, 625), (1065, 640)], "modifie", (847, 360), "end")
+d.edge("depend", [(400, 428), (400, 726), (1080, 726), (1080, 712)], "modifie", (408, 721))
+d.edge("depend", [(60, 262), (34, 262), (34, 748), (1130, 748), (1130, 712)], "le modifie", (46, 743))
+d.legend(785)
 d.save("classes_application.svg")
 
 # ====================================================== 2. le moteur
-d = Diagram(1100, 830, "Diagramme de classes : le moteur de simulation")
-d.box("SimulationSettings", 40, 40, 250, ["eau, obstacles, repousse", "réglages de chaque espèce"])
-d.box("Simulation", 430, 40, 250, ["Step()", "AddAnimal(), Seed()", "Animals(), Count()"])
-d.box("SimulationStats", 820, 40, 240, ["RecordBirth(), RecordDeath()", "History(), Total()"])
+d = Diagram(1480, 1035, "Diagramme de classes : le moteur de simulation")
+d.box("SimulationSettings", 60, 40, 250, ["eau, obstacles, repousse", "réglages de chaque espèce"], "structure")
+d.box("Simulation", 600, 40, 280, ["Step()", "AddAnimal(), Seed()", "Animals(), Count()"])
+d.box("SimulationStats", 1150, 40, 260, ["RecordBirth(), RecordDeath()", "History(), Total()"])
 
-d.box("World", 40, 270, 250, ["largeur, hauteur", "GetCell(), IsWalkable()"])
-d.box("Animal", 400, 260, 310, ["identifiant, âge, énergie", "position, direction, trajet", "traits : AnimalTraits",
+d.box("World", 60, 300, 250, ["largeur, hauteur", "GetCell(), IsWalkable()"])
+d.box("Animal", 560, 300, 310, ["identifiant, âge, énergie", "position, direction, trajet", "caractéristiques et réglages",
                                  "Advance()", "Steer()  (abstraite)", "Act()  (abstraite)"], "abstraite", "abstract")
-d.box("PopulationSample", 820, 270, 240, ["effectifs, herbe", "énergie, événements"])
+d.box("PopulationSample", 1150, 300, 260, ["effectifs, herbe", "énergie, événements"], "structure")
 
-d.box("Cell", 40, 480, 250, ["terrain", "herbe de 0 à 100"])
-d.box("Herbivore", 330, 530, 200, ["broute", "peut fuir"])
-d.box("Predator", 580, 530, 200, ["chasse", "peut chasser en meute"])
-d.box("Habitat", 820, 460, 240, ["NearestPrey()", "HuntersNear()", "CatchPrey(), ShareMeal()"], "interface", "interface")
-d.box("GridHabitat", 820, 660, 240, ["animaux rangés par case", "créé à chaque génération"], "interne à Simulation", "internal")
+d.box("Cell", 60, 560, 250, ["terrain", "herbe de 0 à 100"])
+d.box("Herbivore", 500, 560, 190, ["broute", "peut fuir"], "abstraite", "abstract")
+d.box("Deer", 500, 695, 90, ["herbe haute"])
+d.box("Rabbit", 600, 695, 90, ["herbe rase"])
+d.box("Predator", 740, 560, 190, ["chasse", "peut chasser en meute"])
+d.box("Habitat", 1150, 560, 260, ["NearestPrey()", "HuntersNear()", "CatchPrey(), ShareMeal()"], "interface", "interface")
 
-d.edge("compose", [(430, 80), (290, 80)], "1", (302, 72))
-d.edge("compose", [(680, 80), (820, 80)], "1", (800, 72))
-d.edge("compose", [(470, 134), (470, 190), (170, 190), (170, 270)], "1", (180, 258))
-d.edge("compose", [(555, 134), (555, 260)], "0..*", (564, 248))
-d.edge("compose", [(940, 116), (940, 270)], "0..*  (une par génération)", (950, 252))
-d.edge("compose", [(165, 346), (165, 480)], "1..*", (175, 468))
+d.box("SpeciesInfo", 500, 800, 430, ["nom, valeurs de départ, create()",
+                                     "catalogue : SpeciesCatalog(), SpeciesOf()"], "structure")
+d.box("GridHabitat", 1150, 800, 260, ["animaux rangés par case", "créé à chaque génération"], "interne à Simulation", "internal")
+
+# possessions
+d.edge("compose", [(600, 80), (310, 80)], "1", (322, 72))
+d.edge("compose", [(880, 70), (1150, 70)], "1", (1132, 62))
+d.edge("compose", [(640, 134), (640, 200), (185, 200), (185, 300)], "1", (195, 290))
+d.edge("compose", [(735, 134), (735, 300)], "0..*", (744, 288))
+d.edge("compose", [(1300, 116), (1300, 300)], "0..*  (une par génération)", (1292, 200), "end")
+d.edge("compose", [(185, 376), (185, 560)], "1..*", (195, 548))
 # héritage : les deux espèces partagent la même flèche
-d.edge("inherit", [(430, 530), (430, 480), (555, 480), (555, 422)])
-d.edge("inherit", [(680, 530), (680, 480), (555, 480), (555, 422)])
-d.edge("depend", [(710, 350), (765, 350), (765, 495), (820, 495)], "perçoit par", (772, 420))
-d.edge("implement", [(940, 660), (940, 568)])
-d.edge("depend", [(680, 120), (730, 120), (730, 210), (800, 210), (800, 690), (820, 690)], "crée", (736, 202))
-d.legend(778)
+d.edge("inherit", [(595, 560), (595, 515), (715, 515), (715, 462)])
+d.edge("inherit", [(835, 560), (835, 515), (715, 515), (715, 462)])
+d.edge("inherit", [(545, 695), (545, 674), (595, 674), (595, 650)])
+d.edge("inherit", [(645, 695), (645, 674), (595, 674), (595, 650)])
+d.edge("implement", [(1280, 800), (1280, 668)])
+# la simulation
+d.edge("depend", [(880, 122), (960, 122), (960, 240), (1200, 240), (1200, 300)], "mesure", (1040, 232))
+d.edge("depend", [(880, 98), (1100, 98), (1100, 815), (1150, 815)], "crée", (1108, 770))
+d.edge("depend", [(600, 108), (475, 108), (475, 815), (500, 815)], "consulte", (467, 775), "end")
+# les animaux et leur entourage
+d.edge("depend", [(560, 335), (310, 335)], "se déplace sur", (430, 327), "middle")
+d.edge("depend", [(870, 340), (945, 340), (945, 590), (1150, 590)], "perçoit par", (937, 505), "end")
+d.edge("depend", [(1175, 560), (1175, 480), (420, 480), (420, 355), (310, 355)], "donne accès à", (755, 496))
+d.edge("depend", [(1150, 625), (985, 625), (985, 440), (870, 440)], "désigne", (880, 432))
+d.edge("depend", [(500, 620), (310, 620)], "mange l'herbe de", (390, 612), "middle")
+# ce que GridHabitat garde et lit
+d.edge("assoc", [(1150, 850), (1035, 850), (1035, 400), (870, 400)], "contient", (1043, 700))
+d.edge("depend", [(1150, 833), (1010, 833), (1010, 710), (885, 710), (885, 636)], "lit SharingDistance", (895, 702))
+d.edge("assoc", [(1200, 890), (1200, 945), (42, 945), (42, 355), (60, 355)], "garde la carte", (60, 937))
+d.edge("assoc", [(1410, 822), (1448, 822), (1448, 78), (1410, 78)], "y compte les captures", (1440, 780), "end")
+# le catalogue : fabrique les animaux, fournit les valeurs d'origine
+d.edge("depend", [(545, 800), (545, 753)], "crée", (553, 782))
+d.edge("depend", [(645, 800), (645, 753)], "crée", (653, 782))
+d.edge("depend", [(835, 800), (835, 636)], "crée", (843, 760))
+d.edge("depend", [(60, 95), (24, 95), (24, 845), (500, 845)], "y prend les valeurs de départ", (56, 835))
+d.legend(985)
 d.save("classes_moteur.svg")
+
+# ====================================================== 3. détail, données et modules, lus dans le code
+import uml_details
+uml_details.generate(Diagram, ROOT)
 print("OK")

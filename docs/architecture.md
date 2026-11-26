@@ -28,8 +28,11 @@ simplement dix fois plus de générations par seconde.
 
 ## Les liens entre les classes
 
-Les diagrammes suivent la notation UML ; leur légende est en bas de chaque image. Ils montrent
-les classes principales, pas les petites structures de données.
+Les diagrammes suivent la notation UML ; leur légende est en bas de chaque image. Les deux
+vues d'ensemble ci-dessous montrent les classes, quelques structures importantes et leurs
+liens. Une classe qui implémente une interface a aussi les liens de cette interface : ils ne
+sont pas redessinés. Les types et les membres au complet sont dans les
+[diagrammes détaillés](@ref diagrammes).
 
 ### De l'application au moteur
 
@@ -41,6 +44,10 @@ Les flèches vont toujours du haut vers le bas ou restent dans leur couche : le 
 connaît ni l'interface ni l'affichage. ecosim::Application ne parle à Windows qu'à travers
 ecosim::InputSource et ecosim::View.
 
+À chaque image, ecosim::Win32Renderer crée un ecosim::Canvas. Les fonctions de dessin y
+travaillent en mémoire, puis le résultat est copié d'un coup dans la fenêtre, ce qui évite
+le scintillement.
+
 ### Le moteur
 
 @image html classes_moteur.svg "Le moteur de simulation" width=100%
@@ -51,13 +58,24 @@ ecosim::Simulation possède la carte, les animaux et les statistiques. Les anima
 connaissent pas : ils perçoivent leur entourage par ecosim::Habitat, implémentée par une
 classe interne créée à chaque génération.
 
+Les espèces sont décrites dans un catalogue, ecosim::SpeciesCatalog() : une fiche
+ecosim::SpeciesInfo par espèce, avec son nom, ses valeurs de départ et la fonction
+qui crée ses animaux. Les réglages et la simulation parcourent ce catalogue au lieu de
+nommer chaque classe.
+
 ## Trois choix de conception
 
 ### 1. L'héritage pour les espèces
 
-ecosim::Simulation manipule des ecosim::Animal sans savoir s'il s'agit d'un herbivore ou d'un
-prédateur. Chaque espèce redéfinit sa façon de choisir une direction
-(ecosim::Animal::Steer) et d'agir (ecosim::Animal::Act). C'est le **polymorphisme**.
+ecosim::Simulation manipule des ecosim::Animal sans savoir s'il s'agit d'un cerf, d'un lapin
+ou d'un prédateur. Chaque animal choisit sa direction (ecosim::Animal::Steer) et agit
+(ecosim::Animal::Act) à sa façon. C'est le **polymorphisme**.
+
+L'héritage a deux niveaux. ecosim::Herbivore réunit ce que les herbivores font de la même
+manière, fuir et brouter ; ecosim::Deer et ecosim::Rabbit ne gardent que leurs différences.
+
+Ce qui définit une espèce est rangé dans sa classe, en constantes (ecosim::SpeciesTraits). Ce
+que l'utilisateur règle est à part (ecosim::AnimalOptions), et chaque petit en hérite.
 
 ### 2. L'interface Habitat
 
@@ -92,7 +110,7 @@ plus loin au plus proche** (algorithme du peintre) : les objets proches recouvre
 - La vitesse d'un animal ne coûte pas d'énergie.
 - Les obstacles ne bloquent pas la vue des animaux.
 - La 3D n'a ni textures ni éclairage dynamique.
-- Les préréglages sont conçus pour les deux espèces actuelles.
+- Les préréglages sont conçus pour les trois espèces actuelles.
 
 ## Compilation
 

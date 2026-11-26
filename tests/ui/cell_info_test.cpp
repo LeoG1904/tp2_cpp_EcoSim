@@ -10,7 +10,7 @@ TEST_CASE("Le panneau decrit le terrain et les animaux de la case", "[cell_info]
     world.GetCell({0, 0}).SetVegetation(42);
     world.GetCell({1, 0}) = Cell{Terrain::Eau};
     Simulation simulation{std::move(world), std::mt19937{1}};
-    simulation.AddAnimal(AnimalKind::Herbivore, {0, 0}, 60);
+    simulation.AddAnimal(AnimalKind::Deer, {0, 0}, 60);
     simulation.AddAnimal(AnimalKind::Predator, {0, 0}, 70);
 
     const auto prairie = DescribeCell(simulation, {0, 0});
@@ -18,8 +18,8 @@ TEST_CASE("Le panneau decrit le terrain et les animaux de la case", "[cell_info]
     REQUIRE(prairie[0] == "Case : colonne 1, ligne 1");
     REQUIRE(prairie[1] == "Terrain : Prairie");
     REQUIRE(prairie[2].ends_with("42 / 100"));
-    REQUIRE(prairie[3].starts_with("Herbivores : 1"));
-    REQUIRE(prairie[4].starts_with("Herbivore "));
+    REQUIRE(prairie[3].starts_with("Cerfs : 1"));
+    REQUIRE(prairie[4].starts_with("Cerf "));
     REQUIRE(prairie[4].ends_with("60"));
     REQUIRE(prairie[5].ends_with("70"));
 
@@ -31,7 +31,7 @@ TEST_CASE("Le panneau decrit le terrain et les animaux de la case", "[cell_info]
 
 TEST_CASE("Une case tres peuplee limite la liste", "[cell_info]") {
     Simulation simulation{World{1, 1}, std::mt19937{2}};
-    for (std::size_t i = 0; i < MaxListedAnimals + 3; ++i) simulation.AddAnimal(AnimalKind::Herbivore, {0, 0});
+    for (std::size_t i = 0; i < MaxListedAnimals + 3; ++i) simulation.AddAnimal(AnimalKind::Deer, {0, 0});
 
     const auto lines = DescribeCell(simulation, {0, 0});
     REQUIRE(lines.size() == 4 + MaxListedAnimals + 1);

@@ -25,11 +25,11 @@ namespace {
 
 namespace ecosim {
     Animal::Animal(const std::uint64_t id, const Position cell, const int energy,
-                   const AnimalTraits& traits)
+                   const SpeciesTraits& traits, const AnimalOptions& options)
         : id{id}, location{CenterOf(cell)},
           // Des directions de départ différentes sans consommer de hasard.
           heading{std::remainder(static_cast<double>(id) * 2.399963, 2.0 * std::numbers::pi)},
-          energy{energy}, traits{traits} {
+          energy{energy}, traits{traits}, options{options} {
         if (energy <= 0 || energy > MaxEnergy) {
             throw std::invalid_argument{"L'énergie initiale doit être entre 1 et 100"};
         }
@@ -44,7 +44,8 @@ namespace ecosim {
     const Path& Animal::GetPath() const { return path; }
     int Animal::GetAge() const { return age; }
     int Animal::GetEnergy() const { return energy; }
-    const AnimalTraits& Animal::GetTraits() const { return traits; }
+    const SpeciesTraits& Animal::GetTraits() const { return traits; }
+    const AnimalOptions& Animal::GetOptions() const { return options; }
     bool Animal::IsAlive() const { return energy > 0 && age < traits.maxAge; }
 
     void Animal::Place(const Point point, const double direction) {

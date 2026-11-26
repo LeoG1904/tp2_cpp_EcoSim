@@ -32,11 +32,15 @@ Une tâche n'est terminée que si ces deux règles sont respectées.
 
 ### 2. Les diagrammes de classes sont toujours à jour
 
-- Ils ne se mettent **pas** à jour automatiquement.
-- À vérifier dès qu'une classe ou interface est ajoutée, supprimée ou renommée, ou qu'un
-  héritage, une possession, une référence, une dépendance ou une méthode affichée change.
-- Modifier la description dans `docs/generate_diagrams.py`, puis lancer
+- Rien ne se lance tout seul : après tout changement de déclaration ou d'import, exécuter
   `python docs/generate_diagrams.py`. Ne pas modifier les SVG de `docs/images/` à la main.
+- Les diagrammes détaillés, des données et des modules sont **lus dans le code** par
+  `docs/uml_reader.py` et `docs/uml_details.py`. Vérifier qu'une nouvelle écriture C++ est
+  bien lue (le lecteur ne couvre que celles du projet).
+- Les deux **vues d'ensemble** sont décrites à la main à la fin de
+  `docs/generate_diagrams.py` : les modifier dès qu'une classe ou interface est ajoutée,
+  supprimée ou renommée, ou qu'un héritage, une possession, une référence, une dépendance
+  (y compris dans le corps d'une fonction) ou une méthode affichée change.
 - Contrôler les images à l'écran : texte non coupé, traits lisibles, flèches reliées.
   Si ce contrôle n'est pas possible, le dire.
 

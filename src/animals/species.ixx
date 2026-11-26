@@ -5,7 +5,8 @@
 export module ecosim.species;
 
 import std;
-export import ecosim.herbivore;
+export import ecosim.deer;
+export import ecosim.rabbit;
 export import ecosim.predator;
 
 export namespace ecosim {
@@ -18,8 +19,8 @@ export namespace ecosim {
         std::string name;
         /// @brief Nom au pluriel.
         std::string pluralName;
-        /// @brief Statistiques d'origine.
-        AnimalTraits defaultTraits;
+        /// @brief Chance de naissance proposée au départ.
+        int defaultBirthPercent;
         /// @brief Au départ, un animal pour ce nombre de cases.
         int cellsPerAnimal;
         /// @brief Population de départ minimale.
@@ -30,7 +31,7 @@ export namespace ecosim {
         int defaultInstinct;
         /// @brief Fonction qui crée un animal de cette espèce.
         std::unique_ptr<Animal> (*create)(std::uint64_t id, Position position, int energy,
-                                          const AnimalTraits& traits);
+                                          const AnimalOptions& options);
     };
 
     /// @brief Toutes les espèces, dans l'ordre d'AnimalKind.

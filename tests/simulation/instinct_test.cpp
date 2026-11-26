@@ -13,6 +13,7 @@ namespace {
         std::vector<Point> prey;
         std::vector<Point> hunters;
         int captures{0};
+        int mealPercent{100};
 
         World& GetWorld() override { return world; }
         const World& GetWorld() const override { return world; }
@@ -34,24 +35,23 @@ namespace {
             }
             return result;
         }
-        bool CatchPrey(const Point from, const double reach) override {
-            if (!NearestPrey(from, reach)) return false;
+        std::optional<int> CatchPrey(const Point from, const double reach) override {
+            if (!NearestPrey(from, reach)) return std::nullopt;
             ++captures;
-            return true;
+            return mealPercent;
         }
         int ShareMeal(const Animal&, const int energy) override { return energy; }
     };
 
-    AnimalTraits Instinct(AnimalTraits traits, const int value) {
-        traits.instinct = value;
-        return traits;
+    AnimalOptions Instinct(const int value) {
+        return {.instinct = value};
     }
 
     Steering HerbivoreSteering(const int reflex, const Point hunter) {
         FakeHabitat habitat;
         habitat.world.GetCell({5, 6}).SetVegetation(100); // l'herbe est du cote du chasseur
         habitat.hunters = {hunter};
-        Herbivore herbivore{1, {6, 6}, 50, Instinct(AnimalTraits{}, reflex)};
+        Deer herbivore{1, {6, 6}, 50, Instinct(reflex)};
         herbivore.Place({6.5, 6.5}, std::numbers::pi);
         std::mt19937 rng{1};
         herbivore.BeginGeneration(rng);
@@ -63,7 +63,7 @@ namespace {
         FakeHabitat habitat;
         habitat.prey = prey;
         habitat.hunters = mates;
-        Predator predator{id, {2, 6}, 50, Instinct(Predator::DefaultTraits, pack)};
+        Predator predator{id, {2, 6}, 50, Instinct(pack)};
         predator.Place({2.5, 6.5}, 0.0);
         std::mt19937 rng{2};
         return predator.Steer(habitat, rng);
@@ -110,24 +110,24 @@ TEST_CASE("Sans proie, un predateur en meute rejoint un congenere", "[instinct]"
 
 TEST_CASE("La meute partage le repas sans creer d'energie", "[instinct]") {
     SimulationSettings settings;
-    settings.species[AnimalKind::Predator].traits.instinct = 2;
+    settings.species[AnimalKind::Predator].options.instinct = 2;
     Simulation simulation{World{1, 1}, std::mt19937{4}, settings};
-    simulation.AddAnimal(AnimalKind::Herbivore, {0, 0});
+    simulation.AddAnimal(AnimalKind::Deer, {0, 0});
     simulation.AddAnimal(AnimalKind::Predator, {0, 0});
     simulation.AddAnimal(AnimalKind::Predator, {0, 0});
     simulation.Step();
 
-    // 35 points : 18 pour le chasseur et 17 pour son voisin, moins 2 pour la génération.
+    // 25 points : 13 pour le chasseur et 12 pour son voisin, moins 3 pour la génération.
     const auto animals = simulation.Animals();
     REQUIRE(animals.size() == 2);
-    REQUIRE(animals[0].energy + animals[1].energy == 66 + 65);
+    REQUIRE(animals[0].energy + animals[1].energy == 60 + 59);
 }
 
 TEST_CASE("L'application active la fuite et les meutes, le moteur seul non", "[instinct]") {
     const SimulationSettings application = DefaultSettings(42, 26);
-    REQUIRE(application.species[AnimalKind::Herbivore].traits.instinct == 25);
-    REQUIRE(application.species[AnimalKind::Predator].traits.instinct == 2);
+    REQUIRE(application.species[AnimalKind::Deer].options.instinct == 25);
+    REQUIRE(application.species[AnimalKind::Predator].options.instinct == 2);
     for (const SpeciesSettings& species : SimulationSettings{}.species.values) {
-        REQUIRE(species.traits.instinct == 0);
+        REQUIRE(species.options.instinct == 0);
     }
 }

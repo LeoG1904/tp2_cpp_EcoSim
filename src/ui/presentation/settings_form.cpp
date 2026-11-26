@@ -23,24 +23,14 @@ namespace {
             const ecosim::AnimalKind kind = info.kind;
             const ecosim::SpeciesStyle& style = ecosim::StyleOf(kind);
             const std::size_t column = 1 + static_cast<std::size_t>(kind);
-            const auto trait = [&](const std::string& label, const int minimum, const int maximum,
-                                   int ecosim::AnimalTraits::* member) {
-                fields.push_back({column, label, minimum, maximum,
-                    [kind, member](SimulationSettings& s) -> int& {
-                        return s.species[kind].traits.*member;
-                    }});
-            };
             fields.push_back({column, "Nombre au départ", 0, style.initialMaximum,
                 [kind](SimulationSettings& s) -> int& { return s.species[kind].initialCount; }});
-            trait("Vitesse (% case / tour)", 20, 300, &ecosim::AnimalTraits::speed);
-            trait("Énergie de départ", 10, 100, &ecosim::AnimalTraits::startingEnergy);
-            trait("Énergie perdue / tour", 1, 20, &ecosim::AnimalTraits::energyLoss);
-            trait("Âge maximum", 10, 300, &ecosim::AnimalTraits::maxAge);
-            trait(style.foodLabel, style.foodMinimum, style.foodMaximum,
-                  &ecosim::AnimalTraits::foodEnergy);
-            trait("Seuil de reproduction", 40, 100, &ecosim::AnimalTraits::reproductionEnergy);
-            trait("Chance de naissance (%)", 0, 100, &ecosim::AnimalTraits::reproductionPercent);
-            trait(style.instinctLabel, 0, style.instinctMaximum, &ecosim::AnimalTraits::instinct);
+            fields.push_back({column, "Chance de naissance (%)", 0, 100,
+                [kind](SimulationSettings& s) -> int& {
+                    return s.species[kind].options.birthPercent;
+                }});
+            fields.push_back({column, style.instinctLabel, 0, style.instinctMaximum,
+                [kind](SimulationSettings& s) -> int& { return s.species[kind].options.instinct; }});
         }
         return fields;
     }
@@ -73,7 +63,7 @@ namespace ecosim {
 
     std::string PresetDescription(const Preset preset) {
         switch (preset) {
-            case Preset::Balance: return "Les deux espèces coexistent longtemps.";
+            case Preset::Balance: return "Les trois espèces coexistent le plus souvent longtemps.";
             case Preset::Famine: return "La végétation ne repousse plus : les herbivores meurent de faim.";
             case Preset::Invasion: return "Des meutes massives prennent les herbivores par surprise et les déciment.";
         }

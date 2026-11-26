@@ -55,9 +55,9 @@ namespace ecosim {
         if (!world.IsInside(position) || !world.GetCell(position).IsAccessible()) {
             throw std::invalid_argument{"Un animal doit naître sur une prairie"};
         }
-        const AnimalTraits& traits = settings.species[kind].traits;
         animals.push_back(SpeciesOf(kind).create(nextId, position,
-                                                 energy.value_or(traits.startingEnergy), traits));
+                                                 energy.value_or(Animal::StartingEnergy),
+                                                 settings.species[kind].options));
         ++nextId;
         stats.RecordSample(Measure());
     }

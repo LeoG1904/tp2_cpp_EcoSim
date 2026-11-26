@@ -34,7 +34,7 @@ TEST_CASE("Chaque animal a son modele, meme sur une case partagee", "[scene3d]")
     const auto count = [&world](const int herbivores, const int predators) {
         std::vector<AnimalSnapshot> animals;
         for (int i = 0; i < herbivores + predators; ++i) {
-            const AnimalKind kind = i < herbivores ? AnimalKind::Herbivore : AnimalKind::Predator;
+            const AnimalKind kind = i < herbivores ? AnimalKind::Deer : AnimalKind::Predator;
             Path path;
             path.fill({1.2 + 0.1 * i, 1.5});
             animals.push_back({static_cast<std::uint64_t>(i + 1), {1, 1}, kind, 1, 50, path,
@@ -43,7 +43,7 @@ TEST_CASE("Chaque animal a son modele, meme sur une case partagee", "[scene3d]")
         return BuildScene(world, animals, 1.0, OrbitCamera{4, 4}, Screen, std::nullopt);
     };
     const auto shared = count(1, 1);
-    REQUIRE(std::ranges::count(shared, AnimalKind::Herbivore, &Face::species) > 0);
+    REQUIRE(std::ranges::count(shared, AnimalKind::Deer, &Face::species) > 0);
     REQUIRE(std::ranges::count(shared, AnimalKind::Predator, &Face::species) > 0);
     REQUIRE(count(9, 0).size() > count(4, 0).size());
 }
@@ -53,7 +53,7 @@ TEST_CASE("Un animal glisse entre deux cases en 3D", "[scene3d]") {
     Path path;
     for (std::size_t i = 0; i < path.size(); ++i) path[i] = {2.5 + 3.0 * i / TicksPerGeneration, 1.5};
     const std::vector<AnimalSnapshot> animals{
-        {1, {5, 1}, AnimalKind::Herbivore, 1, 50, path, std::nullopt}};
+        {1, {5, 1}, AnimalKind::Deer, 1, 50, path, std::nullopt}};
     const auto leftEdge = [&](const double progress) {
         int edge = Screen.width;
         for (const Face& face : BuildScene(world, animals, progress, OrbitCamera{8, 3}, Screen,

@@ -8,8 +8,8 @@ import std;
 
 namespace ecosim {
     Predator::Predator(const std::uint64_t id, const Position cell, const int energy,
-                       const AnimalTraits& traits)
-        : Animal{id, cell, energy, traits} {}
+                       const AnimalOptions& options)
+        : Animal{id, cell, energy, Traits, options} {}
 
     AnimalKind Predator::GetKind() const { return AnimalKind::Predator; }
     void Predator::BeginGeneration(std::mt19937&) { hasEaten = false; }
@@ -19,7 +19,7 @@ namespace ecosim {
         if (hasEaten) return {GetHeading() + Jitter(rng, 0.6), 0.3};
 
         const Point here = GetLocation();
-        const int pack = GetTraits().instinct;
+        const int pack = GetOptions().instinct;
         const double range = Sight + pack;
         const std::vector<Point> mates =
             pack > 0 ? habitat.HuntersNear(here, range, this) : std::vector<Point>{};
@@ -48,13 +48,16 @@ namespace ecosim {
     }
 
     void Predator::Act(Habitat& habitat, int) {
-        if (hasEaten || !habitat.CatchPrey(GetLocation(), Reach)) return;
+        if (hasEaten) return;
+        const std::optional<int> size = habitat.CatchPrey(GetLocation(), Reach);
+        if (!size) return;
         hasEaten = true;
-        const int meal = GetTraits().foodEnergy;
-        ReceiveMeal(GetTraits().instinct > 0 ? habitat.ShareMeal(*this, meal) : meal);
+        // Une petite proie nourrit moins.
+        const int meal = GetTraits().foodEnergy * *size / 100;
+        ReceiveMeal(GetOptions().instinct > 0 ? habitat.ShareMeal(*this, meal) : meal);
     }
 
     std::unique_ptr<Animal> Predator::MakeOffspring(const std::uint64_t id) const {
-        return std::make_unique<Predator>(id, GetPosition(), 30, GetTraits());
+        return std::make_unique<Predator>(id, GetPosition(), 30, GetOptions());
     }
 }

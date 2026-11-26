@@ -50,12 +50,12 @@ namespace {
             return result;
         }
 
-        bool CatchPrey(const ecosim::Point from, const double reach) override {
+        std::optional<int> CatchPrey(const ecosim::Point from, const double reach) override {
             ecosim::Animal* prey = ClosestPrey(from, reach);
-            if (!prey) return false;
+            if (!prey) return std::nullopt;
             prey->Die();
             stats.RecordDeath(prey->GetKind(), ecosim::DeathCause::Predation);
-            return true;
+            return prey->GetTraits().mealPercent;
         }
 
         int ShareMeal(const ecosim::Animal& hunter, const int energy) override {
@@ -158,7 +158,7 @@ namespace ecosim {
             // Les proies capturées sont déjà comptées parmi les morts.
             if (!animal->IsAlive()) continue;
             animal->SpendGeneration();
-            std::bernoulli_distribution birth{animal->GetTraits().reproductionPercent / 100.0};
+            std::bernoulli_distribution birth{animal->GetOptions().birthPercent / 100.0};
             if (animal->CanReproduce() && birth(rng)) {
                 newborns.push_back(animal->CreateOffspring(nextId++));
                 animal->PayReproductionCost();

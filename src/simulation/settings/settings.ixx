@@ -13,8 +13,8 @@ export namespace ecosim {
     struct SpeciesSettings {
         /// @brief Nombre d'animaux au départ.
         int initialCount{0};
-        /// @brief Statistiques de l'espèce.
-        AnimalTraits traits{};
+        /// @brief Chance de naissance et instinct.
+        AnimalOptions options{};
 
         /// @brief Vrai si les deux valeurs sont identiques.
         bool operator==(const SpeciesSettings&) const = default;
@@ -43,7 +43,7 @@ export namespace ecosim {
     /// @brief Scénarios prêts à l'emploi : équilibre, famine et invasion.
     /// @ingroup moteur
     enum class Preset {
-        Balance, ///< Les deux espèces coexistent longtemps.
+        Balance, ///< Les trois espèces coexistent le plus souvent longtemps.
         Famine, ///< L'herbe ne repousse plus.
         Invasion ///< Les prédateurs arrivent en masse.
     };

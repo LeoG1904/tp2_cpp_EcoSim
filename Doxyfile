@@ -12,6 +12,7 @@ INPUT_ENCODING         = UTF-8
 INPUT                  = docs/presentation.md \
                          docs/fonctionnement.md \
                          docs/architecture.md \
+                         docs/diagrammes.md \
                          docs/notions.md \
                          docs/couches.dox \
                          src

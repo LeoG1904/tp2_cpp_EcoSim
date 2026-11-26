@@ -65,7 +65,7 @@ export namespace ecosim {
         /// @brief Ajoute un animal au centre d'une case.
         /// @param kind Espèce.
         /// @param position Case de départ.
-        /// @param energy Énergie ; si absente, celle des réglages.
+        /// @param energy Énergie ; si absente, Animal::StartingEnergy.
         /// @throws std::invalid_argument si la case n'est pas une prairie.
         void AddAnimal(AnimalKind kind, Position position, std::optional<int> energy = std::nullopt);
         /// @brief Place des animaux au hasard sur les prairies.

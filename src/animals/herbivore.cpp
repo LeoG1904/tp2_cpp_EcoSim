@@ -8,15 +8,15 @@ import std;
 
 namespace ecosim {
     Herbivore::Herbivore(const std::uint64_t id, const Position cell, const int energy,
-                         const AnimalTraits& traits)
-        : Animal{id, cell, energy, traits} {}
+                         const SpeciesTraits& traits, const AnimalOptions& options,
+                         const int grazingVegetation)
+        : Animal{id, cell, energy, traits, options}, grazingVegetation{grazingVegetation} {}
 
-    AnimalKind Herbivore::GetKind() const { return AnimalKind::Herbivore; }
     bool Herbivore::IsPrey() const { return true; }
 
     void Herbivore::BeginGeneration(std::mt19937& rng) {
         alert = false;
-        if (const int reflex = GetTraits().instinct; reflex > 0) {
+        if (const int reflex = GetOptions().instinct; reflex > 0) {
             std::bernoulli_distribution react{std::min(reflex, 100) / 100.0};
             alert = react(rng);
         }
@@ -37,7 +37,7 @@ namespace ecosim {
         }
 
         const World& world = habitat.GetWorld();
-        if (world.GetCell(GetPosition()).GetVegetation() >= GrazingVegetation) {
+        if (world.GetCell(GetPosition()).GetVegetation() >= grazingVegetation) {
             return {GetHeading() + Jitter(rng, 0.8), 0.2};
         }
         // Huit directions à deux distances : de l'herbe riche, proche et devant soi.
@@ -68,9 +68,5 @@ namespace ecosim {
         const int consumed = std::min({GetTraits().foodEnergy, cell.GetVegetation(), MaxEnergy - GetEnergy()});
         cell.SetVegetation(cell.GetVegetation() - consumed);
         ReceiveMeal(consumed);
-    }
-
-    std::unique_ptr<Animal> Herbivore::MakeOffspring(const std::uint64_t id) const {
-        return std::make_unique<Herbivore>(id, GetPosition(), 30, GetTraits());
     }
 }

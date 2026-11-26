@@ -11,18 +11,20 @@ namespace {
     /// @tparam Species Classe dérivée d'Animal.
     template <typename Species>
     std::unique_ptr<ecosim::Animal> Create(const std::uint64_t id, const ecosim::Position position,
-                                           const int energy, const ecosim::AnimalTraits& traits) {
-        return std::make_unique<Species>(id, position, energy, traits);
+                                           const int energy, const ecosim::AnimalOptions& options) {
+        return std::make_unique<Species>(id, position, energy, options);
     }
 }
 
 namespace ecosim {
     const std::vector<SpeciesInfo>& SpeciesCatalog() {
         static const std::vector<SpeciesInfo> catalog{
-            {AnimalKind::Herbivore, "Herbivore", "Herbivores", AnimalTraits{}, 15, 12, true, 25,
-             &Create<Herbivore>},
-            {AnimalKind::Predator, "Prédateur", "Prédateurs", Predator::DefaultTraits, 150, 3, false, 2,
-             &Create<Predator>},
+            {AnimalKind::Deer, "Cerf", "Cerfs", Deer::DefaultBirthPercent, 15, 12, true, 25,
+             &Create<Deer>},
+            {AnimalKind::Rabbit, "Lapin", "Lapins", Rabbit::DefaultBirthPercent, 15, 12, true, 25,
+             &Create<Rabbit>},
+            {AnimalKind::Predator, "Prédateur", "Prédateurs", Predator::DefaultBirthPercent, 150, 3,
+             false, 2, &Create<Predator>},
         };
         return catalog;
     }

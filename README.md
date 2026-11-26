@@ -1,6 +1,6 @@
 # EcoSim
 
-EcoSim est une simulation d'écosystème cellulaire en **C++23**. Une grille de prairies, d'eau et d'obstacles porte la végétation ; des herbivores et des prédateurs s'y déplacent **librement**, dans toutes les directions. Plusieurs animaux peuvent se trouver sur la même case. La simulation évolue par générations et son moteur fonctionne indépendamment de l'affichage.
+EcoSim est une simulation d'écosystème cellulaire en **C++23**. Une grille de prairies, d'eau et d'obstacles porte la végétation ; des cerfs, des lapins et des prédateurs s'y déplacent **librement**, dans toutes les directions. Plusieurs animaux peuvent se trouver sur la même case. La simulation évolue par générations et son moteur fonctionne indépendamment de l'affichage.
 
 L'application affiche la carte en direct, en **2D** ou dans une **première version 3D**, et permet de consulter l'évolution des statistiques sur des graphiques.
 
@@ -28,22 +28,21 @@ Avant de démarrer, cliquez sur une case et tapez la nouvelle valeur : le premie
 
 Les boutons situés sous les colonnes remplacent tous les réglages. Chaque valeur reste modifiable ensuite, et le bouton choisi n'est plus surligné dès qu'une valeur change. **Valeurs par défaut** revient aux réglages d'origine.
 
-| Préréglage | Ce qui change par rapport aux valeurs par défaut | Comportement observé (carte 42 × 26) |
+| Préréglage | Ce qui change par rapport aux valeurs par défaut | Comportement observé (carte 42 × 26, 100 graines) |
 | --- | --- | --- |
-| **Équilibre** | Herbivores : vitesse 120, chance de naissance 30 %, fuite 50 %. Prédateurs : vitesse 80, perte 3, âge maximum 60, énergie par proie 25, seuil 70, chance 15 %, meute 1 | Les deux espèces sont encore présentes à 1000 générations sur 30 graines sur 30 |
-| **Famine** | Aucune repousse, perte des herbivores 3, un seul prédateur, de vitesse 80 | Herbivores éteints vers la génération 75, environ 85 % de leurs morts étant dues à la faim (100 graines) |
-| **Invasion** | Beaucoup plus de prédateurs au départ (une case sur onze, 200 au maximum), aucune fuite, meute 3 | Tous les herbivores sont mangés en une dizaine de générations (100 graines) |
+| **Équilibre** | Fuite des cerfs 50 %, aucune meute | Les trois espèces sont encore présentes à 400 générations dans 89 simulations sur 100, et à 1000 générations dans 81 sur 100 |
+| **Famine** | Aucune repousse et un seul prédateur | Plus aucun cerf ni lapin à 150 générations (la moitié des extinctions avant la génération 80 environ). La faim cause 91 % des morts chez les cerfs et 61 % chez les lapins, qui meurent aussi de vieillesse |
+| **Invasion** | Beaucoup plus de prédateurs au départ (une case sur onze, 200 au maximum), aucune fuite, meute 3 | La moitié des extinctions de cerfs et de lapins a lieu avant la génération 17 environ, presque uniquement par capture. À la génération 100, des cerfs restent dans 1 simulation et des lapins dans 4 |
 
 Ces résultats sont des tendances : la carte et les animaux restent tirés au hasard.
 
 | Colonne | Réglages |
 | --- | --- |
 | Terrain | Pourcentage d'eau (0 à 50) et d'obstacles (0 à 40), repousse de la végétation par génération (0 à 20) |
-| Herbivores et prédateurs | Nombre au départ, vitesse (20 à 300 % de case par génération), énergie de départ, énergie perdue par génération, âge maximum, seuil d'énergie et chance de reproduction |
-| Herbivores | Végétation mangée au maximum par génération |
-| Prédateurs | Énergie gagnée par proie |
+| Cerfs et lapins | Nombre au départ (0 à 500), chance de naissance (0 à 100 %), chance de fuir (0 à 100 %) |
+| Prédateurs | Nombre au départ (0 à 200), chance de naissance (0 à 100 %), esprit de meute (0 à 4) |
 
-Les nouveau-nés gardent une énergie de 30, la reproduction coûte 30 et demande un âge d'au moins 5 générations. Le nombre d'animaux au départ dépend par défaut de la taille de l'écran. Les bornes sont définies dans `src/ui/presentation/settings_form.cpp` et, pour ce qui dépend de l'espèce, dans `src/ui/presentation/species_style.cpp`.
+Chaque espèce n'a que **trois réglages**. Ses autres caractéristiques sont fixes (voir [Les trois espèces](#les-trois-espèces)) : ce sont elles qui la définissent. Tous les animaux placés au départ ont 50 d'énergie. Les nouveau-nés en ont 30, la reproduction coûte 30 et demande un âge d'au moins 5 générations. Le nombre d'animaux au départ dépend par défaut de la taille de l'écran. Les bornes sont définies dans `src/ui/presentation/settings_form.cpp` et, pour ce qui dépend de l'espèce, dans `src/ui/presentation/species_style.cpp`.
 
 ## Utilisation
 
@@ -61,7 +60,7 @@ Les nouveau-nés gardent une énergie de 30, la reproduction coûte 30 et demand
 | Revenir à l'accueil, quitter ou annuler | `Échap` pendant la simulation, puis choisir **Menu**, **Quitter** ou **Annuler** |
 | Quitter depuis l'accueil | `Échap` |
 
-L'application s'ouvre sur l'accueil ; aucune simulation ne démarre avant le clic sur **Démarrer**. La simulation continue pendant la consultation du graphique tant qu'elle n'est pas en pause. Pendant la pause, **Génération +1** fait avancer le monde et les courbes d'une seule génération. Sur la carte, chaque animal suit son trajet réel pendant la durée d'une génération, tourné dans le sens de sa marche. La pause fige le mouvement, et un pas manuel est animé en un quart de seconde. La case choisie est encadrée. Son panneau indique le terrain, la végétation et les animaux présents (espèce, numéro, âge et énergie, sept au maximum, les autres étant comptés). Il se met à jour à chaque génération et se place du côté opposé à la case. La sélection est conservée en passant par les courbes et effacée par **Recommencer** ou le retour au menu. Un animal est compté sur la case où il se trouvera à la fin du trajet affiché. L'écran **Courbes** présente chaque statistique dans son propre graphique, avec sa propre échelle : effectifs, naissances, morts de faim, morts de vieillesse, herbivores mangés, énergie moyenne et végétation des prairies. Les cases du haut affichent ou masquent chaque graphique ; les cases **Herbivores** et **Prédateurs** filtrent les courbes par espèce, et le bouton **Événements** passe du total depuis le début aux valeurs de chaque génération. La légende de chaque graphique donne la valeur actuelle ; en survolant un graphique, elle donne les valeurs de la génération pointée sur tous les graphiques. Les choix sont conservés après **Recommencer** et le retour au menu. La courbe jaune représente les herbivores, la rouge les prédateurs et la verte la végétation. La courbe d'énergie s'arrête quand une espèce n'a plus d'animaux. Un animal à la fois épuisé et trop âgé est compté comme mort de faim.
+L'application s'ouvre sur l'accueil ; aucune simulation ne démarre avant le clic sur **Démarrer**. La simulation continue pendant la consultation du graphique tant qu'elle n'est pas en pause. Pendant la pause, **Génération +1** fait avancer le monde et les courbes d'une seule génération. Sur la carte, chaque animal suit son trajet réel pendant la durée d'une génération, tourné dans le sens de sa marche. La pause fige le mouvement, et un pas manuel est animé en un quart de seconde. La case choisie est encadrée. Son panneau indique le terrain, la végétation et les animaux présents (espèce, numéro, âge et énergie, sept au maximum, les autres étant comptés). Il se met à jour à chaque génération et se place du côté opposé à la case. La sélection est conservée en passant par les courbes et effacée par **Recommencer** ou le retour au menu. Un animal est compté sur la case où il se trouvera à la fin du trajet affiché. L'écran **Courbes** présente chaque statistique dans son propre graphique, avec sa propre échelle : effectifs, naissances, morts de faim, morts de vieillesse, cerfs et lapins mangés, énergie moyenne et végétation des prairies. Les cases du haut affichent ou masquent chaque graphique ; les cases **Cerfs**, **Lapins** et **Prédateurs** filtrent les courbes par espèce, et le bouton **Événements** passe du total depuis le début aux valeurs de chaque génération. La légende de chaque graphique donne la valeur actuelle ; en survolant un graphique, elle donne les valeurs de la génération pointée sur tous les graphiques. Les choix sont conservés après **Recommencer** et le retour au menu. La courbe jaune représente les cerfs, la blanche les lapins, la rouge les prédateurs et la verte la végétation. La courbe d'énergie s'arrête quand une espèce n'a plus d'animaux. Un animal à la fois épuisé et trop âgé est compté comme mort de faim.
 
 La touche `Échap` fige la simulation et affiche un choix : **Menu** revient à l'accueil, **Quitter** ferme l'application, **Annuler** reprend l'affichage. Un second appui sur `Échap` annule aussi le choix.
 
@@ -81,10 +80,29 @@ Une génération est découpée en **10 petits pas**. À chacun, un animal chois
 
 | Espèce | Comportement |
 | --- | --- |
-| **Herbivores** | Sur une herbe suffisante (30 ou plus), ils flânent à petite allure. Sinon, ils cherchent l'herbe la plus riche jusqu'à 2 cases, en préférant ce qui est proche et devant eux, avec un peu d'hésitation. Ils mangent une fois par génération, là où ils se trouvent à la fin. |
+| **Cerfs et lapins** | Sur une herbe suffisante (30 ou plus pour un cerf, 10 ou plus pour un lapin), ils flânent à petite allure. Sinon, ils cherchent l'herbe la plus riche jusqu'à 2 cases, en préférant ce qui est proche et devant eux, avec un peu d'hésitation. Ils mangent une fois par génération, là où ils se trouvent à la fin. |
 | **Prédateurs** | Ils voient à 3 cases et foncent sur la proie la plus proche. Sans proie, ils errent. Une proie à moins de 0,45 case est capturée, au plus une fois par génération ; ils flânent ensuite. |
 
 Le vieillissement, la perte d'énergie, les naissances et la repousse ont toujours lieu une fois par génération. Le trajet de la dernière génération est enregistré : l'affichage le rejoue sans recalculer la simulation. La **vitesse ne coûte pas d'énergie** pour l'instant.
+
+### Les trois espèces
+
+| Caractéristique fixe | Cerf | Lapin | Prédateur |
+| --- | --- | --- | --- |
+| Vitesse (% de case par génération) | 110 | 100 | 80 |
+| Énergie perdue par génération | 2 | 1 | 3 |
+| Âge maximum | 80 | 60 | 70 |
+| Herbe mangée au maximum, ou énergie par proie | 10 | 6 | 25 |
+| Énergie pour se reproduire | 80 | 60 | 70 |
+| Reste brouter sur une herbe d'au moins | 30 | 10 | |
+| Repas offert au prédateur | 100 % | 50 % | |
+
+| Réglage proposé au départ | Cerf | Lapin | Prédateur |
+| --- | --- | --- | --- |
+| Chance de naissance | 20 % | 40 % | 10 % |
+| Instinct | fuite 25 % | fuite 25 % | meute 2 |
+
+Chaque caractéristique fixe est écrite à un seul endroit, dans la classe de l'espèce (`Deer::Traits`, `Rabbit::Traits`, `Predator::Traits`, et le seuil d'herbe `GrazingThreshold`).
 
 ## Fuite et meutes
 
@@ -92,7 +110,7 @@ Chaque espèce a un **instinct**, réglable à l'accueil (dernière ligne de sa 
 
 | Réglage | Comportement | Valeur de départ |
 | --- | --- | --- |
-| **Chance de fuir (%)** (herbivores) | À chaque génération, l'herbivore a cette chance d'être sur ses gardes. Il s'éloigne alors à pleine allure des prédateurs situés à 2 cases ou moins, surtout du plus proche. | 25 |
+| **Chance de fuir (%)** (cerfs et lapins) | À chaque génération, l'herbivore a cette chance d'être sur ses gardes. Il s'éloigne alors à pleine allure des prédateurs situés à 2 cases ou moins, surtout du plus proche. | 25 |
 | **Esprit de meute (vue +)** (prédateurs) | La valeur s'ajoute à la distance de vue. Près d'un congénère, chacun vise un côté de la proie pour lui couper la route ; sans proie, ils se regroupent. Le repas est partagé à parts égales avec les prédateurs à 1,5 case au plus, sans créer d'énergie. | 2 |
 
 Les obstacles ne bloquent pas la vue.
@@ -108,7 +126,7 @@ Sur la carte, le bouton **Vue 3D** change l'affichage sans toucher à la simulat
 | Revenir à la vue d'ensemble | Bouton **Recentrer** |
 | Voir le détail d'une case | **Clic gauche** sur le sol de la case |
 
-Les obstacles sont des blocs, les herbivores de petits modèles jaunes et les prédateurs des modèles rouges plus hauts, orientés dans le sens du déplacement. La couleur des prairies suit la végétation. Des touffes d'herbe y poussent : une case rase (végétation inférieure à 5) n'en a pas, puis leur nombre (jusqu'à cinq) et leur hauteur augmentent avec la végétation. Elles raccourcissent quand un herbivore broute et repoussent au fil des générations. Avec la repousse par défaut de 1 par génération, la croissance est progressive ; le réglage **Repousse végétation** l'accélère. La vue choisie et la position de la caméra sont conservées après **Recommencer** et le retour au menu.
+Les obstacles sont des blocs, les cerfs des modèles jaunes, les lapins de petits modèles blancs et les prédateurs des modèles rouges plus hauts, orientés dans le sens du déplacement. La couleur des prairies suit la végétation. Des touffes d'herbe y poussent : une case rase (végétation inférieure à 5) n'en a pas, puis leur nombre (jusqu'à cinq) et leur hauteur augmentent avec la végétation. Elles raccourcissent quand un cerf ou un lapin broute et repoussent au fil des générations. Avec la repousse par défaut de 1 par génération, la croissance est progressive ; le réglage **Repousse végétation** l'accélère. La vue choisie et la position de la caméra sont conservées après **Recommencer** et le retour au menu.
 
 Limites de cette première version : le rendu est calculé par le processeur et dessiné avec Win32/GDI, sans carte graphique, textures ni éclairage dynamique. Les animaux proches les uns des autres peuvent se chevaucher à l'écran ; le panneau d'une case donne les effectifs réels. La caméra vise toujours le centre de la carte. La sélection vise le sol : cliquer sur le haut d'un obstacle peut choisir la case située derrière.
 
@@ -117,8 +135,8 @@ Limites de cette première version : le rendu est calculé par le processeur et 
 À chaque génération :
 
 1. La végétation repousse sur les prairies.
-2. Pendant 10 petits pas, les herbivores puis les prédateurs se déplacent ; les prédateurs capturent les proies qu'ils atteignent (au plus une chacun).
-3. Les herbivores encore vivants mangent la végétation de la case où ils se trouvent.
+2. Pendant 10 petits pas, les cerfs et les lapins, puis les prédateurs, se déplacent ; les prédateurs capturent les proies qu'ils atteignent (au plus une chacun).
+3. Les cerfs et les lapins encore vivants mangent la végétation de la case où ils se trouvent.
 4. Les survivants vieillissent et perdent de l'énergie. Les individus suffisamment âgés et nourris peuvent se reproduire.
 5. Les animaux morts sont retirés ; les effectifs, la végétation totale et les événements de la génération sont enregistrés par `SimulationStats`.
 
@@ -133,7 +151,7 @@ Les fichiers `.ixx` exposent les modules C++ ; leurs implémentations sont dans 
 | Emplacement | Responsabilité |
 | --- | --- |
 | `src/world/` | Cellules, terrains, positions et génération du monde. |
-| `src/animals/` | Classe de base `Animal`, interface `Habitat`, `Herbivore`, `Predator` et catalogue des espèces. |
+| `src/animals/` | Classe de base `Animal`, interface `Habitat`, famille `Herbivore` avec `Deer` et `Rabbit`, `Predator` et catalogue des espèces. |
 | `src/simulation/simulation/` | Classe `Simulation` : cycle des générations, déplacements, voisinage et repousse. |
 | `src/simulation/stats/` | Classe `SimulationStats` : historique et événements. |
 | `src/simulation/settings/` | Réglages, valeurs par défaut et préréglages. |
@@ -163,12 +181,12 @@ Le découpage privilégie la **simplicité** : `UiController` regroupe la naviga
 
 ### Ajouter une espèce
 
-1. Créer une classe dérivée d'`Animal` (direction, action, descendance).
+1. Créer une classe dérivée d'`Animal` (direction, action, descendance), ou de `Herbivore` si elle broute, avec ses caractéristiques fixes (`SpeciesTraits`) et sa chance de naissance de départ.
 2. Ajouter sa valeur à `AnimalKind` et augmenter `SpeciesCount` (`animal.ixx`).
-3. Ajouter son entrée au catalogue (`src/animals/species.cpp`) : noms, statistiques d'origine, population de départ et classe.
-4. Ajouter son apparence (`src/ui/presentation/species_style.cpp`) : couleur, silhouette et limites de saisie.
+3. Ajouter son entrée au catalogue (`src/animals/species.cpp`) : noms, population de départ, réglages proposés et classe.
+4. Ajouter son apparence (`src/ui/presentation/species_style.cpp`) : couleur, silhouette, nom de l'instinct et limites de saisie.
 
-Les réglages, les statistiques, les graphiques, le panneau d'une case et les cartes parcourent le catalogue. Une colonne s'ajoute à l'accueil, dont la lisibilité est alors à vérifier. Les préréglages ne règlent que les herbivores et les prédateurs. Les proies (`IsPrey`) jouent en premier et sont chassées par les prédateurs ; un régime alimentaire plus fin demanderait d'étendre `Habitat`.
+Les réglages, les statistiques, les graphiques, le panneau d'une case et les cartes parcourent le catalogue. Une colonne s'ajoute à l'accueil, dont la lisibilité est alors à vérifier. Les préréglages ne règlent que les cerfs, les lapins et les prédateurs. Les proies (`IsPrey`) jouent en premier et sont chassées par les prédateurs ; un régime alimentaire plus fin demanderait d'étendre `Habitat`.
 
 ## Documentation
 
@@ -178,7 +196,7 @@ La documentation est générée avec **Doxygen** (Python est aussi nécessaire, 
 doxygen Doxyfile
 ```
 
-Ouvrez ensuite `docs/doxygen/html/index.html`. Les pages d'explication se trouvent dans `docs/` : vue d'ensemble, fonctionnement, architecture et notions de C++. Les commentaires des fichiers `.ixx` décrivent chaque classe et fonction visible ; les éléments oubliés sont signalés dans `docs/doxygen-warnings.log`.
+Ouvrez ensuite `docs/doxygen/html/index.html`. Les pages d'explication se trouvent dans `docs/` : vue d'ensemble, fonctionnement, architecture, diagrammes détaillés et notions de C++. Les diagrammes sont régénérés avec `python docs/generate_diagrams.py`. Les commentaires des fichiers `.ixx` décrivent chaque classe et fonction visible ; les éléments oubliés sont signalés dans `docs/doxygen-warnings.log`.
 
 Les membres privés et les aides internes sont eux aussi commentés, sans apparaître dans le site. Un second contrôle les vérifie ; son journal, `docs/doxygen-verification.log`, doit rester vide :
 

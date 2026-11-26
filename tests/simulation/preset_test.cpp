@@ -17,28 +17,34 @@ namespace {
     }
 }
 
-TEST_CASE("Equilibre : les deux especes sont encore la apres 400 generations", "[preset]") {
+TEST_CASE("Equilibre : les trois especes sont encore la apres 400 generations", "[preset]") {
     for (const std::uint32_t seed : {1u, 2u, 3u}) {
         const Simulation simulation = Run(Preset::Balance, seed, 400);
-        REQUIRE(simulation.Count(AnimalKind::Herbivore) > 0);
-        REQUIRE(simulation.Count(AnimalKind::Predator) > 0);
+        for (const SpeciesInfo& species : SpeciesCatalog()) {
+            CAPTURE(seed, species.name);
+            REQUIRE(simulation.Count(species.kind) > 0);
+        }
     }
 }
 
-TEST_CASE("Famine : les herbivores disparaissent, surtout de faim", "[preset]") {
+TEST_CASE("Famine : les cerfs et les lapins disparaissent, surtout de faim", "[preset]") {
     for (const std::uint32_t seed : {1u, 2u, 3u}) {
         const Simulation simulation = Run(Preset::Famine, seed, 150);
-        const LifeEvents& herbivores = simulation.Stats().Total(AnimalKind::Herbivore);
-        REQUIRE(simulation.Count(AnimalKind::Herbivore) == 0);
-        REQUIRE(herbivores.starved > herbivores.eaten);
+        for (const AnimalKind kind : {AnimalKind::Deer, AnimalKind::Rabbit}) {
+            const LifeEvents& events = simulation.Stats().Total(kind);
+            REQUIRE(simulation.Count(kind) == 0);
+            REQUIRE(events.starved > events.eaten);
+        }
     }
 }
 
-TEST_CASE("Invasion : les herbivores sont rapidement manges", "[preset]") {
+TEST_CASE("Invasion : les cerfs et les lapins sont rapidement manges", "[preset]") {
     for (const std::uint32_t seed : {1u, 2u, 3u}) {
         const Simulation simulation = Run(Preset::Invasion, seed, 100);
-        const LifeEvents& herbivores = simulation.Stats().Total(AnimalKind::Herbivore);
-        REQUIRE(simulation.Count(AnimalKind::Herbivore) == 0);
-        REQUIRE(herbivores.eaten > herbivores.starved);
+        for (const AnimalKind kind : {AnimalKind::Deer, AnimalKind::Rabbit}) {
+            const LifeEvents& events = simulation.Stats().Total(kind);
+            REQUIRE(simulation.Count(kind) == 0);
+            REQUIRE(events.eaten > events.starved);
+        }
     }
 }

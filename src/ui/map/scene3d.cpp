@@ -203,11 +203,11 @@ namespace {
         const ecosim::SpeciesStyle& style = ecosim::StyleOf(kind);
         const double headX = x + std::cos(heading) * style.length * 0.55;
         const double headZ = z + std::sin(heading) * style.length * 0.55;
-        constexpr double head{0.08};
+        const double head = std::min(0.08, style.thickness / 2.0);
         return {
             Box{x, z, style.length / 2.0, style.thickness / 2.0, 0.03, style.height, heading,
                 style.color, FaceKind::Animal, kind},
-            Box{headX, headZ, head, head, style.height - 0.08, style.height + 0.10, heading,
+            Box{headX, headZ, head, head, style.height - head, style.height + head * 1.25, heading,
                 Shade(style.color, 0.88), FaceKind::Animal, kind},
         };
     }

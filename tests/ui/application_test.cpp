@@ -92,11 +92,11 @@ TEST_CASE("Recommencer remet le temps a zero et garde les reglages", "[applicati
     scenario.Frame(UiAction::None, 1.0);
     REQUIRE(scenario.Generation() == 2);
 
-    const int herbivores = scenario.application.Settings().species[AnimalKind::Herbivore].initialCount;
+    const int herbivores = scenario.application.Settings().species[AnimalKind::Deer].initialCount;
     scenario.Frame(UiAction::StartOrRestart);
     REQUIRE(scenario.Generation() == 0);
     REQUIRE(scenario.application.Clock().GetSpeed() == 1);
-    REQUIRE(scenario.application.CurrentSimulation()->Count(AnimalKind::Herbivore)
+    REQUIRE(scenario.application.CurrentSimulation()->Count(AnimalKind::Deer)
             == static_cast<std::size_t>(herbivores));
 }
 
