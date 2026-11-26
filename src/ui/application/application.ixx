@@ -4,7 +4,6 @@ export module ecosim.application;
 import std;
 export import ecosim.simulation;
 export import ecosim.controller;
-export import ecosim.animation;
 
 export namespace ecosim {
     struct FrameInput {
@@ -36,6 +35,9 @@ export namespace ecosim {
 
     class Application {
     public:
+        // Un pas avancé pendant la pause est animé en un quart de seconde.
+        static constexpr double ManualStepsPerSecond{4.0};
+
         // input et view doivent rester valides pendant toute la vie de l'application.
         Application(InputSource& input, View& view, int mapWidth, int mapHeight, std::uint32_t seed);
 
@@ -62,6 +64,7 @@ export namespace ecosim {
         // La simulation n'existe qu'après le clic sur Démarrer.
         std::optional<Simulation> simulation;
         SimulationClock clock;
-        ManualStepAnimation animation;
+        // Vrai pendant l'animation d'un pas avancé à la main.
+        bool animatingStep{false};
     };
 }

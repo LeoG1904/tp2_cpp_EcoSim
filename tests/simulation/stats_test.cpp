@@ -80,8 +80,8 @@ TEST_CASE("A chaque generation, effectifs = anciens + naissances - morts", "[sta
             REQUIRE(simulation.Count(AnimalKind::Predator) == predators + p.births - p.Deaths());
             REQUIRE(p.eaten == 0);
             // L'historique garde les evenements de chaque generation pour les graphiques.
-            REQUIRE(simulation.PopulationHistory().back().species[AnimalKind::Herbivore].events.births == h.births);
-            REQUIRE(simulation.PopulationHistory().back().species[AnimalKind::Predator].events.Deaths() == p.Deaths());
+            REQUIRE(simulation.Stats().History().back().species[AnimalKind::Herbivore].events.births == h.births);
+            REQUIRE(simulation.Stats().History().back().species[AnimalKind::Predator].events.Deaths() == p.Deaths());
         }
     }
 }

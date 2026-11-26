@@ -3,43 +3,67 @@ module ecosim.herbivore;
 import std;
 
 namespace ecosim {
-    Herbivore::Herbivore(const std::uint64_t id, const Position position, const int energy,
+    Herbivore::Herbivore(const std::uint64_t id, const Position cell, const int energy,
                          const AnimalTraits& traits)
-        : Animal{id, position, energy, traits} {}
+        : Animal{id, cell, energy, traits} {}
 
     AnimalKind Herbivore::GetKind() const { return AnimalKind::Herbivore; }
-
-    TurnPhase Herbivore::Phase() const { return TurnPhase::Grazing; }
     bool Herbivore::IsPrey() const { return true; }
 
-    Position Herbivore::ChooseDestination(const Habitat& habitat, std::mt19937& rng) const {
-        const World& world = habitat.GetWorld();
-        const auto hunterThere = [&habitat](const Position other) {
-            return habitat.HunterCount(other) > 0;
-        };
-        // La fuite n'est pas automatique : un chasseur repéré n'est évité qu'avec une certaine
-        // chance. Sinon les proies, qui jouent les premières, ne seraient jamais rattrapées.
-        bool fleeing = false;
-        if (const int reflex = GetTraits().instinct;
-            reflex > 0 && NearestDistance(world, GetPosition(), ThreatSight, hunterThere) <= ThreatSight) {
+    void Herbivore::BeginGeneration(std::mt19937& rng) {
+        alert = false;
+        if (const int reflex = GetTraits().instinct; reflex > 0) {
             std::bernoulli_distribution react{std::min(reflex, 100) / 100.0};
-            fleeing = react(rng);
+            alert = react(rng);
         }
-        return BestAccessiblePosition(world, [&](const Position position) {
-            const int food = world.GetCell(position).GetVegetation();
-            if (!fleeing) return food;
-            // En fuite, s'éloigner passe avant la nourriture.
-            const int safety = NearestDistance(world, position, ThreatSight, hunterThere);
-            return safety * (Cell::MaxVegetation + 1) + food;
-        }, rng);
     }
 
-    void Herbivore::Feed(Habitat& habitat) {
+    Steering Herbivore::Steer(const Habitat& habitat, std::mt19937& rng) const {
+        const Point here = GetLocation();
+        if (alert) {
+            // Chaque chasseur repousse, d'autant plus fort qu'il est proche.
+            double awayX = 0.0;
+            double awayY = 0.0;
+            for (const Point hunter : habitat.HuntersNear(here, ThreatSight, this)) {
+                const double weight = 1.0 / std::max(0.01, std::pow(Distance(here, hunter), 2.0));
+                awayX += (here.x - hunter.x) * weight;
+                awayY += (here.y - hunter.y) * weight;
+            }
+            if (awayX != 0.0 || awayY != 0.0) return {std::atan2(awayY, awayX), 1.0};
+        }
+
+        const World& world = habitat.GetWorld();
+        if (world.GetCell(GetPosition()).GetVegetation() >= GrazingVegetation) {
+            return {GetHeading() + Jitter(rng, 0.8), 0.2};
+        }
+        // Huit directions à deux distances : de l'herbe riche, proche et devant soi.
+        std::uniform_real_distribution<double> hesitation{0.0, 12.0};
+        double bestScore = -std::numeric_limits<double>::infinity();
+        double bestHeading = GetHeading() + std::numbers::pi;
+        for (int direction = 0; direction < 8; ++direction) {
+            const double angle = GetHeading() + direction * std::numbers::pi / 4.0;
+            const double turn = std::abs(std::remainder(angle - GetHeading(), 2.0 * std::numbers::pi));
+            for (const double reach : {FoodSight / 2.0, FoodSight}) {
+                const Point target{here.x + std::cos(angle) * reach, here.y + std::sin(angle) * reach};
+                if (!world.IsWalkable(target)) continue;
+                const double score = world.GetCell(CellAt(target)).GetVegetation()
+                                   - 5.0 * reach - 6.0 * turn + hesitation(rng);
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestHeading = angle;
+                }
+            }
+        }
+        return {bestHeading, 0.8};
+    }
+
+    void Herbivore::Act(Habitat& habitat, const int tick) {
+        if (tick != TicksPerGeneration - 1) return;
         Cell& cell = habitat.GetWorld().GetCell(GetPosition());
         if (!cell.IsAccessible()) return;
         const int consumed = std::min({GetTraits().foodEnergy, cell.GetVegetation(), MaxEnergy - GetEnergy()});
         cell.SetVegetation(cell.GetVegetation() - consumed);
-        GainEnergy(consumed);
+        ReceiveMeal(consumed);
     }
 
     std::unique_ptr<Animal> Herbivore::MakeOffspring(const std::uint64_t id) const {

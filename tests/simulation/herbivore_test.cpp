@@ -30,10 +30,11 @@ TEST_CASE("Un herbivore rejoint une prairie voisine plus riche", "[herbivore]") 
     Simulation simulation{std::move(world), std::mt19937{2}};
     simulation.AddAnimal(AnimalKind::Herbivore, {0, 0});
 
-    simulation.Step();
+    for (int i = 0; i < 4 && simulation.Animals().front().position != Position{1, 0}; ++i) {
+        simulation.Step();
+    }
 
     REQUIRE(simulation.Animals().front().position == Position{1, 0});
-    REQUIRE(simulation.GetWorld().GetCell({1, 0}).GetVegetation() == 41);
 }
 
 TEST_CASE("Un herbivore meurt quand son énergie est épuisée", "[herbivore]") {
@@ -71,14 +72,35 @@ TEST_CASE("La naissance crée un animal distinct qui attend la génération suiv
     REQUIRE(animals[1].position == animals[0].position);
 }
 
-TEST_CASE("Chaque animal garde sa case precedente pour l'animation", "[herbivore]") {
-    World world{2, 1};
-    world.GetCell({1, 0}).SetVegetation(50);
-    Simulation simulation{std::move(world), std::mt19937{2}};
-    simulation.AddAnimal(AnimalKind::Herbivore, {0, 0});
-    REQUIRE(simulation.Animals().front().previousPosition == Position{0, 0});
+TEST_CASE("Le trajet d'une generation est continu et reste sur les prairies", "[herbivore]") {
+    std::mt19937 rng{9};
+    World world = GenerateRandomWorld(20, 14, rng);
+    Simulation simulation{std::move(world), std::mt19937{10}};
+    simulation.Seed(AnimalKind::Herbivore, 30);
+    simulation.Seed(AnimalKind::Predator, 6);
+    std::map<std::uint64_t, Point> previous;
+    for (const auto& animal : simulation.Animals()) previous[animal.id] = animal.path.back();
 
-    simulation.Step();
-    REQUIRE(simulation.Animals().front().previousPosition == Position{0, 0});
-    REQUIRE(simulation.Animals().front().position == Position{1, 0});
+    for (int generation = 0; generation < 40 && !simulation.IsFinished(); ++generation) {
+        simulation.Step();
+        for (const auto& animal : simulation.Animals()) {
+            // Un trajet commence où le précédent s'est arrêté.
+            if (previous.contains(animal.id)) REQUIRE(animal.path.front() == previous[animal.id]);
+            for (std::size_t i = 1; i < animal.path.size(); ++i) {
+                REQUIRE(Distance(animal.path[i - 1], animal.path[i]) <= 1.2 / TicksPerGeneration + 1e-9);
+                REQUIRE(simulation.GetWorld().IsWalkable(animal.path[i]));
+            }
+            REQUIRE(animal.position == CellAt(animal.path.back()));
+            previous[animal.id] = animal.path.back();
+        }
+    }
+}
+
+TEST_CASE("Les animaux ne partent pas tous du centre des cases", "[herbivore]") {
+    Simulation simulation{World{6, 6}, std::mt19937{12}};
+    simulation.Seed(AnimalKind::Herbivore, 10);
+    const auto animals = simulation.Animals();
+    REQUIRE(std::ranges::any_of(animals, [](const auto& animal) {
+        return animal.path.back() != CenterOf(animal.position);
+    }));
 }

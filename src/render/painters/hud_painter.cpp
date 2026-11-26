@@ -15,18 +15,20 @@ import ecosim.species;
 using namespace ecosim_gdi;
 
 namespace ecosim {
-    void HudPainter::Draw(Canvas& canvas, const Simulation& simulation, const PlaybackState& playback,
-                          const MapView& view, const MapView& nextView) const {
+    void DrawHud(Canvas& canvas, const Simulation& simulation, const PlaybackState& playback,
+                 const bool threeD) {
         const HDC buffer = static_cast<HDC>(canvas.Context());
         const int width = canvas.Width();
+        const std::string help = threeD ? "clic droit : tourner ; molette : zoom ; clic : détails d'une case"
+                                        : "Échap : options ; clic : détails d'une case";
         std::string status;
         if (simulation.IsFinished()) status = "Fin de la simulation : plus aucun animal";
         else if (playback.paused) {
             status = std::format("En pause   Vitesse x{}   (flèche droite ou haut : avancer ; {})",
-                                 playback.speed, view.Help());
+                                 playback.speed, help);
         } else {
             status = std::format("Vitesse x{}   (Tab ou touches 1 à 4 : x1 x2 x5 x10 ; {})",
-                                 playback.speed, view.Help());
+                                 playback.speed, help);
         }
         std::string counts = std::format("Génération {}", simulation.GetGeneration());
         for (const SpeciesInfo& species : SpeciesCatalog()) {
@@ -47,7 +49,7 @@ namespace ecosim {
             button(PauseButton(width, false), playback.paused ? "Reprendre" : "Pause");
             if (playback.paused) button(NextButton(width, false), "Génération +1");
         }
-        button(ViewButton(width), nextView.ButtonLabel());
-        if (view.CanRecenter()) button(RecenterButton(width), "Recentrer");
+        button(ViewButton(width), threeD ? "Vue 2D" : "Vue 3D");
+        if (threeD) button(RecenterButton(width), "Recentrer");
     }
 }

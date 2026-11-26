@@ -14,10 +14,8 @@ import ecosim.layout;
 using namespace ecosim_gdi;
 
 namespace ecosim {
-    HomePainter::HomePainter(const int cellSize) : cellSize{cellSize} {}
-
-    void HomePainter::Draw(Canvas& canvas, const SimulationSettings& current,
-                           const SettingEditor& editor) const {
+    void DrawHomeScreen(Canvas& canvas, const SimulationSettings& current, const SettingEditor& editor,
+                        const int cellSize) {
         // Copie : les accesseurs des champs demandent un objet modifiable.
         SimulationSettings settings = current;
         const HDC buffer = static_cast<HDC>(canvas.Context());

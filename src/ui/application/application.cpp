@@ -37,26 +37,31 @@ namespace ecosim {
         } else if (simulation && !simulation->IsFinished()) {
             if (action == UiAction::TogglePause) {
                 clock.SetPaused(!clock.IsPaused());
-                animation.Cancel();
+                animatingStep = false;
             }
             if (action == UiAction::CycleSpeed) clock.CycleSpeed();
             if (action == UiAction::NextGeneration && clock.IsPaused()) {
                 simulation->Step();
-                animation.Start(clock);
+                clock.SetProgress(0.0);
+                animatingStep = true;
             }
         }
     }
 
     void Application::ResetPlayback() {
         clock = SimulationClock{};
-        animation.Cancel();
+        animatingStep = false;
     }
 
     // La simulation continue pendant la consultation des courbes.
     void Application::Advance(const FrameInput& frame, const double elapsedSeconds) {
         if (frame.speed && !frame.exitDialogOpen) clock.SetSpeed(*frame.speed);
         if (frame.action != UiAction::None || frame.exitDialogOpen || simulation->IsFinished()) return;
-        animation.Update(clock, elapsedSeconds);
+        if (animatingStep && clock.IsPaused()) {
+            // L'horloge garde la position atteinte : la reprise ne fait pas reculer les animaux.
+            clock.SetProgress(clock.Progress() + elapsedSeconds * ManualStepsPerSecond);
+            animatingStep = clock.Progress() < 1.0;
+        }
         const int steps = clock.Advance(elapsedSeconds);
         for (int i = 0; i < steps && !simulation->IsFinished(); ++i) simulation->Step();
     }

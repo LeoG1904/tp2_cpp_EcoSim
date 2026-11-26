@@ -15,8 +15,8 @@ import ecosim.cell_info;
 using namespace ecosim_gdi;
 
 namespace ecosim {
-    void CellPanelPainter::Draw(Canvas& canvas, const Simulation& simulation,
-                                const std::optional<Position> selected, const bool onLeft) const {
+    void DrawCellPanel(Canvas& canvas, const Simulation& simulation,
+                       const std::optional<Position> selected, const bool onLeft) {
         if (!selected || !simulation.GetWorld().IsInside(*selected)) return;
         const HDC buffer = static_cast<HDC>(canvas.Context());
         const auto fill = [buffer](const RECT& rect, const COLORREF color) {

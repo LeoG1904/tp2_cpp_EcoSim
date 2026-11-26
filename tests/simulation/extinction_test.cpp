@@ -15,13 +15,13 @@ TEST_CASE("La simulation s'arrete a la generation ou le dernier animal meurt", "
     REQUIRE(simulation.GetGeneration() == 1);
     REQUIRE(simulation.Count(AnimalKind::Herbivore) == 0);
     REQUIRE(simulation.Count(AnimalKind::Predator) == 0);
-    REQUIRE(simulation.PopulationHistory().size() == 2);
-    REQUIRE(simulation.PopulationHistory().back().species[AnimalKind::Herbivore].population == 0);
-    REQUIRE(simulation.PopulationHistory().back().species[AnimalKind::Predator].population == 0);
+    REQUIRE(simulation.Stats().History().size() == 2);
+    REQUIRE(simulation.Stats().History().back().species[AnimalKind::Herbivore].population == 0);
+    REQUIRE(simulation.Stats().History().back().species[AnimalKind::Predator].population == 0);
 
     const int vegetation = simulation.GetWorld().GetCell({0, 0}).GetVegetation();
     for (int i = 0; i < 10; ++i) simulation.Step();
     REQUIRE(simulation.GetGeneration() == 1);
-    REQUIRE(simulation.PopulationHistory().size() == 2);
+    REQUIRE(simulation.Stats().History().size() == 2);
     REQUIRE(simulation.GetWorld().GetCell({0, 0}).GetVegetation() == vegetation);
 }

@@ -143,10 +143,9 @@ namespace {
 }
 
 namespace ecosim {
-    void StatsPainter::Draw(Canvas& canvas, const Simulation& simulation, const PlaybackState& playback,
-                            const ChartSelection& selection,
-                            const std::optional<PointerPosition> pointer) const {
-        const std::vector<PopulationSample>& history = simulation.PopulationHistory();
+    void DrawStatsScreen(Canvas& canvas, const Simulation& simulation, const PlaybackState& playback,
+                         const ChartSelection& selection, const std::optional<PointerPosition> pointer) {
+        const std::vector<PopulationSample>& history = simulation.Stats().History();
         const HDC buffer = static_cast<HDC>(canvas.Context());
         const int windowWidth = canvas.Width();
         const int windowHeight = canvas.Height();

@@ -14,7 +14,7 @@ import ecosim.layout;
 using namespace ecosim_gdi;
 
 namespace ecosim {
-    void ExitDialogPainter::Draw(Canvas& canvas) const {
+    void DrawExitDialog(Canvas& canvas) {
         const HDC buffer = static_cast<HDC>(canvas.Context());
         const int windowWidth = canvas.Width();
         const int windowHeight = canvas.Height();

@@ -48,7 +48,7 @@ function(ecosim_sources SOURCES_VAR MODULES_VAR)
     set(${MODULES_VAR} ${modules} PARENT_SCOPE)
 endfunction()
 
-ecosim_sources(CORE_SOURCES CORE_MODULES core world animals simulation)
+ecosim_sources(CORE_SOURCES CORE_MODULES world animals simulation)
 ecosim_sources(UI_SOURCES UI_MODULES ui)
 ecosim_sources(APP_SOURCES APP_MODULES render app)
 

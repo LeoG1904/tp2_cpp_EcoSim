@@ -3,57 +3,62 @@ module ecosim.simulation;
 import std;
 
 namespace {
-    // Vue offerte aux animaux pendant une phase ; les proies sont comptées à son début.
-    class PhaseHabitat final : public ecosim::Habitat {
+    // Vue offerte aux animaux pendant une génération. Ils sont rangés par case,
+    // pour ne chercher leurs voisins que dans les cases proches.
+    class GridHabitat final : public ecosim::Habitat {
     public:
-        PhaseHabitat(ecosim::World& world, std::vector<std::unique_ptr<ecosim::Animal>>& animals,
-                     ecosim::SimulationStats& stats)
-            : world{world}, animals{animals}, stats{stats},
-              preyCounts(static_cast<std::size_t>(world.GetWidth()) * world.GetHeight()),
-              hunterCounts(preyCounts.size()) {
+        GridHabitat(ecosim::World& world, std::vector<std::unique_ptr<ecosim::Animal>>& animals,
+                    ecosim::SimulationStats& stats)
+            : world{world}, stats{stats},
+              buckets(static_cast<std::size_t>(world.GetWidth()) * world.GetHeight()) {
             for (const auto& animal : animals) {
-                if (!animal->IsAlive()) continue;
-                if (animal->IsPrey()) ++preyCounts[Index(animal->GetPosition())];
-                if (animal->IsHunter()) ++hunterCounts[Index(animal->GetPosition())];
+                if (animal->IsAlive()) buckets[Index(animal->GetPosition())].push_back(animal.get());
             }
         }
 
-        int HunterCount(const ecosim::Position position) const override {
-            return hunterCounts[Index(position)];
-        }
-
-        // Le repas est divisé avec les membres de la meute situés à un pas au plus.
-        int ShareMeal(const ecosim::Animal& hunter, const int energy) override {
-            std::vector<ecosim::Animal*> mates;
-            for (const auto& other : animals) {
-                if (other.get() == &hunter || !other->IsAlive() || other->GetKind() != hunter.GetKind()) {
-                    continue;
-                }
-                const ecosim::Position a = other->GetPosition();
-                const ecosim::Position b = hunter.GetPosition();
-                if (std::abs(a.x - b.x) + std::abs(a.y - b.y) <= 1) mates.push_back(other.get());
-            }
-            const int share = energy / (static_cast<int>(mates.size()) + 1);
-            for (ecosim::Animal* mate : mates) mate->ReceiveMeal(share);
-            return energy - share * static_cast<int>(mates.size());
+        // À appeler après le déplacement d'un animal.
+        void Moved(ecosim::Animal& animal, const ecosim::Position from) {
+            if (animal.GetPosition() == from) return;
+            std::erase(buckets[Index(from)], &animal);
+            buckets[Index(animal.GetPosition())].push_back(&animal);
         }
 
         ecosim::World& GetWorld() override { return world; }
         const ecosim::World& GetWorld() const override { return world; }
 
-        int PreyCount(const ecosim::Position position) const override {
-            return preyCounts[Index(position)];
+        std::optional<ecosim::Point> NearestPrey(const ecosim::Point from,
+                                                 const double radius) const override {
+            const ecosim::Animal* prey = ClosestPrey(from, radius);
+            if (!prey) return std::nullopt;
+            return prey->GetLocation();
         }
 
-        bool CatchPrey(const ecosim::Position position) override {
-            for (const auto& prey : animals) {
-                if (prey->IsPrey() && prey->IsAlive() && prey->GetPosition() == position) {
-                    prey->Die();
-                    stats.RecordDeath(prey->GetKind(), ecosim::DeathCause::Predation);
-                    return true;
-                }
-            }
-            return false;
+        std::vector<ecosim::Point> HuntersNear(const ecosim::Point from, const double radius,
+                                               const ecosim::Animal* except) const override {
+            std::vector<ecosim::Point> result;
+            ForEachNear(from, radius, [&](ecosim::Animal& other, double) {
+                if (&other != except && !other.IsPrey()) result.push_back(other.GetLocation());
+            });
+            return result;
+        }
+
+        bool CatchPrey(const ecosim::Point from, const double reach) override {
+            ecosim::Animal* prey = ClosestPrey(from, reach);
+            if (!prey) return false;
+            prey->Die();
+            stats.RecordDeath(prey->GetKind(), ecosim::DeathCause::Predation);
+            return true;
+        }
+
+        int ShareMeal(const ecosim::Animal& hunter, const int energy) override {
+            std::vector<ecosim::Animal*> mates;
+            ForEachNear(hunter.GetLocation(), ecosim::Predator::SharingDistance,
+                        [&](ecosim::Animal& other, double) {
+                if (&other != &hunter && other.GetKind() == hunter.GetKind()) mates.push_back(&other);
+            });
+            const int share = energy / (static_cast<int>(mates.size()) + 1);
+            for (ecosim::Animal* mate : mates) mate->ReceiveMeal(share);
+            return energy - share * static_cast<int>(mates.size());
         }
 
     private:
@@ -62,26 +67,74 @@ namespace {
                  + static_cast<std::size_t>(position.x);
         }
 
+        // Appelle visit pour chaque animal vivant à moins de radius.
+        template <typename Visit>
+        void ForEachNear(const ecosim::Point from, const double radius, const Visit& visit) const {
+            const ecosim::Position low = ecosim::CellAt({from.x - radius, from.y - radius});
+            const ecosim::Position high = ecosim::CellAt({from.x + radius, from.y + radius});
+            for (int y = std::max(0, low.y); y <= std::min(world.GetHeight() - 1, high.y); ++y) {
+                for (int x = std::max(0, low.x); x <= std::min(world.GetWidth() - 1, high.x); ++x) {
+                    for (ecosim::Animal* animal : buckets[Index({x, y})]) {
+                        if (!animal->IsAlive()) continue;
+                        const double distance = ecosim::Distance(from, animal->GetLocation());
+                        if (distance <= radius) visit(*animal, distance);
+                    }
+                }
+            }
+        }
+
+        ecosim::Animal* ClosestPrey(const ecosim::Point from, const double radius) const {
+            ecosim::Animal* closest = nullptr;
+            double best = std::numeric_limits<double>::infinity();
+            ForEachNear(from, radius, [&](ecosim::Animal& other, const double distance) {
+                if (other.IsPrey() && distance < best) {
+                    closest = &other;
+                    best = distance;
+                }
+            });
+            return closest;
+        }
+
         ecosim::World& world;
-        std::vector<std::unique_ptr<ecosim::Animal>>& animals;
         ecosim::SimulationStats& stats;
-        std::vector<int> preyCounts;
-        std::vector<int> hunterCounts;
+        std::vector<std::vector<ecosim::Animal*>> buckets;
     };
 }
 
 namespace ecosim {
+    void GrowVegetation(World& world, const int growth) {
+        for (int y = 0; y < world.GetHeight(); ++y) {
+            for (int x = 0; x < world.GetWidth(); ++x) {
+                Cell& cell = world.GetCell(Position{x, y});
+                if (cell.GetTerrain() == Terrain::Prairie) {
+                    cell.SetVegetation(cell.GetVegetation() + growth);
+                }
+            }
+        }
+    }
+
     Simulation::Simulation(World world, std::mt19937 rng, const SimulationSettings& settings)
         : world{std::move(world)}, settings{settings}, rng{std::move(rng)} {
         stats.RecordSample(Measure());
     }
 
-    void Simulation::PlayPhase(const TurnPhase phase) {
-        PhaseHabitat habitat{world, animals, stats};
+    void Simulation::MoveAndInteract() {
+        GridHabitat habitat{world, animals, stats};
         for (auto& animal : animals) {
-            if (animal->Phase() != phase || !animal->IsAlive()) continue;
-            animal->MoveTo(animal->ChooseDestination(habitat, rng));
-            animal->Feed(habitat);
+            animal->StartPath();
+            animal->BeginGeneration(rng);
+        }
+        for (int tick = 0; tick < TicksPerGeneration; ++tick) {
+            // Les proies jouent d'abord, puis les chasseurs.
+            for (const bool preyTurn : {true, false}) {
+                for (auto& animal : animals) {
+                    if (animal->IsPrey() != preyTurn || !animal->IsAlive()) continue;
+                    const Position before = animal->GetPosition();
+                    animal->Advance(world, animal->Steer(habitat, rng), tick);
+                    habitat.Moved(*animal, before);
+                    animal->Act(habitat, tick);
+                }
+            }
         }
     }
 
@@ -112,8 +165,7 @@ namespace ecosim {
         if (IsFinished()) return;
         stats.BeginGeneration();
         GrowVegetation(world, settings.vegetationGrowth);
-        // Les herbivores se déplacent et mangent avant la chasse.
-        for (const TurnPhase phase : TurnPhases) PlayPhase(phase);
+        MoveAndInteract();
         LiveAndReproduce();
         ++generation;
         stats.RecordSample(Measure());

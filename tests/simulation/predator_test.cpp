@@ -17,7 +17,8 @@ TEST_CASE("Un prédateur chasse une proie présente sur sa case", "[predator]") 
     REQUIRE(simulation.Count(AnimalKind::Herbivore) == 0);
     REQUIRE(simulation.Count(AnimalKind::Predator) == 1);
     REQUIRE(simulation.Animals().front().energy == 83); // 50 + 35 pour la proie - 2 pour le temps
-    REQUIRE(simulation.GetWorld().GetCell({0, 0}).GetVegetation() == 1);
+    // Capturée en chemin, la proie n'a pas eu le temps de manger.
+    REQUIRE(simulation.GetWorld().GetCell({0, 0}).GetVegetation() == 11);
 }
 
 TEST_CASE("Une proie ne peut être capturée qu'une fois", "[predator]") {

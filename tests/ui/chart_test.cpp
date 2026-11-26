@@ -95,21 +95,21 @@ TEST_CASE("Les cases a cocher choisissent les graphiques", "[chart]") {
     SimulationSettings settings;
     // Sur la carte, ces positions ne changent rien.
     controller.Handle(Click(MetricChip(1920, 1)), false, false, settings);
-    REQUIRE(controller.Stats().Selection().VisibleMetrics().size() == MetricCount);
+    REQUIRE(controller.Charts().VisibleMetrics().size() == MetricCount);
 
     controller.Handle(Click(GraphButton(1920)), false, false, settings);
     controller.Handle(Click(MetricChip(1920, 1)), false, false, settings);
-    REQUIRE(controller.Stats().Selection().VisibleMetrics().size() == MetricCount - 1);
-    REQUIRE_FALSE(controller.Stats().Selection().metrics[1]);
+    REQUIRE(controller.Charts().VisibleMetrics().size() == MetricCount - 1);
+    REQUIRE_FALSE(controller.Charts().metrics[1]);
 
     controller.Handle(Click(SpeciesChip(1)), false, false, settings);
     controller.Handle(Click(CumulativeButton()), false, false, settings);
-    REQUIRE(controller.Stats().Selection().hidden[AnimalKind::Predator]);
-    REQUIRE_FALSE(controller.Stats().Selection().cumulative);
+    REQUIRE(controller.Charts().hidden[AnimalKind::Predator]);
+    REQUIRE_FALSE(controller.Charts().cumulative);
 
     // Le choix est conserve apres un redemarrage.
     controller.Handle(Click(RestartButton(1920)), false, false, settings);
-    REQUIRE_FALSE(controller.Stats().Selection().metrics[1]);
+    REQUIRE_FALSE(controller.Charts().metrics[1]);
 }
 
 TEST_CASE("Les graphiques restent dans l'ecran sans se chevaucher", "[chart]") {

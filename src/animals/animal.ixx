@@ -20,9 +20,16 @@ export namespace ecosim {
         bool operator==(const PerSpecies&) const = default;
     };
 
-    // Les phases d'une génération sont jouées dans l'ordre de ce tableau.
-    enum class TurnPhase { Grazing, Hunting };
-    inline constexpr std::array<TurnPhase, 2> TurnPhases{TurnPhase::Grazing, TurnPhase::Hunting};
+    // Une génération est découpée en petits pas : les animaux y ajustent leur direction.
+    inline constexpr int TicksPerGeneration{10};
+    // Trajet de la dernière génération : le point de départ, puis un point par petit pas.
+    using Path = std::array<Point, TicksPerGeneration + 1>;
+
+    // Direction voulue (radians, 0 vers l'est, sens des y croissants) et allure de 0 à 1.
+    struct Steering {
+        double heading{0.0};
+        double pace{0.0};
+    };
 
     // Statistiques réglables d'une espèce. Les valeurs initiales sont celles des herbivores.
     struct AnimalTraits {
@@ -33,26 +40,29 @@ export namespace ecosim {
         int reproductionEnergy{80};   // énergie minimale pour se reproduire
         int reproductionPercent{20};  // chance de naissance quand les conditions sont réunies
         // Instinct propre à l'espèce, 0 pour le désactiver. Proie : chance (%) de fuir un
-        // chasseur repéré. Chasseur : rayon de meute, en cases.
+        // chasseur repéré. Chasseur : esprit de meute, qui ajoute autant de cases à sa vue.
         int instinct{0};
+        int speed{100};               // distance par génération à pleine allure, en % de case
 
         bool operator==(const AnimalTraits&) const = default;
     };
 
     class Animal;
 
-    // Ce qu'un animal peut percevoir et modifier pendant son tour, sans connaître la simulation.
+    // Ce qu'un animal peut percevoir et modifier, sans connaître la simulation.
+    // Les obstacles ne bloquent pas la vue.
     class Habitat {
     public:
         virtual ~Habitat() = default;
         virtual World& GetWorld() = 0;
         virtual const World& GetWorld() const = 0;
-        // Nombre de proies sur la case au début de la phase en cours.
-        virtual int PreyCount(Position position) const = 0;
-        // Capture une proie encore vivante sur la case, s'il en reste une.
-        virtual bool CatchPrey(Position position) = 0;
-        // Nombre de chasseurs sur la case au début de la phase en cours.
-        virtual int HunterCount(Position position) const = 0;
+        // Proie vivante la plus proche dans le rayon.
+        virtual std::optional<Point> NearestPrey(Point from, double radius) const = 0;
+        // Positions des chasseurs vivants dans le rayon, sans compter except.
+        virtual std::vector<Point> HuntersNear(Point from, double radius,
+                                               const Animal* except) const = 0;
+        // Capture la proie la plus proche à portée, s'il y en a une.
+        virtual bool CatchPrey(Point from, double reach) = 0;
         // Partage un repas avec les congénères proches ; renvoie la part du chasseur.
         virtual int ShareMeal(const Animal& hunter, int energy) = 0;
     };
@@ -60,6 +70,8 @@ export namespace ecosim {
     class Animal {
     public:
         static constexpr int MaxEnergy{100};
+        // Virage maximal à chaque petit pas : les trajectoires restent courbes.
+        static constexpr double MaxTurnPerTick{0.65};
 
         virtual ~Animal() = default;
         Animal(const Animal&) = delete;
@@ -67,48 +79,53 @@ export namespace ecosim {
 
         std::uint64_t GetId() const;
         std::optional<std::uint64_t> GetParentId() const;
+        Point GetLocation() const;
+        // Case située sous l'animal.
         Position GetPosition() const;
-        // Case occupée avant le dernier déplacement.
-        Position GetPreviousPosition() const;
+        double GetHeading() const;
+        const Path& GetPath() const;
         int GetAge() const;
         int GetEnergy() const;
         const AnimalTraits& GetTraits() const;
         bool IsAlive() const;
 
-        void MoveTo(Position destination);
+        // Installe l'animal ailleurs, sans trajet.
+        void Place(Point point, double direction);
+        // Efface le trajet de la génération précédente.
+        void StartPath();
+        // Un petit pas : tourne vers la direction voulue, avance et contourne les obstacles.
+        void Advance(const World& world, Steering steering, int tick);
         void SpendGeneration();
         void Die();
         bool CanReproduce() const;
         void PayReproductionCost();
         std::unique_ptr<Animal> CreateOffspring(std::uint64_t id) const;
+        // Gagne de l'énergie en mangeant, sans dépasser le maximum.
+        void ReceiveMeal(int energy);
 
         // Comportement propre à chaque espèce.
         virtual AnimalKind GetKind() const = 0;
-        virtual TurnPhase Phase() const = 0;
+        // Les proies jouent avant les autres espèces, qui les chassent.
         virtual bool IsPrey() const;
-        virtual bool IsHunter() const;
-        // Énergie reçue d'un autre animal.
-        void ReceiveMeal(int energy);
-        virtual Position ChooseDestination(const Habitat& habitat, std::mt19937& rng) const = 0;
-        virtual void Feed(Habitat& habitat) = 0;
+        // Décisions prises une fois par génération.
+        virtual void BeginGeneration(std::mt19937& rng);
+        virtual Steering Steer(const Habitat& habitat, std::mt19937& rng) const = 0;
+        // Après chaque petit pas : manger, chasser.
+        virtual void Act(Habitat& habitat, int tick) = 0;
 
     protected:
-        Animal(std::uint64_t id, Position position, int energy, const AnimalTraits& traits);
-        void GainEnergy(int amount);
-        // Case accessible, sur place ou voisine, au meilleur score ; égalités tirées au sort.
-        Position BestAccessiblePosition(const World& world, const std::function<int(Position)>& score,
-                                        std::mt19937& rng) const;
-        // Distance (en pas sur la grille) jusqu'à la case la plus proche qui vérifie found,
-        // dans la limite de radius ; radius + 1 si aucune. Les obstacles ne bloquent pas la vue.
-        static int NearestDistance(const World& world, Position from, int radius,
-                                   const std::function<bool(Position)>& found);
+        Animal(std::uint64_t id, Position cell, int energy, const AnimalTraits& traits);
+        static double HeadingTo(Point from, Point to);
+        // Écart aléatoire entre -spread et +spread radians.
+        static double Jitter(std::mt19937& rng, double spread);
         virtual std::unique_ptr<Animal> MakeOffspring(std::uint64_t id) const = 0;
 
     private:
         std::uint64_t id;
         std::optional<std::uint64_t> parentId;
-        Position position;
-        Position previousPosition;
+        Point location;
+        double heading;
+        Path path{};
         int age{0};
         int energy;
         AnimalTraits traits;

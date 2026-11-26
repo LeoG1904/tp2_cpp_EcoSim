@@ -2,76 +2,192 @@ module ecosim.controller;
 
 import std;
 import ecosim.layout;
+import ecosim.species;
 
 namespace ecosim {
     UiController::UiController(const int width, const int height, const int cellSize)
-        : width{width}, home{width, height, cellSize}, dialog{width, height}, stats{width},
-          map{width, height, cellSize} {}
+        : width{width}, height{height}, cellSize{cellSize},
+          camera{std::max(1, width / cellSize), std::max(1, height / cellSize)} {}
 
-    const HomeController& UiController::Home() const { return home; }
-    const ExitDialog& UiController::Dialog() const { return dialog; }
-    const StatsScreen& UiController::Stats() const { return stats; }
-    const MapNavigator& UiController::Map() const { return map; }
+    bool UiController::IsExitDialogOpen() const { return exitDialogOpen; }
+    bool UiController::IsShowingStats() const { return showingStats; }
+    bool UiController::IsShowing3D() const { return showing3D; }
+    const SettingEditor& UiController::Editor() const { return editor; }
+    const ChartSelection& UiController::Charts() const { return charts; }
+    const OrbitCamera& UiController::Camera() const { return camera; }
     std::optional<PointerPosition> UiController::Pointer() const { return pointer; }
+    std::optional<Position> UiController::SelectedCell() const { return selectedCell; }
+
+    bool UiController::IsCellPanelOnLeft() const {
+        if (!selectedCell) return false;
+        if (!showing3D) return selectedCell->x * cellSize >= width / 2;
+        const auto centre = camera.Project({selectedCell->x + 0.5, 0.0, selectedCell->y + 0.5},
+                                           {width, height});
+        return centre && centre->x >= width / 2;
+    }
 
     UiAction UiController::Handle(const RawInput& input, const bool isHomeScreen, const bool paused,
                                   SimulationSettings& settings) {
         pointer = input.pointer;
-        if (isHomeScreen) home.Type(input.typed, settings);
-        map.Control(input, !isHomeScreen && !stats.IsOpen() && !dialog.IsOpen());
-        if (input.escape) return HandleEscape(isHomeScreen);
-        if (!isHomeScreen && !dialog.IsOpen()) {
-            if (const UiAction action = HandleKeys(input, paused); action != UiAction::None) {
-                return action;
+        if (isHomeScreen) Type(input.typed, settings);
+        if (!isHomeScreen && showing3D && !showingStats && !exitDialogOpen) MoveCamera(input);
+        else dragOrigin.reset();
+
+        if (input.escape) {
+            if (!isHomeScreen) {
+                exitDialogOpen = !exitDialogOpen;
+                return exitDialogOpen ? UiAction::None : UiAction::CancelExit;
             }
+            // Pendant une saisie, Échap annule au lieu de quitter.
+            if (!editor.Field()) return UiAction::Quit;
+            editor.Cancel();
+            return UiAction::None;
+        }
+        if (!isHomeScreen && !exitDialogOpen) {
+            if (input.space) return UiAction::TogglePause;
+            if (input.tab) return UiAction::CycleSpeed;
+            if (paused && (input.right || input.up)) return UiAction::NextGeneration;
         }
         if (!input.click) return UiAction::None;
-        return HandleClick(*input.click, isHomeScreen, paused, settings);
+        if (exitDialogOpen) return ClickExitDialog(*input.click);
+        if (isHomeScreen) return ClickHome(*input.click, settings);
+        return ClickSimulation(*input.click, paused);
     }
 
-    UiAction UiController::HandleEscape(const bool isHomeScreen) {
-        if (!isHomeScreen) return dialog.Toggle();
-        // Pendant une saisie, Échap annule au lieu de quitter.
-        return home.CancelEditing() ? UiAction::None : UiAction::Quit;
-    }
-
-    UiAction UiController::HandleKeys(const RawInput& input, const bool paused) const {
-        if (input.space) return UiAction::TogglePause;
-        if (input.tab) return UiAction::CycleSpeed;
-        if (paused && (input.right || input.up)) return UiAction::NextGeneration;
-        return UiAction::None;
-    }
-
-    UiAction UiController::HandleClick(const PointerPosition mouse, const bool isHomeScreen,
-                                       const bool paused, SimulationSettings& settings) {
-        if (dialog.IsOpen()) {
-            const UiAction action = dialog.Click(mouse);
-            if (action == UiAction::ReturnHome) {
-                stats.Close();
-                map.ClearSelection();
+    void UiController::Type(const std::vector<KeyStroke>& typed, SimulationSettings& settings) {
+        for (const KeyStroke& key : typed) {
+            const auto field = editor.Field();
+            if (!field) return;
+            switch (key.kind) {
+                case KeyStroke::Kind::Digit: editor.Type(key.digit); break;
+                case KeyStroke::Kind::Erase: editor.Erase(); break;
+                case KeyStroke::Kind::Confirm: editor.Commit(settings); break;
+                case KeyStroke::Kind::Next:
+                    editor.Commit(settings);
+                    editor.Begin((*field + 1) % SettingFields().size(), settings);
+                    break;
             }
-            return action;
         }
-        if (!isHomeScreen) return HandleSimulationClick(mouse, paused);
-        const UiAction action = home.Click(mouse, settings);
-        if (action == UiAction::StartOrRestart) map.ClearSelection();
-        return action;
+    }
+
+    void UiController::MoveCamera(const RawInput& input) {
+        if (input.wheel != 0) camera.Zoom(input.wheel);
+        if (!input.rotating || !input.pointer) {
+            dragOrigin.reset();
+            return;
+        }
+        // La carte suit la souris : glisser vers le bas fait passer la caméra au-dessus.
+        if (dragOrigin) {
+            constexpr double radiansPerPixel{0.006};
+            camera.Rotate((dragOrigin->x - input.pointer->x) * radiansPerPixel,
+                          (input.pointer->y - dragOrigin->y) * radiansPerPixel);
+        }
+        dragOrigin = input.pointer;
+    }
+
+    UiAction UiController::ClickHome(const PointerPosition mouse, SimulationSettings& settings) {
+        const auto& fields = SettingFields();
+        std::array<int, SettingColumns> rows{};
+        for (std::size_t i = 0; i < fields.size(); ++i) {
+            const int column = static_cast<int>(fields[i].column);
+            const int row = rows.at(fields[i].column)++;
+            if (!ValueBox(width, height, column, row).Contains(mouse.x, mouse.y)) continue;
+            if (editor.Field() != i) {
+                editor.Commit(settings);
+                editor.Begin(i, settings);
+            }
+            return UiAction::None;
+        }
+        // Un clic en dehors des cases valide la saisie en cours.
+        editor.Commit(settings);
+        for (std::size_t i = 0; i < Presets.size(); ++i) {
+            if (PresetButton(width, height, static_cast<int>(i)).Contains(mouse.x, mouse.y)) {
+                settings = PresetSettings(Presets[i], width / cellSize, height / cellSize);
+                return UiAction::None;
+            }
+        }
+        if (StartButton(width, height).Contains(mouse.x, mouse.y)) {
+            selectedCell.reset();
+            return UiAction::StartOrRestart;
+        }
+        return ResetButton(width, height).Contains(mouse.x, mouse.y)
+            ? UiAction::ResetSettings : UiAction::None;
+    }
+
+    UiAction UiController::ClickExitDialog(const PointerPosition mouse) {
+        if (ExitMenuButton(width, height).Contains(mouse.x, mouse.y)) {
+            exitDialogOpen = false;
+            showingStats = false;
+            selectedCell.reset();
+            return UiAction::ReturnHome;
+        }
+        if (ExitQuitButton(width, height).Contains(mouse.x, mouse.y)) return UiAction::Quit;
+        if (ExitCancelButton(width, height).Contains(mouse.x, mouse.y)) {
+            exitDialogOpen = false;
+            return UiAction::CancelExit;
+        }
+        return UiAction::None;
     }
 
     // Les commandes du temps sont communes à la carte et aux statistiques.
-    UiAction UiController::HandleSimulationClick(const PointerPosition mouse, const bool paused) {
+    UiAction UiController::ClickSimulation(const PointerPosition mouse, const bool paused) {
         if (RestartButton(width).Contains(mouse.x, mouse.y)) {
-            stats.Close();
-            map.ClearSelection();
+            showingStats = false;
+            selectedCell.reset();
             return UiAction::StartOrRestart;
         }
-        if (PauseButton(width, stats.IsOpen()).Contains(mouse.x, mouse.y)) return UiAction::TogglePause;
-        if (paused && NextButton(width, stats.IsOpen()).Contains(mouse.x, mouse.y)) {
+        if (PauseButton(width, showingStats).Contains(mouse.x, mouse.y)) return UiAction::TogglePause;
+        if (paused && NextButton(width, showingStats).Contains(mouse.x, mouse.y)) {
             return UiAction::NextGeneration;
         }
-        if (stats.IsOpen()) stats.Click(mouse);
-        else if (GraphButton(width).Contains(mouse.x, mouse.y)) stats.Open();
-        else map.Click(mouse);
+        if (showingStats) ClickStats(mouse);
+        else if (GraphButton(width).Contains(mouse.x, mouse.y)) showingStats = true;
+        else ClickMap(mouse);
         return UiAction::None;
+    }
+
+    void UiController::ClickStats(const PointerPosition mouse) {
+        if (BackButton().Contains(mouse.x, mouse.y)) showingStats = false;
+        for (std::size_t i = 0; i < MetricCount; ++i) {
+            if (MetricChip(width, static_cast<int>(i)).Contains(mouse.x, mouse.y)) {
+                charts.metrics[i] = !charts.metrics[i];
+            }
+        }
+        for (const SpeciesInfo& species : SpeciesCatalog()) {
+            if (SpeciesChip(static_cast<int>(species.kind)).Contains(mouse.x, mouse.y)) {
+                charts.hidden[species.kind] = !charts.hidden[species.kind];
+            }
+        }
+        if (CumulativeButton().Contains(mouse.x, mouse.y)) charts.cumulative = !charts.cumulative;
+    }
+
+    void UiController::ClickMap(const PointerPosition mouse) {
+        if (ViewButton(width).Contains(mouse.x, mouse.y)) {
+            showing3D = !showing3D;
+            return;
+        }
+        if (showing3D && RecenterButton(width).Contains(mouse.x, mouse.y)) {
+            camera.Reset();
+            return;
+        }
+        if (selectedCell) {
+            const UiRect panel = CellPanel(width, height, IsCellPanelOnLeft());
+            if (panel.Contains(mouse.x, mouse.y)) {
+                if (CellPanelClose(panel).Contains(mouse.x, mouse.y)) selectedCell.reset();
+                return;
+            }
+        }
+        std::optional<Position> cell;
+        if (showing3D) {
+            cell = camera.PickCell({mouse.x, mouse.y}, {width, height});
+        } else if (mouse.x >= 0 && mouse.y >= 0 && mouse.x / cellSize < width / cellSize
+                   && mouse.y / cellSize < height / cellSize) {
+            // La bande restante au bord de l'écran ne contient pas de case.
+            cell = Position{mouse.x / cellSize, mouse.y / cellSize};
+        }
+        if (!cell) return;
+        // Un second clic sur la case choisie ferme le panneau.
+        if (selectedCell == cell) selectedCell.reset();
+        else selectedCell = cell;
     }
 }

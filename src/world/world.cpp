@@ -23,6 +23,11 @@ namespace ecosim {
         return position.x >= 0 && position.x < width && position.y >= 0 && position.y < height;
     }
 
+    bool World::IsWalkable(const Point point) const {
+        const Position cell = CellAt(point);
+        return IsInside(cell) && GetCell(cell).IsAccessible();
+    }
+
     Cell& World::GetCell(const Position position) { return cells[Index(position)]; }
     const Cell& World::GetCell(const Position position) const { return cells[Index(position)]; }
 

@@ -25,8 +25,8 @@ export namespace ecosim {
     UiRect RecenterButton(const int width) { return {width - 230, 238, 210, 36}; }
     // Accueil : une colonne pour le terrain, puis une par espèce.
     inline constexpr int SettingColumns{1 + static_cast<int>(SpeciesCount)};
-    inline constexpr int SettingRows{8};
-    inline constexpr int SettingRowHeight{44};
+    inline constexpr int SettingRows{9};
+    inline constexpr int SettingRowHeight{40};
     int SettingColumnWidth(const int width) {
         const int available = (width - 40) / SettingColumns;
         return available < 390 ? available : 390;

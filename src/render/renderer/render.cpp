@@ -12,36 +12,31 @@ namespace ecosim {
     Win32Renderer::Win32Renderer(const Win32Window& target, const UiController& controller,
                                  const int cellSize)
         : controller{controller}, window{target.Handle()}, width{target.Width()},
-          height{target.Height()}, home{cellSize},
-          maps{std::make_unique<FlatMapPainter>(cellSize),
-               std::make_unique<OrbitMapPainter>(controller.Map().Camera())} {}
+          height{target.Height()}, cellSize{cellSize} {}
 
     void Win32Renderer::DrawHome(const SimulationSettings& settings) {
         Canvas canvas{window, width, height};
-        home.Draw(canvas, settings, controller.Home().Editor());
+        DrawHomeScreen(canvas, settings, controller.Editor(), cellSize);
         Finish(canvas);
     }
 
     void Win32Renderer::DrawSimulation(const Simulation& simulation, const PlaybackState& playback) {
         Canvas canvas{window, width, height};
         // L'écran affiché est un choix de navigation, fait par le contrôleur.
-        if (controller.Stats().IsOpen()) {
-            stats.Draw(canvas, simulation, playback, controller.Stats().Selection(),
-                       controller.Pointer());
+        if (controller.IsShowingStats()) {
+            DrawStatsScreen(canvas, simulation, playback, controller.Charts(), controller.Pointer());
         } else {
-            DrawMap(canvas, simulation, playback);
+            if (controller.IsShowing3D()) {
+                DrawOrbitMap(canvas, simulation, playback.progress, controller.SelectedCell(),
+                             controller.Camera());
+            } else {
+                DrawFlatMap(canvas, simulation, playback.progress, controller.SelectedCell(), cellSize);
+            }
+            DrawHud(canvas, simulation, playback, controller.IsShowing3D());
+            DrawCellPanel(canvas, simulation, controller.SelectedCell(), controller.IsCellPanelOnLeft());
         }
-        if (controller.Dialog().IsOpen()) exitDialog.Draw(canvas);
+        if (controller.IsExitDialogOpen()) DrawExitDialog(canvas);
         Finish(canvas);
-    }
-
-    void Win32Renderer::DrawMap(Canvas& canvas, const Simulation& simulation,
-                                const PlaybackState& playback) const {
-        const MapNavigator& map = controller.Map();
-        maps.at(static_cast<std::size_t>(map.ActiveKind()))
-            ->Draw(canvas, simulation, playback.progress, map.SelectedCell());
-        hud.Draw(canvas, simulation, playback, map.ActiveView(), map.NextView());
-        cellPanel.Draw(canvas, simulation, map.SelectedCell(), map.IsCellPanelOnLeft());
     }
 
     void Win32Renderer::Finish(const Canvas& canvas) {

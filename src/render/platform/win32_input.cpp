@@ -40,7 +40,7 @@ namespace ecosim {
         const UiAction action = controller.Handle(ReadRawInput(), isHomeScreen, paused, settings);
         // Lue à chaque image pour oublier les appuis faits sur l'accueil ou la confirmation.
         const std::optional<int> speed = SpeedKeyPressed();
-        return {action, speed, controller.Dialog().IsOpen()};
+        return {action, speed, controller.IsExitDialogOpen()};
     }
 
     RawInput Win32Input::ReadRawInput() {

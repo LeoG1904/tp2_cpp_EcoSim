@@ -99,3 +99,17 @@ TEST_CASE("Recommencer remet le temps a zero et garde les reglages", "[applicati
     REQUIRE(scenario.application.CurrentSimulation()->Count(AnimalKind::Herbivore)
             == static_cast<std::size_t>(herbivores));
 }
+
+TEST_CASE("Apres un pas manuel, la reprise enchaine sans retour en arriere", "[application]") {
+    Scenario scenario;
+    scenario.Frame(UiAction::StartOrRestart);
+    scenario.Frame(UiAction::TogglePause);
+    scenario.Frame(UiAction::NextGeneration);
+    scenario.Frame(UiAction::None, 0.125);
+    REQUIRE(scenario.view.last.progress == 0.5);
+    scenario.Frame(UiAction::None, 5.0);
+    scenario.Frame(UiAction::TogglePause);
+    scenario.Frame(UiAction::None, 0.125);
+    REQUIRE(scenario.Generation() == 2);
+    REQUIRE(scenario.view.last.progress == 0.125);
+}

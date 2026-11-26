@@ -5,47 +5,43 @@ import ecosim.animation;
 
 using namespace ecosim;
 
-TEST_CASE("Un pas manuel s'anime en pause puis s'arrete a l'arrivee", "[animation]") {
-    SimulationClock clock;
-    clock.SetPaused(true);
-    ManualStepAnimation animation;
-    animation.Start(clock);
-    REQUIRE(clock.Progress() == 0.0);
-
-    animation.Update(clock, 0.125);
-    REQUIRE(clock.Progress() == 0.5);
-    animation.Update(clock, 5.0);
-    REQUIRE(clock.Progress() == 1.0);
-
-    // A la reprise, la generation suivante commence sans retour en arriere.
-    clock.SetPaused(false);
-    REQUIRE(clock.Advance(0.125) == 1);
-    REQUIRE(clock.Progress() == 0.125);
+namespace {
+    // Trajet rectiligne régulier d'un point à un autre.
+    Path Straight(const Point from, const Point to) {
+        Path path;
+        for (std::size_t i = 0; i < path.size(); ++i) {
+            const double part = static_cast<double>(i) / TicksPerGeneration;
+            path[i] = {std::lerp(from.x, to.x, part), std::lerp(from.y, to.y, part)};
+        }
+        return path;
+    }
 }
 
-TEST_CASE("Sans pas manuel, la pause reste figee", "[animation]") {
-    SimulationClock clock;
-    clock.Advance(0.25);
-    clock.SetPaused(true);
-    ManualStepAnimation animation;
-    animation.Update(clock, 1.0);
-    REQUIRE(clock.Progress() == 0.25);
+TEST_CASE("La position et la direction se lisent le long du trajet", "[animation]") {
+    Path path = Straight({1.0, 1.0}, {2.0, 1.0});
+    REQUIRE(PathPoint(path, 0.0) == Point{1.0, 1.0});
+    REQUIRE(PathPoint(path, 0.5).x == Catch::Approx(1.5));
+    REQUIRE(PathPoint(path, 1.0) == Point{2.0, 1.0});
+    REQUIRE(PathHeading(path, 0.5) == Catch::Approx(0.0));
 
-    animation.Start(clock);
-    animation.Cancel();
-    animation.Update(clock, 1.0);
-    REQUIRE(clock.Progress() == 0.0);
+    // Arrêté à mi-chemin, l'animal garde sa dernière direction.
+    for (std::size_t i = 5; i < path.size(); ++i) path[i] = path[5];
+    REQUIRE(PathPoint(path, 0.9) == path[5]);
+    REQUIRE(PathHeading(path, 0.9) == Catch::Approx(0.0));
+    REQUIRE(PathHeading(Straight({1, 1}, {1, 3}), 0.2) == Catch::Approx(std::numbers::pi / 2));
 }
 
 TEST_CASE("A l'ecran, un nouveau-ne accompagne son parent", "[animation]") {
+    const Path parentTrip = Straight({0.5, 0.5}, {1.5, 0.5});
+    const Path still = Straight({1.5, 0.5}, {1.5, 0.5});
     std::vector<AnimalSnapshot> animals{
-        {1, {1, 0}, AnimalKind::Herbivore, 9, 50, {0, 0}, std::nullopt},
-        {2, {1, 0}, AnimalKind::Herbivore, 0, 30, {1, 0}, 1},
-        {3, {2, 0}, AnimalKind::Herbivore, 4, 40, {3, 0}, 1},
+        {1, {1, 0}, AnimalKind::Herbivore, 9, 50, parentTrip, std::nullopt},
+        {2, {1, 0}, AnimalKind::Herbivore, 0, 30, still, 1},
+        {3, {1, 0}, AnimalKind::Herbivore, 4, 40, still, 1},
     };
 
     AttachNewbornsToParents(animals);
 
-    REQUIRE(animals[1].previousPosition == Position{0, 0});
-    REQUIRE(animals[2].previousPosition == Position{3, 0});
+    REQUIRE(animals[1].path == parentTrip);
+    REQUIRE(animals[2].path == still);
 }

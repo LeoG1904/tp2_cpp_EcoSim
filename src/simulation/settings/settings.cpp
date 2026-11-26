@@ -29,25 +29,29 @@ namespace ecosim {
         SpeciesSettings& predators = settings.species[AnimalKind::Predator];
         switch (preset) {
             case Preset::Balance:
-                // Herbivores durables et prolifiques ; prédateurs qui se reproduisent peu.
-                herbivores.traits.maxAge = 120;
-                herbivores.traits.reproductionEnergy = 70;
-                herbivores.traits.reproductionPercent = 40;
+                // Des proies rapides et souvent sur leurs gardes face à des chasseurs plus lents,
+                // qui profitent bien de chaque capture et vivent moins longtemps.
+                herbivores.traits.speed = 120;
+                herbivores.traits.reproductionPercent = 30;
+                herbivores.traits.instinct = 50;
+                predators.traits.speed = 80;
                 predators.traits.energyLoss = 3;
                 predators.traits.maxAge = 60;
-                predators.traits.foodEnergy = 15;
+                predators.traits.foodEnergy = 25;
                 predators.traits.reproductionEnergy = 70;
-                predators.traits.reproductionPercent = 5;
+                predators.traits.reproductionPercent = 15;
+                predators.traits.instinct = 1;
                 break;
             case Preset::Famine:
-                // Plus de repousse et peu de chasseurs : la faim domine.
+                // Plus de repousse et un seul chasseur lent : la faim domine.
                 settings.vegetationGrowth = 0;
                 herbivores.traits.energyLoss = 3;
-                predators.initialCount = std::max(1, predators.initialCount / 3);
+                predators.initialCount = 1;
+                predators.traits.speed = 80;
                 break;
             case Preset::Invasion:
                 // Les prédateurs sont bien plus nombreux au départ que les herbivores.
-                predators.initialCount = std::clamp(width * height / 7, 10, 200);
+                predators.initialCount = std::clamp(width * height / 11, 10, 200);
                 // Les proies sont prises par surprise face à de larges meutes.
                 herbivores.traits.instinct = 0;
                 predators.traits.instinct = 3;

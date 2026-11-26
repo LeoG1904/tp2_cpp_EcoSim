@@ -28,6 +28,7 @@ namespace {
             };
             fields.push_back({column, "Nombre au départ", 0, style.initialMaximum,
                 [kind](SimulationSettings& s) -> int& { return s.species[kind].initialCount; }});
+            trait("Vitesse (% case / tour)", 20, 300, &ecosim::AnimalTraits::speed);
             trait("Énergie de départ", 10, 100, &ecosim::AnimalTraits::startingEnergy);
             trait("Énergie perdue / tour", 1, 20, &ecosim::AnimalTraits::energyLoss);
             trait("Âge maximum", 10, 300, &ecosim::AnimalTraits::maxAge);

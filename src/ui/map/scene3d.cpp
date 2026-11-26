@@ -1,6 +1,7 @@
 module ecosim.scene3d;
 
 import std;
+import ecosim.animation;
 
 namespace {
     using ecosim::Color;
@@ -8,9 +9,15 @@ namespace {
     using ecosim::FaceKind;
     using ecosim::Vec3;
 
+    // Bloc posé à plat, orientable autour de la verticale.
     struct Box {
-        Vec3 low;
-        Vec3 high;
+        double x;          // centre au sol
+        double z;
+        double halfAlong;  // demi-longueur dans le sens de heading
+        double halfAcross;
+        double bottom;
+        double top;
+        double heading;
         Color color;
         FaceKind kind;
         std::optional<ecosim::AnimalKind> species;
@@ -74,27 +81,32 @@ namespace {
 
     // Seules les faces tournées vers la caméra sont ajoutées ; le dessous n'est jamais visible.
     void AddBox(const Context& context, const Box& box) {
-        const Vec3& a = box.low;
-        const Vec3& b = box.high;
-        if (context.eye.y > b.y) {
-            AddFace(context, std::array<Vec3, 4>{{{a.x, b.y, a.z}, {b.x, b.y, a.z}, {b.x, b.y, b.z}, {a.x, b.y, b.z}}},
+        const double alongX = std::cos(box.heading);
+        const double alongZ = std::sin(box.heading);
+        const auto corner = [&](const double along, const double across, const double y) {
+            return Vec3{box.x + alongX * along * box.halfAlong - alongZ * across * box.halfAcross, y,
+                        box.z + alongZ * along * box.halfAlong + alongX * across * box.halfAcross};
+        };
+        if (context.eye.y > box.top) {
+            AddFace(context, std::array<Vec3, 4>{{corner(-1, -1, box.top), corner(1, -1, box.top),
+                                                  corner(1, 1, box.top), corner(-1, 1, box.top)}},
                     box.color, box.kind, box.species);
         }
-        if (context.eye.x < a.x) {
-            AddFace(context, std::array<Vec3, 4>{{{a.x, a.y, a.z}, {a.x, a.y, b.z}, {a.x, b.y, b.z}, {a.x, b.y, a.z}}},
-                    Shade(box.color, 0.72), box.kind, box.species);
-        }
-        if (context.eye.x > b.x) {
-            AddFace(context, std::array<Vec3, 4>{{{b.x, a.y, a.z}, {b.x, a.y, b.z}, {b.x, b.y, b.z}, {b.x, b.y, a.z}}},
-                    Shade(box.color, 0.72), box.kind, box.species);
-        }
-        if (context.eye.z < a.z) {
-            AddFace(context, std::array<Vec3, 4>{{{a.x, a.y, a.z}, {b.x, a.y, a.z}, {b.x, b.y, a.z}, {a.x, b.y, a.z}}},
-                    Shade(box.color, 0.56), box.kind, box.species);
-        }
-        if (context.eye.z > b.z) {
-            AddFace(context, std::array<Vec3, 4>{{{a.x, a.y, b.z}, {b.x, a.y, b.z}, {b.x, b.y, b.z}, {a.x, b.y, b.z}}},
-                    Shade(box.color, 0.56), box.kind, box.species);
+        // Les quatre côtés : deux extrémités, puis les deux flancs.
+        constexpr std::array<std::array<std::pair<double, double>, 2>, 4> sides{{
+            {{{1, -1}, {1, 1}}}, {{{-1, 1}, {-1, -1}}}, {{{1, 1}, {-1, 1}}}, {{{-1, -1}, {1, -1}}}}};
+        for (const auto& side : sides) {
+            const Vec3 a = corner(side[0].first, side[0].second, box.bottom);
+            const Vec3 b = corner(side[1].first, side[1].second, box.bottom);
+            const double centreX = (a.x + b.x) / 2.0;
+            const double centreZ = (a.z + b.z) / 2.0;
+            const double outX = centreX - box.x;
+            const double outZ = centreZ - box.z;
+            if ((context.eye.x - centreX) * outX + (context.eye.z - centreZ) * outZ <= 0.0) continue;
+            // La lumière dépend de l'orientation du côté.
+            const double light = 0.56 + 0.16 * std::abs(outX) / std::hypot(outX, outZ);
+            AddFace(context, std::array<Vec3, 4>{{a, b, {b.x, box.top, b.z}, {a.x, box.top, a.z}}},
+                    Shade(box.color, light), box.kind, box.species);
         }
     }
 
@@ -147,31 +159,18 @@ namespace {
         }
     }
 
-    // La case est partagée en une bande par espèce, avec quatre places chacune.
-    std::pair<double, double> Slot(const ecosim::AnimalKind kind, const int rank) {
-        constexpr double band = 1.0 / ecosim::SpeciesCount;
-        const double x = band * (static_cast<double>(kind) + (rank % 2 == 0 ? 0.3 : 0.7));
-        const double z = rank / 2 % 2 == 0 ? 0.30 : 0.70;
-        return {x, z};
-    }
-
-    // Corps et tête ; la tête est tournée dans le sens du dernier déplacement.
+    // Corps et tête, orientés dans le sens de la marche.
     std::vector<Box> AnimalModel(const ecosim::AnimalKind kind, const double x, const double z,
-                                 const int directionX, const int directionZ) {
+                                 const double heading) {
         const ecosim::SpeciesStyle& style = ecosim::StyleOf(kind);
-        const bool alongX = directionX != 0;
-        const double halfX = (alongX ? style.length : style.thickness) / 2.0;
-        const double halfZ = (alongX ? style.thickness : style.length) / 2.0;
-        const int forwardZ = alongX ? 0 : directionZ < 0 ? -1 : 1;
-        const double headX = x + directionX * style.length * 0.55;
-        const double headZ = z + forwardZ * style.length * 0.55;
+        const double headX = x + std::cos(heading) * style.length * 0.55;
+        const double headZ = z + std::sin(heading) * style.length * 0.55;
         constexpr double head{0.08};
         return {
-            Box{{x - halfX, 0.03, z - halfZ}, {x + halfX, style.height, z + halfZ}, style.color,
-                FaceKind::Animal, kind},
-            Box{{headX - head, style.height - 0.08, headZ - head},
-                {headX + head, style.height + 0.10, headZ + head}, Shade(style.color, 0.88),
-                FaceKind::Animal, kind},
+            Box{x, z, style.length / 2.0, style.thickness / 2.0, 0.03, style.height, heading,
+                style.color, FaceKind::Animal, kind},
+            Box{headX, headZ, head, head, style.height - 0.08, style.height + 0.10, heading,
+                Shade(style.color, 0.88), FaceKind::Animal, kind},
         };
     }
 }
@@ -210,40 +209,25 @@ namespace ecosim {
                     AddGrass(context, objects, x, z, cell.GetVegetation());
                 }
                 if (cell.GetTerrain() == Terrain::Obstacle) {
-                    const Box rock{{x + 0.1, 0.0, z + 0.1}, {x + 0.9, 0.55, z + 0.9},
+                    const Box rock{x + 0.5, z + 0.5, 0.4, 0.4, 0.0, 0.55, 0.0,
                                    {132, 132, 126}, FaceKind::Obstacle};
                     objects.push_back({SquaredDistance(context.eye, {x + 0.5, 0.27, z + 0.5}), {rock}});
                 }
             }
         }
 
-        // Rang de chaque animal parmi ceux de son espèce, au départ et à l'arrivée.
-        std::map<std::tuple<int, int, AnimalKind>, int> departures;
-        std::map<std::tuple<int, int, AnimalKind>, int> arrivals;
         for (const AnimalSnapshot& animal : animals) {
-            const int from = departures[{animal.previousPosition.x, animal.previousPosition.y,
-                                         animal.kind}]++;
-            const int to = arrivals[{animal.position.x, animal.position.y, animal.kind}]++;
-            if (to >= MaxModelsPerCell) continue;
-            const auto [fromX, fromZ] = Slot(animal.kind, from % MaxModelsPerCell);
-            const auto [toX, toZ] = Slot(animal.kind, to);
-            const double x = std::lerp(animal.previousPosition.x + fromX,
-                                       animal.position.x + toX, progress);
-            const double z = std::lerp(animal.previousPosition.y + fromZ,
-                                       animal.position.y + toZ, progress);
-            const int directionX = animal.position.x - animal.previousPosition.x;
-            const int directionZ = animal.position.y - animal.previousPosition.y;
-            objects.push_back({SquaredDistance(context.eye, {x, 0.15, z}),
-                               AnimalModel(animal.kind, x, z, directionX, directionZ)});
+            const Point point = PathPoint(animal.path, progress);
+            objects.push_back({SquaredDistance(context.eye, {point.x, 0.15, point.y}),
+                               AnimalModel(animal.kind, point.x, point.y,
+                                           PathHeading(animal.path, progress))});
         }
 
         // Algorithme du peintre : les volumes proches recouvrent les volumes lointains.
         std::ranges::stable_sort(objects, std::greater{}, &Object::distance);
         for (Object& object : objects) {
             std::ranges::stable_sort(object.boxes, std::greater{}, [&context](const Box& box) {
-                return SquaredDistance(context.eye, {(box.low.x + box.high.x) / 2,
-                                                     (box.low.y + box.high.y) / 2,
-                                                     (box.low.z + box.high.z) / 2});
+                return SquaredDistance(context.eye, {box.x, (box.bottom + box.top) / 2, box.z});
             });
             for (const Box& box : object.boxes) AddBox(context, box);
             if (object.tuft) {

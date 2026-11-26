@@ -21,9 +21,6 @@ export namespace ecosim {
         std::optional<AnimalKind> species; // pour les faces d'un animal
     };
 
-    // Au-delà, les animaux d'une même espèce sur une case ne sont plus dessinés.
-    inline constexpr int MaxModelsPerCell{4};
-
     // Herbe d'une prairie : la hauteur et le nombre de touffes suivent la végétation.
     inline constexpr int MaxGrassTufts{5};
     // Assez basse pour laisser voir les animaux.

@@ -13,11 +13,11 @@ export namespace ecosim {
 
     struct AnimalSnapshot {
         std::uint64_t id;
-        Position position;
+        Position position;  // case sous l'animal à la fin de la génération
         AnimalKind kind;
         int age;
         int energy;
-        Position previousPosition;
+        Path path;          // trajet de la dernière génération ; le dernier point est actuel
         std::optional<std::uint64_t> parentId;
     };
 
@@ -30,12 +30,11 @@ export namespace ecosim {
         std::size_t Count(AnimalKind kind) const;
         bool IsFinished() const;
         std::vector<AnimalSnapshot> Animals() const;
-        const std::vector<PopulationSample>& PopulationHistory() const;
         const SimulationStats& Stats() const;
 
         // Sans énergie précisée, l'animal reçoit l'énergie de départ des réglages.
         void AddAnimal(AnimalKind kind, Position position, std::optional<int> energy = std::nullopt);
-        // Place des animaux au hasard sur les prairies.
+        // Place des animaux au hasard sur les prairies, n'importe où dans une case.
         void Seed(AnimalKind kind, int count);
         void Step();
 
@@ -48,7 +47,8 @@ export namespace ecosim {
         int generation{0};
         SimulationStats stats;
 
-        void PlayPhase(TurnPhase phase);
+        // Les petits pas d'une génération : se déplacer, manger, chasser.
+        void MoveAndInteract();
         // Naissances, métabolisme et morts de la génération.
         void LiveAndReproduce();
         PopulationSample Measure() const;

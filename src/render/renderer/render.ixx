@@ -1,15 +1,14 @@
-// Rendu Win32/GDI : un dessinateur par écran. Aucun ne modifie l'état qu'il affiche.
+// Rendu Win32/GDI. Il dessine l'état sans le modifier.
 export module ecosim.render;
 
 import std;
 export import ecosim.application;
 export import ecosim.window;
 import ecosim.camera;
-import ecosim.map_navigator;
 import ecosim.chart;
 import ecosim.settings_form;
 
-// Classes internes au rendu (non exportées).
+// Outils internes au rendu (non exportés).
 namespace ecosim {
     // Image préparée en mémoire puis copiée dans la fenêtre ; les ressources suivent l'objet.
     class Canvas {
@@ -44,71 +43,24 @@ namespace ecosim {
     void WriteText(void* context, int x, int y, const std::string& text);
     TextSize MeasureText(void* context, const std::string& text);
 
-    class HomePainter {
-    public:
-        explicit HomePainter(int cellSize);
-        void Draw(Canvas& canvas, const SimulationSettings& current, const SettingEditor& editor) const;
-
-    private:
-        int cellSize;
-    };
-
-    class StatsPainter {
-    public:
-        void Draw(Canvas& canvas, const Simulation& simulation, const PlaybackState& playback,
-                  const ChartSelection& selection, std::optional<PointerPosition> pointer) const;
-    };
-
-    // Dessine la carte. Une nouvelle vue ajoute une classe sans modifier les autres.
-    class MapPainter {
-    public:
-        virtual ~MapPainter() = default;
-        virtual void Draw(Canvas& canvas, const Simulation& simulation, double progress,
-                          std::optional<Position> selected) const = 0;
-    };
-
-    class FlatMapPainter final : public MapPainter {
-    public:
-        explicit FlatMapPainter(int cellSize);
-        void Draw(Canvas& canvas, const Simulation& simulation, double progress,
-                  std::optional<Position> selected) const override;
-
-    private:
-        int cellSize;
-    };
-
-    class OrbitMapPainter final : public MapPainter {
-    public:
-        // camera doit rester valide pendant la vie du dessinateur.
-        explicit OrbitMapPainter(const OrbitCamera& camera);
-        void Draw(Canvas& canvas, const Simulation& simulation, double progress,
-                  std::optional<Position> selected) const override;
-
-    private:
-        const OrbitCamera& camera;
-    };
-
+    // Une fonction par écran ou élément ; chacune ne reçoit que ce qu'elle affiche.
+    void DrawHomeScreen(Canvas& canvas, const SimulationSettings& current, const SettingEditor& editor,
+                        int cellSize);
+    void DrawStatsScreen(Canvas& canvas, const Simulation& simulation, const PlaybackState& playback,
+                         const ChartSelection& selection, std::optional<PointerPosition> pointer);
+    void DrawFlatMap(Canvas& canvas, const Simulation& simulation, double progress,
+                     std::optional<Position> selected, int cellSize);
+    void DrawOrbitMap(Canvas& canvas, const Simulation& simulation, double progress,
+                      std::optional<Position> selected, const OrbitCamera& camera);
     // Compteurs, aide et boutons affichés par-dessus la carte.
-    class HudPainter {
-    public:
-        void Draw(Canvas& canvas, const Simulation& simulation, const PlaybackState& playback,
-                  const MapView& view, const MapView& nextView) const;
-    };
-
-    class CellPanelPainter {
-    public:
-        void Draw(Canvas& canvas, const Simulation& simulation, std::optional<Position> selected,
-                  bool onLeft) const;
-    };
-
-    class ExitDialogPainter {
-    public:
-        void Draw(Canvas& canvas) const;
-    };
+    void DrawHud(Canvas& canvas, const Simulation& simulation, const PlaybackState& playback,
+                 bool threeD);
+    void DrawCellPanel(Canvas& canvas, const Simulation& simulation, std::optional<Position> selected,
+                       bool onLeft);
+    void DrawExitDialog(Canvas& canvas);
 }
 
 export namespace ecosim {
-    // Assemble les dessinateurs et choisit l'écran d'après la navigation.
     class Win32Renderer final : public View {
     public:
         // window et controller doivent rester valides pendant la vie du rendu.
@@ -118,19 +70,12 @@ export namespace ecosim {
         void DrawSimulation(const Simulation& simulation, const PlaybackState& playback) override;
 
     private:
-        void DrawMap(Canvas& canvas, const Simulation& simulation, const PlaybackState& playback) const;
         static void Finish(const Canvas& canvas);
 
         const UiController& controller;
         void* window;
         int width;
         int height;
-        HomePainter home;
-        StatsPainter stats;
-        // Dans l'ordre de MapViewKind.
-        std::array<std::unique_ptr<MapPainter>, MapViewCount> maps;
-        HudPainter hud;
-        CellPanelPainter cellPanel;
-        ExitDialogPainter exitDialog;
+        int cellSize;
     };
 }

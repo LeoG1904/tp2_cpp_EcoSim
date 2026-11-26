@@ -70,31 +70,31 @@ TEST_CASE("Le bouton bascule en 3D ; le clic droit et la molette pilotent la cam
     drag.rotating = true;
     drag.pointer = PointerPosition{500, 500};
     drag.wheel = 1;
-    const double distance = controller.Map().Camera().Distance();
+    const double distance = controller.Camera().Distance();
 
     // En 2D, la camera ne bouge pas.
     controller.Handle(drag, false, false, settings);
-    REQUIRE(controller.Map().Camera().Distance() == distance);
+    REQUIRE(controller.Camera().Distance() == distance);
 
     const UiRect view = ViewButton(1920);
     controller.Handle(Click(view.x + 1, view.y + 1), false, false, settings);
-    REQUIRE(controller.Map().ActiveKind() == MapViewKind::Orbit);
+    REQUIRE(controller.IsShowing3D());
 
     controller.Handle(drag, false, false, settings);
-    REQUIRE(controller.Map().Camera().Distance() < distance);
-    REQUIRE(controller.Map().Camera().Yaw() == 0.0);
+    REQUIRE(controller.Camera().Distance() < distance);
+    REQUIRE(controller.Camera().Yaw() == 0.0);
     drag.wheel = 0;
     drag.pointer = PointerPosition{400, 500};
     controller.Handle(drag, false, false, settings);
-    REQUIRE(controller.Map().Camera().Yaw() > 0.0);
+    REQUIRE(controller.Camera().Yaw() > 0.0);
 
     const UiRect recenter = RecenterButton(1920);
     controller.Handle(Click(recenter.x + 1, recenter.y + 1), false, false, settings);
-    REQUIRE(controller.Map().Camera().Yaw() == 0.0);
-    REQUIRE(controller.Map().Camera().Distance() == distance);
+    REQUIRE(controller.Camera().Yaw() == 0.0);
+    REQUIRE(controller.Camera().Distance() == distance);
 
     controller.Handle(Click(view.x + 1, view.y + 1), false, false, settings);
-    REQUIRE(controller.Map().ActiveKind() == MapViewKind::Flat);
+    REQUIRE_FALSE(controller.IsShowing3D());
 }
 
 TEST_CASE("En 3D, un clic choisit la case visee", "[camera]") {
@@ -103,9 +103,9 @@ TEST_CASE("En 3D, un clic choisit la case visee", "[camera]") {
     const UiRect view = ViewButton(1920);
     controller.Handle(Click(view.x + 1, view.y + 1), false, false, settings);
 
-    const auto point = controller.Map().Camera().Project({10.5, 0.0, 8.5}, Screen);
+    const auto point = controller.Camera().Project({10.5, 0.0, 8.5}, Screen);
     REQUIRE(point.has_value());
     controller.Handle(Click(point->x, point->y), false, false, settings);
-    REQUIRE(controller.Map().SelectedCell() == Position{10, 8});
-    REQUIRE_FALSE(controller.Map().IsCellPanelOnLeft());
+    REQUIRE(controller.SelectedCell() == Position{10, 8});
+    REQUIRE_FALSE(controller.IsCellPanelOnLeft());
 }

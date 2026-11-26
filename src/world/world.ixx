@@ -11,6 +11,21 @@ export namespace ecosim {
         bool operator==(const Position&) const = default;
     };
 
+    // Point libre sur la carte, en cases : la case (x, y) couvre [x, x+1[ x [y, y+1[.
+    struct Point {
+        double x{0.0};
+        double y{0.0};
+
+        bool operator==(const Point&) const = default;
+    };
+
+    // Case située sous un point.
+    inline Position CellAt(const Point point) {
+        return {static_cast<int>(std::floor(point.x)), static_cast<int>(std::floor(point.y))};
+    }
+    inline Point CenterOf(const Position cell) { return {cell.x + 0.5, cell.y + 0.5}; }
+    inline double Distance(const Point a, const Point b) { return std::hypot(a.x - b.x, a.y - b.y); }
+
     enum class Terrain { Prairie, Eau, Obstacle };
 
     class Cell {
@@ -36,6 +51,8 @@ export namespace ecosim {
         int GetWidth() const;
         int GetHeight() const;
         bool IsInside(Position position) const;
+        // Un animal peut se tenir en ce point : dans la carte et sur une prairie.
+        bool IsWalkable(Point point) const;
         Cell& GetCell(Position position);
         const Cell& GetCell(Position position) const;
         std::vector<Position> Neighbors(Position position) const;

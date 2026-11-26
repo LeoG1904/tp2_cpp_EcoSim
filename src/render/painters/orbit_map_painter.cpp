@@ -15,11 +15,8 @@ import ecosim.scene3d;
 using namespace ecosim_gdi;
 
 namespace ecosim {
-    OrbitMapPainter::OrbitMapPainter(const OrbitCamera& camera) : camera{camera} {}
-
-    // La scène est calculée par ecosim.scene3d ; ici, ses faces sont seulement remplies.
-    void OrbitMapPainter::Draw(Canvas& canvas, const Simulation& simulation, const double progress,
-                               const std::optional<Position> selected) const {
+    void DrawOrbitMap(Canvas& canvas, const Simulation& simulation, const double progress,
+                      const std::optional<Position> selected, const OrbitCamera& camera) {
         std::vector<AnimalSnapshot> animals = simulation.Animals();
         AttachNewbornsToParents(animals);
         const std::vector<Face> faces = BuildScene(simulation.GetWorld(), animals, progress, camera,

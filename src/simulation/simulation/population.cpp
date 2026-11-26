@@ -20,13 +20,9 @@ namespace ecosim {
         for (const auto& animal : animals) {
             result.push_back({animal->GetId(), animal->GetPosition(), animal->GetKind(),
                               animal->GetAge(), animal->GetEnergy(),
-                              animal->GetPreviousPosition(), animal->GetParentId()});
+                              animal->GetPath(), animal->GetParentId()});
         }
         return result;
-    }
-
-    const std::vector<PopulationSample>& Simulation::PopulationHistory() const {
-        return stats.History();
     }
 
     const SimulationStats& Simulation::Stats() const { return stats; }
@@ -76,7 +72,16 @@ namespace ecosim {
         if (accessible.empty()) throw std::runtime_error{"Aucune prairie pour les animaux"};
 
         std::uniform_int_distribution<std::size_t> pick{0, accessible.size() - 1};
-        for (int i = 0; i < count; ++i) AddAnimal(kind, accessible[pick(rng)]);
+        // Les animaux ne partent pas du centre exact des cases.
+        std::uniform_real_distribution<double> within{0.2, 0.8};
+        std::uniform_real_distribution<double> direction{-std::numbers::pi, std::numbers::pi};
+        for (int i = 0; i < count; ++i) {
+            const Position cell = accessible[pick(rng)];
+            AddAnimal(kind, cell);
+            const double x = cell.x + within(rng);
+            const double y = cell.y + within(rng);
+            animals.back()->Place({x, y}, direction(rng));
+        }
     }
 
     Simulation CreateRandomSimulation(const int width, const int height,
