@@ -19,7 +19,8 @@ namespace {
         auto* events = reinterpret_cast<ecosim::Win32Window::Events*>(
             GetWindowLongPtrW(hwnd, GWLP_USERDATA));
         if (message == WM_KEYDOWN) {
-            if (events) events->keys.push_back(static_cast<int>(wp));
+            // Le bit 30 indique que la touche était déjà enfoncée.
+            if (events) events->keys.push_back({static_cast<int>(wp), (lp & (1 << 30)) != 0});
             return 0;
         }
         if (message == WM_MOUSEWHEEL) {
@@ -78,7 +79,9 @@ namespace ecosim {
         return GetForegroundWindow() == static_cast<HWND>(handle);
     }
 
-    std::vector<int> Win32Window::TakeKeys() { return std::exchange(events.keys, {}); }
+    std::vector<Win32Window::KeyPress> Win32Window::TakeKeys() {
+        return std::exchange(events.keys, {});
+    }
 
     int Win32Window::TakeWheel() {
         // Les pavés tactiles envoient des fractions de cran : le reste est conservé.
