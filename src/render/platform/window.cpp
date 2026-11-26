@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Création de la fenêtre et réception des messages Windows.
+ */
 module;
 
 #define WIN32_LEAN_AND_MEAN

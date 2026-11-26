@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Calculs de projection et de sélection en 3D.
+ */
 module ecosim.camera;
 
 import std;

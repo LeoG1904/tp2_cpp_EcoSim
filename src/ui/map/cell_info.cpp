@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Rédaction du panneau d'une case.
+ */
 module ecosim.cell_info;
 
 import std;

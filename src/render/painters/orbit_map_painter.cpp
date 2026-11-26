@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Dessin de la carte 3D.
+ */
 module;
 
 #define WIN32_LEAN_AND_MEAN

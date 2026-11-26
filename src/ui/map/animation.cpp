@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Interpolation le long des trajets.
+ */
 module ecosim.animation;
 
 import std;

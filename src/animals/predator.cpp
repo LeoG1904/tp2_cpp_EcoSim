@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Décisions du prédateur : poursuivre, se placer en meute ou errer.
+ */
 module ecosim.predator;
 
 import std;

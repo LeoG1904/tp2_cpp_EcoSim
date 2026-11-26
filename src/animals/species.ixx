@@ -1,4 +1,7 @@
-// Catalogue des espèces : seul endroit du moteur qui les énumère avec leurs classes.
+/**
+ * @file
+ * @brief Le catalogue des espèces.
+ */
 export module ecosim.species;
 
 import std;
@@ -6,22 +9,34 @@ export import ecosim.herbivore;
 export import ecosim.predator;
 
 export namespace ecosim {
+    /// @brief La fiche d'une espèce.
+    /// @ingroup moteur
     struct SpeciesInfo {
+        /// @brief Espèce décrite.
         AnimalKind kind;
+        /// @brief Nom au singulier.
         std::string name;
+        /// @brief Nom au pluriel.
         std::string pluralName;
+        /// @brief Statistiques d'origine.
         AnimalTraits defaultTraits;
-        // Population de départ : une pour tant de cases, avec un minimum.
+        /// @brief Au départ, un animal pour ce nombre de cases.
         int cellsPerAnimal;
+        /// @brief Population de départ minimale.
         int minimumAtStart;
+        /// @brief Vrai pour une proie.
         bool canBeEaten;
-        // Instinct activé dans l'application : fuite (%) ou rayon de meute.
+        /// @brief Instinct activé dans l'application.
         int defaultInstinct;
+        /// @brief Fonction qui crée un animal de cette espèce.
         std::unique_ptr<Animal> (*create)(std::uint64_t id, Position position, int energy,
                                           const AnimalTraits& traits);
     };
 
-    // Une entrée par valeur d'AnimalKind, dans le même ordre.
+    /// @brief Toutes les espèces, dans l'ordre d'AnimalKind.
+    /// @ingroup moteur
     const std::vector<SpeciesInfo>& SpeciesCatalog();
+    /// @brief La fiche d'une espèce.
+    /// @ingroup moteur
     const SpeciesInfo& SpeciesOf(AnimalKind kind);
 }

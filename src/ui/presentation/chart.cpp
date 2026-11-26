@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Description de chaque statistique et calcul des courbes.
+ */
 module ecosim.chart;
 
 import std;

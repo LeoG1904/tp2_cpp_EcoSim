@@ -1,4 +1,7 @@
-// Choix et données des graphiques de statistiques, sans API graphique.
+/**
+ * @file
+ * @brief Les données des graphiques de statistiques.
+ */
 export module ecosim.chart;
 
 import std;
@@ -6,36 +9,57 @@ export import ecosim.stats;
 import ecosim.species;
 
 export namespace ecosim {
+    /// @brief Les statistiques que l'on peut afficher.
+    /// @ingroup interface
     enum class ChartMetric { Population, Births, Starved, OldAge, Eaten, Energy, Vegetation };
+    /// @brief Nombre de statistiques.
+    /// @ingroup interface
     inline constexpr std::size_t MetricCount{7};
 
-    // Noms des boutons, dans l'ordre de ChartMetric.
+    /// @brief Les noms des boutons, dans l'ordre de ChartMetric.
+    /// @ingroup interface
     const std::vector<std::string>& MetricNames();
 
-    // Ce que l'utilisateur a choisi d'afficher.
+    /// @brief Ce que l'utilisateur a choisi d'afficher.
+    /// @ingroup interface
     struct ChartSelection {
+        /// @brief Graphiques affichés.
         std::array<bool, MetricCount> metrics{true, true, true, true, true, true, true};
-        PerSpecies<bool> hidden{}; // espèces masquées sur les graphiques
-        bool cumulative{true}; // événements : total depuis le début, ou par génération
+        /// @brief Espèces masquées.
+        PerSpecies<bool> hidden{};
+        /// @brief Naissances et morts : total depuis le début, ou par génération.
+        bool cumulative{true};
 
+        /// @brief Les statistiques affichées.
         std::vector<ChartMetric> VisibleMetrics() const;
     };
 
+    /// @brief Une courbe.
+    /// @ingroup interface
     struct ChartSeries {
-        // Vide pour une mesure du monde, comme la végétation.
+        /// @brief Espèce ; vide pour une mesure du monde, comme l'herbe.
         std::optional<AnimalKind> species;
-        // Une valeur par génération ; vide quand la mesure n'existe pas.
+        /// @brief Une valeur par génération ; vide quand la mesure n'existe pas.
         std::vector<std::optional<double>> values;
     };
 
-    // Les naissances et les morts sont les seules mesures qui se cumulent.
+    /// @brief Vrai pour les naissances et les morts, les seules mesures cumulables.
+    /// @ingroup interface
     bool IsEventMetric(ChartMetric metric);
+    /// @brief Le titre d'un graphique.
+    /// @ingroup interface
     std::string ChartTitle(ChartMetric metric, bool cumulative);
+    /// @brief Prépare les courbes d'une statistique à partir de l'historique.
+    /// @ingroup interface
     std::vector<ChartSeries> BuildSeries(const std::vector<PopulationSample>& history,
                                          ChartMetric metric, const ChartSelection& selection);
-    // Haut de l'axe : un nombre rond, divisible en quatre graduations entières.
+    /// @brief Le haut de l'axe : un nombre rond, divisible en quatre graduations entières.
+    /// @ingroup interface
     long long AxisMaximum(const std::vector<ChartSeries>& series);
+    /// @brief Met une valeur en texte ; « - » si elle n'existe pas.
+    /// @ingroup interface
     std::string FormatValue(ChartMetric metric, std::optional<double> value);
-    // Génération la plus proche d'une position horizontale du graphique.
+    /// @brief La génération la plus proche d'une position horizontale de la souris.
+    /// @ingroup interface
     std::size_t IndexAt(int x, int plotX, int plotWidth, std::size_t count);
 }

@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Image en mémoire et conversion du texte UTF-8 pour Windows.
+ */
 module;
 
 #define WIN32_LEAN_AND_MEAN

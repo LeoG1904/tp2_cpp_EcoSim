@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Implémentation du comportement commun : âge, énergie et déplacement.
+ */
 module ecosim.animal;
 
 import std;

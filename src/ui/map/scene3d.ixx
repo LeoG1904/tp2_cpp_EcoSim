@@ -1,4 +1,7 @@
-// Transforme l'état de la simulation en faces 3D déjà projetées, sans API graphique.
+/**
+ * @file
+ * @brief La construction de la scène 3D.
+ */
 export module ecosim.scene3d;
 
 import std;
@@ -7,29 +10,47 @@ export import ecosim.simulation;
 export import ecosim.species_style;
 
 export namespace ecosim {
+    /// @brief Ce que représente un polygone de la scène.
+    /// @ingroup interface
     enum class FaceKind { Ground, Selection, Obstacle, Grass, Animal };
 
-    // Une touffe d'herbe compte le plus de sommets.
+    /// @brief Nombre maximal de sommets d'un polygone (une touffe d'herbe).
+    /// @ingroup interface
     inline constexpr std::size_t MaxFacePoints{7};
 
-    // Polygone à l'écran ; seuls les pointCount premiers sommets sont utilisés.
+    /// @brief Un polygone déjà projeté sur l'écran.
+    /// @ingroup interface
     struct Face {
+        /// @brief Sommets ; seuls les pointCount premiers servent.
         std::array<ScreenPoint, MaxFacePoints> points;
+        /// @brief Nombre de sommets.
         std::size_t pointCount;
+        /// @brief Couleur.
         Color color;
+        /// @brief Nature de l'élément.
         FaceKind kind;
-        std::optional<AnimalKind> species; // pour les faces d'un animal
+        /// @brief Espèce, pour un animal.
+        std::optional<AnimalKind> species;
     };
 
-    // Herbe d'une prairie : la hauteur et le nombre de touffes suivent la végétation.
+    /// @brief Nombre maximal de touffes d'herbe par case.
+    /// @ingroup interface
     inline constexpr int MaxGrassTufts{5};
-    // Assez basse pour laisser voir les animaux.
+    /// @brief Hauteur maximale de l'herbe, assez basse pour laisser voir les animaux.
+    /// @ingroup interface
     inline constexpr double MaxGrassHeight{0.24};
 
+    /// @brief Nombre de touffes pour une quantité d'herbe.
+    /// @ingroup interface
     int GrassTuftCount(int vegetation);
+    /// @brief Hauteur de l'herbe pour une quantité donnée.
+    /// @ingroup interface
     double GrassHeight(int vegetation);
 
-    // Les faces sont rangées dans l'ordre de dessin : le sol, puis les volumes du plus loin au plus près.
+    /// @brief Transforme la simulation en polygones.
+    ///
+    /// Ils sont rangés dans l'ordre de dessin : le sol, puis les volumes du plus loin au plus près.
+    /// @ingroup interface
     std::vector<Face> BuildScene(const World& world, const std::vector<AnimalSnapshot>& animals,
                                  double progress, const OrbitCamera& camera, Viewport viewport,
                                  std::optional<Position> selected);

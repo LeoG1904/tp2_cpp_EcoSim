@@ -1,49 +1,73 @@
-// Caméra 3D qui tourne autour de la carte, sans API graphique.
+/**
+ * @file
+ * @brief La caméra 3D et ses calculs de projection.
+ */
 export module ecosim.camera;
 
 import std;
 export import ecosim.world;
 
 export namespace ecosim {
-    // La case (x, y) occupe le carré [x, x+1] x [y, y+1] du sol ; y3d est la hauteur.
+    /// @brief Un point de l'espace 3D. La case (x, y) de la carte occupe [x, x+1] sur x et [y, y+1] sur z ; y est la hauteur.
+    /// @ingroup interface
     struct Vec3 {
+        /// @brief Axe des colonnes.
         double x;
+        /// @brief Hauteur.
         double y;
+        /// @brief Axe des lignes.
         double z;
     };
 
+    /// @brief Un point de l'écran, en pixels.
+    /// @ingroup interface
     struct ScreenPoint {
+        /// @brief Abscisse, en pixels.
         int x;
+        /// @brief Ordonnée, en pixels.
         int y;
     };
 
+    /// @brief La taille de l'image.
+    /// @ingroup interface
     struct Viewport {
+        /// @brief Largeur, en pixels.
         int width;
+        /// @brief Hauteur, en pixels.
         int height;
     };
 
+    /// @brief Une caméra qui tourne autour du centre de la carte.
+    /// @ingroup interface
     class OrbitCamera {
     public:
-        static constexpr double MinPitch{0.30};  // presque au ras du sol
-        static constexpr double MaxPitch{1.45};  // presque à la verticale
+        /// @brief Inclinaison minimale : presque au ras du sol.
+        static constexpr double MinPitch{0.30};
+        /// @brief Inclinaison maximale : presque à la verticale.
+        static constexpr double MaxPitch{1.45};
 
+        /// @brief Crée la caméra en vue d'ensemble.
         OrbitCamera(int mapWidth, int mapHeight);
 
-        // Revient à la vue d'ensemble.
+        /// @brief Revient à la vue d'ensemble.
         void Reset();
-        // Angles en radians : autour de la carte, puis au-dessus du sol.
+        /// @brief Tourne autour de la carte et change l'inclinaison, en radians.
         void Rotate(double yawDelta, double pitchDelta);
-        // Un cran positif rapproche la caméra.
+        /// @brief Zoome ; un cran positif rapproche.
         void Zoom(int notches);
 
+        /// @brief Angle autour de la carte.
         double Yaw() const;
+        /// @brief Inclinaison.
         double Pitch() const;
+        /// @brief Distance au centre.
         double Distance() const;
+        /// @brief Position de la caméra dans l'espace.
         Vec3 Position3d() const;
 
-        // Position à l'écran ; vide si le point est derrière la caméra.
+        /// @brief Projette un point de l'espace sur l'écran ; vide s'il est derrière la caméra.
         std::optional<ScreenPoint> Project(Vec3 point, Viewport viewport) const;
-        // Case du sol située sous un point de l'écran.
+        /// @brief La case du sol située sous un point de l'écran.
         std::optional<Position> PickCell(ScreenPoint screen, Viewport viewport) const;
 
     private:

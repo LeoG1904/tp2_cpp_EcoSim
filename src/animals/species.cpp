@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Contenu du catalogue des espèces.
+ */
 module ecosim.species;
 
 import std;

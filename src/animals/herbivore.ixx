@@ -1,30 +1,43 @@
-// Spécialisation de l'animal qui se nourrit de végétation.
+/**
+ * @file
+ * @brief L'herbivore : il broute et peut fuir.
+ */
 export module ecosim.herbivore;
 
 import std;
 export import ecosim.animal;
 
 export namespace ecosim {
+    /// @brief Un animal qui mange l'herbe et sert de proie.
+    /// @ingroup moteur
     class Herbivore final : public Animal {
     public:
+        /// @brief Énergie de départ par défaut.
         static constexpr int StartingEnergy{50};
-        // Distances, en cases, auxquelles il repère un chasseur ou de l'herbe.
+        /// @brief Distance, en cases, à laquelle un prédateur est repéré.
         static constexpr double ThreatSight{2.0};
+        /// @brief Distance, en cases, à laquelle il cherche de l'herbe.
         static constexpr double FoodSight{2.0};
-        // Au-dessus de cette végétation, il reste brouter au lieu de chercher ailleurs.
+        /// @brief À partir de cette quantité d'herbe sous lui, il reste brouter.
         static constexpr int GrazingVegetation{30};
 
+        /// @brief Crée un herbivore au centre d'une case.
+        /// @throws std::invalid_argument si l'énergie n'est pas entre 1 et 100.
         Herbivore(std::uint64_t id, Position cell, int energy = StartingEnergy,
                   const AnimalTraits& traits = {});
+        /// @copydoc Animal::GetKind
         AnimalKind GetKind() const override;
+        /// @brief Toujours vrai.
         bool IsPrey() const override;
+        /// @brief Tire au sort s'il sera sur ses gardes pendant cette génération.
         void BeginGeneration(std::mt19937& rng) override;
-        // Fuit un chasseur s'il est sur ses gardes, sinon cherche l'herbe la plus riche.
+        /// @brief Fuit un prédateur s'il est sur ses gardes, sinon broute ou cherche de l'herbe.
         Steering Steer(const Habitat& habitat, std::mt19937& rng) const override;
-        // Mange une fois par génération, là où il se trouve à la fin.
+        /// @brief Mange une fois par génération, au dernier petit pas, là où il se trouve.
         void Act(Habitat& habitat, int tick) override;
 
     protected:
+        /// @brief Crée un petit herbivore.
         std::unique_ptr<Animal> MakeOffspring(std::uint64_t id) const override;
 
     private:

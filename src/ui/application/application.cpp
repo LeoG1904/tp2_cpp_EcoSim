@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Enchaînement des actions et du temps à chaque image.
+ */
 module ecosim.application;
 
 import std;

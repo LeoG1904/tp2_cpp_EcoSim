@@ -1,13 +1,20 @@
-// Texte décrivant une case de la simulation, sans API graphique.
+/**
+ * @file
+ * @brief Le texte du panneau d'une case.
+ */
 export module ecosim.cell_info;
 
 import std;
 export import ecosim.simulation;
 
 export namespace ecosim {
-    // Au-delà, les animaux restants sont seulement comptés.
+    /// @brief Nombre d'animaux détaillés ; les autres sont seulement comptés.
+    /// @ingroup interface
     inline constexpr std::size_t MaxListedAnimals{7};
 
-    // Une chaîne par ligne du panneau ; la position doit être dans le monde.
+    /// @brief Décrit une case, une chaîne par ligne du panneau.
+    /// @param simulation Simulation observée.
+    /// @param position Case, qui doit être dans la carte.
+    /// @ingroup interface
     std::vector<std::string> DescribeCell(const Simulation& simulation, Position position);
 }

@@ -1,0 +1,19 @@
+/**
+ * @defgroup moteur 1. Moteur de simulation
+ * @brief Le monde, les animaux et les règles. Fonctionne sans affichage.
+ */
+
+/**
+ * @defgroup interface 2. Interface
+ * @brief Écrans, boutons, caméra et graphiques, en C++ pur.
+ */
+
+/**
+ * @defgroup affichage 3. Affichage Windows
+ * @brief Fenêtre, clavier, souris et dessin.
+ */
+
+/**
+ * @namespace ecosim
+ * @brief Tout le code du projet.
+ */

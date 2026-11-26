@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Enregistrement des statistiques.
+ */
 module ecosim.stats;
 
 import std;

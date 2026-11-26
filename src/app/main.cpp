@@ -1,10 +1,15 @@
-// Assemblage : moteur, fenêtre Windows, entrées et rendu 2D.
+/**
+ * @file
+ * @brief Point d'entrée : assemble les objets et fait tourner la boucle principale.
+ */
 import std;
 import ecosim.application;
 import ecosim.window;
 import ecosim.win32_input;
 import ecosim.render;
 
+/// @brief Crée la fenêtre et les objets, puis traite une image à chaque tour jusqu'à la fermeture.
+/// @return 0 à la fin normale du programme.
 int main() {
     // Taille d'une case en pixels ; la carte s'adapte à la taille de l'écran
     constexpr int CellSize{40};

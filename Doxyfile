@@ -1,0 +1,56 @@
+# Documentation d'EcoSim. À lancer depuis la racine du projet :  doxygen Doxyfile
+# Résultat : docs/doxygen/html/index.html
+
+PROJECT_NAME           = "EcoSim"
+PROJECT_BRIEF          = "Simulateur d'écosystème en C++23"
+OUTPUT_DIRECTORY       = docs/doxygen
+OUTPUT_LANGUAGE        = French
+INPUT_ENCODING         = UTF-8
+
+# Sources : les pages d'explication, puis le code (le dossier des tests n'est pas inclus).
+# L'ordre de cette liste fixe celui des pages dans le menu.
+INPUT                  = docs/presentation.md \
+                         docs/fonctionnement.md \
+                         docs/architecture.md \
+                         docs/notions.md \
+                         docs/couches.dox \
+                         src
+RECURSIVE              = YES
+FILE_PATTERNS          = *.md *.dox *.ixx *.cpp *.hpp
+EXCLUDE                = docs/doxygen
+# Diagrammes de classes affichés dans les pages.
+IMAGE_PATH             = docs/images
+USE_MDFILE_AS_MAINPAGE = docs/presentation.md
+EXTENSION_MAPPING      = ixx=C++
+MARKDOWN_SUPPORT       = YES
+
+# Doxygen analyse mal les modules C++20 : un filtre retire "export" et "import" à la lecture.
+# Python doit être accessible par la commande "python".
+FILTER_PATTERNS        = *.ixx="python docs/doxygen_filter.py" \
+                         *.cpp="python docs/doxygen_filter.py"
+FILTER_SOURCE_FILES    = NO
+
+# Contenu : l'interface publique, pour rester facile à lire.
+EXTRACT_ALL            = NO
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = NO
+EXTRACT_ANON_NSPACES   = NO
+HIDE_UNDOC_MEMBERS     = NO
+BRIEF_MEMBER_DESC      = YES
+REPEAT_BRIEF           = YES
+SORT_MEMBER_DOCS       = NO
+SHOW_USED_FILES        = NO
+
+# Présentation
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+GENERATE_TREEVIEW      = YES
+SOURCE_BROWSER         = YES
+HAVE_DOT               = NO
+
+# Les éléments oubliés sont signalés dans un fichier.
+QUIET                  = YES
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+WARN_LOGFILE           = docs/doxygen-warnings.log

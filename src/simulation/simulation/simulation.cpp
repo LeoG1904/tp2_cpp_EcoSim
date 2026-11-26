@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Le cycle d'une génération et la recherche des voisins.
+ */
 module ecosim.simulation;
 
 import std;

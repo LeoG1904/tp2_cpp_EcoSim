@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Conversion des touches et des clics Windows en entrées.
+ */
 module;
 
 #define WIN32_LEAN_AND_MEAN

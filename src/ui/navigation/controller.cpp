@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Traitement des entrées de chaque écran.
+ */
 module ecosim.controller;
 
 import std;

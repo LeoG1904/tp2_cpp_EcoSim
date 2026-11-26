@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Implémentation du monde et de la génération de carte.
+ */
 module ecosim.world;
 
 import std;

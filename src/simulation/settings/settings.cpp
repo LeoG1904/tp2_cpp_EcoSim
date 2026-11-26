@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Valeurs par défaut et préréglages.
+ */
 module ecosim.settings;
 
 import std;

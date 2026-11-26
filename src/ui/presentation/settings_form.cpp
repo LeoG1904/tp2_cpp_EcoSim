@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Liste des réglages et saisie.
+ */
 module ecosim.settings_form;
 
 import std;

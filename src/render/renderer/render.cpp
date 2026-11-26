@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Choix des fonctions de dessin à chaque image.
+ */
 module;
 
 #define WIN32_LEAN_AND_MEAN

@@ -170,6 +170,16 @@ Le découpage privilégie la **simplicité** : `UiController` regroupe la naviga
 
 Les réglages, les statistiques, les graphiques, le panneau d'une case et les cartes parcourent le catalogue. Une colonne s'ajoute à l'accueil, dont la lisibilité est alors à vérifier. Les préréglages ne règlent que les herbivores et les prédateurs. Les proies (`IsPrey`) jouent en premier et sont chassées par les prédateurs ; un régime alimentaire plus fin demanderait d'étendre `Habitat`.
 
+## Documentation
+
+La documentation est générée avec **Doxygen** (Python est aussi nécessaire, pour le filtre des modules). Depuis la racine du projet :
+
+```powershell
+doxygen Doxyfile
+```
+
+Ouvrez ensuite `docs/doxygen/html/index.html`. Les pages d'explication se trouvent dans `docs/` : vue d'ensemble, fonctionnement, architecture et notions de C++. Les commentaires des fichiers `.ixx` décrivent chaque classe et fonction visible ; les éléments oubliés sont signalés dans `docs/doxygen-warnings.log`.
+
 ## Conventions de code
 
 Pour garder le code facile à lire dans le cadre du TP, on évite `std::span` et `std::string_view`. On utilise `std::string` pour les textes et des références à `std::vector` pour accéder aux collections sans les copier : `const std::vector<T>&` en lecture, `std::vector<T>&` si une modification est nécessaire.

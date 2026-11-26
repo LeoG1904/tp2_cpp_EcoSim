@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Construction du sol, des obstacles, de l'herbe et des animaux en 3D.
+ */
 module ecosim.scene3d;
 
 import std;

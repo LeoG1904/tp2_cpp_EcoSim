@@ -1,15 +1,23 @@
-// Lecture des trajets pour l'affichage, sans API graphique.
+/**
+ * @file
+ * @brief La lecture des trajets pour l'affichage.
+ */
 export module ecosim.animation;
 
 import std;
 export import ecosim.simulation;
 
 export namespace ecosim {
-    // Position sur un trajet, progress allant de 0 (départ) à 1 (arrivée).
+    /// @brief La position sur un trajet.
+    /// @param path Trajet d'une génération.
+    /// @param progress De 0 (départ) à 1 (arrivée).
+    /// @ingroup interface
     Point PathPoint(const Path& path, double progress);
-    // Orientation à ce moment du trajet ; un animal immobile garde sa dernière direction.
+    /// @brief L'orientation à ce moment du trajet ; un animal arrêté garde sa dernière direction.
+    /// @ingroup interface
     double PathHeading(const Path& path, double progress);
 
-    // À l'écran, un nouveau-né accompagne le dernier déplacement de son parent.
+    /// @brief Fait accompagner à chaque nouveau-né, à l'écran, le trajet de son parent.
+    /// @ingroup interface
     void AttachNewbornsToParents(std::vector<AnimalSnapshot>& animals);
 }

@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Dessin de l'accueil.
+ */
 module;
 
 #define WIN32_LEAN_AND_MEAN

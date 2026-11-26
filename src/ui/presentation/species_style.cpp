@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Couleurs, silhouettes et limites de chaque espèce.
+ */
 module ecosim.species_style;
 
 import std;

@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Ajout, comptage et mesure des animaux.
+ */
 module ecosim.simulation;
 
 import std;

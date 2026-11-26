@@ -377,3 +377,7 @@ log.txt
 /shaders/
 .vscode
 cmake-build-debug-mingw
+
+##### Documentation générée
+docs/doxygen/
+docs/doxygen-warnings.log

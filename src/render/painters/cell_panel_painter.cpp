@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Dessin du panneau d'une case.
+ */
 module;
 
 #define WIN32_LEAN_AND_MEAN

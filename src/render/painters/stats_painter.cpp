@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Dessin des graphiques.
+ */
 module;
 
 #define WIN32_LEAN_AND_MEAN

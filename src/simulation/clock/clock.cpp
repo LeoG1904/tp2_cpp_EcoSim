@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Implémentation de l'horloge.
+ */
 module ecosim.clock;
 
 import std;

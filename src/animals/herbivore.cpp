@@ -1,3 +1,7 @@
+/**
+ * @file
+ * @brief Décisions de l'herbivore : fuir, flâner ou chercher de l'herbe.
+ */
 module ecosim.herbivore;
 
 import std;
