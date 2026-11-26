@@ -159,7 +159,8 @@ Les fichiers `.ixx` exposent les modules C++ ; leurs implémentations sont dans 
 | `src/animals/` | Ce qui est commun : classe de base `Animal`, interface `Habitat` et catalogue des espèces. |
 | `src/animals/herbivores/` | La famille `Herbivore` et ses espèces, `Deer` et `Rabbit`. |
 | `src/animals/predators/` | La famille `Predator` et ses espèces, `Wolf` et `Fox`. |
-| `src/simulation/simulation/` | Classe `Simulation` : cycle des générations, déplacements, voisinage et repousse. |
+| `src/simulation/simulation/` | Classe `Simulation` : cycle des générations, déplacements et repousse. |
+| `src/simulation/habitat/` | Classe `GridHabitat` : voisinage des animaux, captures et partage des repas. |
 | `src/simulation/stats/` | Classe `SimulationStats` : historique et événements. |
 | `src/simulation/settings/` | Réglages, valeurs par défaut et préréglages. |
 | `src/simulation/clock/` | Classe `SimulationClock` : vitesses et pause. |

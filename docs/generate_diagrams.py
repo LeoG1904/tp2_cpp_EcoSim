@@ -170,7 +170,7 @@ d.box("Habitat", 1150, 560, 260, ["NearestPrey()", "ThreatsNear(), MatesNear()",
 
 d.box("SpeciesInfo", 500, 800, 430, ["nom, valeurs de départ, create()",
                                      "catalogue : SpeciesCatalog(), SpeciesOf()"], "structure")
-d.box("GridHabitat", 1150, 800, 260, ["animaux rangés par case", "créé à chaque génération"], "interne à Simulation", "internal")
+d.box("GridHabitat", 1150, 800, 260, ["animaux rangés par case", "créé à chaque génération"])
 
 # possessions
 d.edge("compose", [(600, 80), (310, 80)], "1", (322, 72))
@@ -200,7 +200,7 @@ d.edge("depend", [(500, 620), (310, 620)], "mange l'herbe de", (390, 612), "midd
 # ce que GridHabitat garde et lit
 d.edge("assoc", [(1150, 850), (1035, 850), (1035, 400), (870, 400)], "contient", (1043, 700))
 d.edge("depend", [(1150, 833), (1010, 833), (1010, 668), (915, 668), (915, 695)], "lit SharingDistance", (1004, 660), "end")
-d.edge("assoc", [(1200, 890), (1200, 945), (42, 945), (42, 355), (60, 355)], "garde la carte", (60, 937))
+d.edge("assoc", [(1200, 876), (1200, 945), (42, 945), (42, 355), (60, 355)], "garde la carte", (60, 937))
 d.edge("assoc", [(1410, 822), (1448, 822), (1448, 78), (1410, 78)], "y compte les captures", (1440, 780), "end")
 # le catalogue : fabrique les animaux, fournit les valeurs d'origine
 d.edge("depend", [(545, 800), (545, 753)], "crée", (553, 782))

@@ -55,8 +55,8 @@ le scintillement.
 <a href="classes_moteur.svg" target="_blank">Ouvrir ce diagramme en grand</a>
 
 ecosim::Simulation possède la carte, les animaux et les statistiques. Les animaux ne la
-connaissent pas : ils perçoivent leur entourage par ecosim::Habitat, implémentée par une
-classe interne créée à chaque génération.
+connaissent pas : ils perçoivent leur entourage par ecosim::Habitat, implémentée par
+ecosim::GridHabitat, que la simulation crée à chaque génération.
 
 Les espèces sont décrites dans un catalogue, ecosim::SpeciesCatalog() : une fiche
 ecosim::SpeciesInfo par espèce, avec son nom, ses valeurs de départ et la fonction
