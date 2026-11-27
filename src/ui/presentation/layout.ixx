@@ -35,12 +35,12 @@ export namespace ecosim {
     UiRect BackButton() { return {20, 20, 110, 36}; }
     /// @brief Bouton de changement de vue 2D ou 3D.
     UiRect ViewButton(const int width) { return {width - 230, 192, 210, 36}; }
-    /// @brief Bouton « Recentrer » en 3D.
+    /// @brief Bouton « Recentrer » de la carte, en 2D comme en 3D.
     UiRect RecenterButton(const int width) { return {width - 230, 238, 210, 36}; }
     /// @brief Colonnes de l'accueil : le terrain, puis une par espèce.
     inline constexpr int SettingColumns{1 + static_cast<int>(SpeciesCount)};
     /// @brief Nombre de lignes de réglages.
-    inline constexpr int SettingRows{3};
+    inline constexpr int SettingRows{5};
     /// @brief Hauteur d'une ligne de réglage.
     inline constexpr int SettingRowHeight{40};
     /// @brief Largeur d'une colonne de réglages.

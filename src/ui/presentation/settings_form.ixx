@@ -22,6 +22,8 @@ export namespace ecosim {
         int maximum;
         /// @brief Donne accès à la valeur dans les réglages.
         std::function<int&(SimulationSettings&)> value;
+        /// @brief Applique une nouvelle valeur quand elle entraîne d'autres changements ; vide sinon.
+        std::function<void(SimulationSettings&, int)> apply{};
     };
 
     /// @brief Titre d'une colonne.
@@ -39,6 +41,12 @@ export namespace ecosim {
     /// @brief Description d'un préréglage.
     /// @ingroup interface
     std::string PresetDescription(Preset preset);
+    /// @brief Nombre de cases à partir duquel l'accueil prévient que la carte risque d'être lente.
+    /// @ingroup interface
+    inline constexpr long long LargeMapCells{20000};
+    /// @brief L'avertissement d'une grande carte, ou un texte vide.
+    /// @ingroup interface
+    std::string MapWarning(const SimulationSettings& settings);
 
     /// @brief La saisie d'une valeur au clavier, appliquée seulement à la validation.
     /// @ingroup interface
@@ -46,7 +54,7 @@ export namespace ecosim {
     public:
         /// @brief Commence la saisie ; le premier chiffre remplacera la valeur actuelle.
         void Begin(std::size_t field, SimulationSettings& settings);
-        /// @brief Ajoute un chiffre, trois au maximum.
+        /// @brief Ajoute un chiffre, sans dépasser la longueur de la limite haute du réglage.
         void Type(int digit);
         /// @brief Efface le dernier chiffre, ou toute la valeur sélectionnée.
         void Erase();

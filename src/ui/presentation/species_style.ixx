@@ -24,8 +24,6 @@ export namespace ecosim {
     struct SpeciesStyle {
         /// @brief Couleur à l'écran.
         Color color;
-        /// @brief Population de départ maximale.
-        int initialMaximum;
         /// @brief Nom du réglage d'instinct.
         std::string instinctLabel;
         /// @brief Limite haute de l'instinct.

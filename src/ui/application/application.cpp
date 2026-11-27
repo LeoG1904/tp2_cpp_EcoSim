@@ -15,13 +15,28 @@ namespace ecosim {
     const std::optional<Simulation>& Application::CurrentSimulation() const { return simulation; }
     const SimulationClock& Application::Clock() const { return clock; }
     const SimulationSettings& Application::Settings() const { return settings; }
+    const std::string& Application::Notice() const { return notice; }
+
+    void Application::Start() {
+        const std::string tooLarge{"Carte trop grande pour la mémoire de cet ordinateur : réduisez sa taille."};
+        // L'ancienne simulation est libérée d'abord : sa mémoire peut servir à la nouvelle.
+        simulation.reset();
+        try {
+            simulation = CreateSimulation();
+            notice.clear();
+        } catch (const std::bad_alloc&) {
+            notice = tooLarge;
+        } catch (const std::length_error&) {
+            notice = tooLarge;
+        }
+    }
 
     bool Application::RunFrame(const double elapsedSeconds) {
         const FrameInput frame = input.Read(!simulation.has_value(), clock.IsPaused(), settings);
         if (frame.action == UiAction::Quit) return false;
         Apply(frame.action);
         if (!simulation) {
-            view.DrawHome(settings);
+            view.DrawHome(settings, notice);
             return true;
         }
         Advance(frame, elapsedSeconds);
@@ -32,11 +47,12 @@ namespace ecosim {
     void Application::Apply(const UiAction action) {
         if (action == UiAction::ResetSettings) {
             settings = DefaultSettings(mapWidth, mapHeight);
+            notice.clear();
         } else if (action == UiAction::ReturnHome) {
             simulation.reset();
             ResetPlayback();
         } else if (action == UiAction::StartOrRestart) {
-            simulation = CreateSimulation();
+            Start();
             ResetPlayback();
         } else if (simulation && !simulation->IsFinished()) {
             if (action == UiAction::TogglePause) {
@@ -67,11 +83,17 @@ namespace ecosim {
             animatingStep = clock.Progress() < 1.0;
         }
         const int steps = clock.Advance(elapsedSeconds);
-        for (int i = 0; i < steps && !simulation->IsFinished(); ++i) simulation->Step();
+        const auto start = std::chrono::steady_clock::now();
+        for (int i = 0; i < steps && !simulation->IsFinished(); ++i) {
+            simulation->Step();
+            // Au moins une génération est calculée ; le retard restant n'est pas rattrapé.
+            const std::chrono::duration<double> spent = std::chrono::steady_clock::now() - start;
+            if (spent.count() > MaxSimulationSecondsPerFrame) break;
+        }
     }
 
     Simulation Application::CreateSimulation() {
-        return CreateRandomSimulation(mapWidth, mapHeight, settings,
+        return CreateRandomSimulation(settings.mapWidth, settings.mapHeight, settings,
                                       static_cast<std::uint32_t>(seeds()));
     }
 }

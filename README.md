@@ -36,12 +36,25 @@ Les boutons situés sous les colonnes remplacent tous les réglages. Chaque vale
 
 Ces résultats sont des tendances : la carte et les animaux restent tirés au hasard. Les cartes mesurées n'ont pas servi à choisir les valeurs des espèces.
 
+**Les préréglages dépendent de la taille.** « Équilibre » a été réglé pour une carte d'environ 42 × 26 :
+
+| Taille | Les quatre espèces à 400 générations | Plus aucun cerf ni lapin |
+| --- | --- | --- |
+| 10 × 10 | 0 % (200 cartes) | 84 % |
+| 20 × 14 | 7 % (200 cartes) | 8 % |
+| 30 × 20 | 59 % (200 cartes) | 1 % |
+| 42 × 26 | 90 % (200 cartes) | 0 % |
+| 48 × 27 | 96 % (200 cartes) | 0 % |
+| 80 × 45 | 100 % (60 cartes) | 0 % |
+
+« Famine » et « Invasion » gardent leur effet aux tailles mesurées (10 × 10, 20 × 14, 48 × 27 et 80 × 45) : à la fin de l'observation, il ne reste ni cerf ni lapin dans presque toutes les simulations (au moins 39 sur 40). Au-delà de 80 × 45, aucun préréglage n'a été mesuré.
+
 | Colonne | Réglages |
 | --- | --- |
-| Terrain | Part de la carte couverte d'eau (0 à 50 %) et d'obstacles (0 à 40 %), repousse de la végétation par génération (0 à 20) |
-| Cerfs et lapins | Nombre au départ (0 à 500), chance de naissance (0 à 100 %), chance de fuir (0 à 100 %) |
-| Loups | Nombre au départ (0 à 200), chance de naissance (0 à 100 %), esprit de meute (0 à 4) |
-| Renards | Nombre au départ (0 à 200), chance de naissance (0 à 100 %), flair (0 à 4) |
+| Terrain | Part de la carte couverte d'eau (0 à 50 %) et d'obstacles (0 à 40 %), repousse de la végétation par génération (0 à 20), largeur et hauteur (10 au minimum, voir [Taille de la carte](#taille-de-la-carte)) |
+| Cerfs et lapins | Nombre au départ (0 à 999 999), chance de naissance (0 à 100 %), chance de fuir (0 à 100 %) |
+| Loups | Nombre au départ (0 à 999 999), chance de naissance (0 à 100 %), esprit de meute (0 à 4) |
+| Renards | Nombre au départ (0 à 999 999), chance de naissance (0 à 100 %), flair (0 à 4) |
 
 Chaque espèce n'a que **trois réglages**. Ses autres caractéristiques sont fixes (voir [Les quatre espèces](#les-quatre-espèces)) : ce sont elles qui la définissent. Tous les animaux placés au départ ont 50 d'énergie. Les nouveau-nés en ont 30, la reproduction coûte 30 et demande un âge d'au moins 5 générations. Le nombre d'animaux au départ dépend par défaut de la taille de l'écran. Les bornes sont définies dans `src/ui/presentation/settings_form.cpp` et, pour ce qui dépend de l'espèce, dans `src/ui/presentation/species_style.cpp`.
 
@@ -55,6 +68,9 @@ Chaque espèce n'a que **trois réglages**. Ses autres caractéristiques sont fi
 | Mettre en pause ou reprendre | **Espace**, ou bouton **Pause** / **Reprendre** sur la carte et les courbes |
 | Avancer d'une génération | Flèche **droite** ou **haut**, ou bouton **Génération +1**, pendant la pause |
 | Voir le détail d'une case | Clic sur la case ; second clic ou bouton **X** pour fermer |
+| Zoomer sur la carte 2D | **Molette**, vers l'endroit sous la souris |
+| Déplacer la carte 2D zoomée | Maintenir le **clic droit** et glisser |
+| Revoir toute la carte | Bouton **Recentrer** |
 | Afficher l'évolution des populations | Bouton **Courbes**, en haut à droite de la carte |
 | Revenir à la carte | Bouton **Retour**, sur l'écran des courbes |
 | Redémarrer avec une nouvelle carte et de nouveaux animaux | Bouton **Recommencer**, sur la carte et les courbes |
@@ -69,6 +85,29 @@ Quand il ne reste plus aucun animal, la simulation s'arrête à la dernière gé
 
 Le bouton **Recommencer** repart à la génération 0, réinitialise la vitesse à x1 et affiche la nouvelle carte.
 
+## Taille de la carte
+
+La largeur (X) et la hauteur (Y) se saisissent à l'accueil, dans la colonne **Terrain**. Le minimum est de **10 × 10**. Aucun plafond de taille n'est imposé : la saisie accepte jusqu'à 999 999 par côté, bien au-delà de ce qu'un ordinateur peut calculer. La taille proposée au départ est celle qui remplit l'écran avec des cases de 40 pixels.
+
+- **Populations :** quand la taille change, les nombres d'animaux au départ sont recalculés pour garder la même densité (un cerf et un lapin pour 15 cases, un loup pour 150, un renard pour 135, avec un minimum). Les autres réglages sont conservés. Un préréglage encore intact reste actif, recalculé pour la nouvelle taille.
+- **Grande carte :** à partir de 20 000 cases, l'accueil prévient que la simulation et la 3D risquent d'être lentes.
+- **Mémoire insuffisante :** si la réservation de mémoire échoue, l'application reste sur l'accueil avec un message. Une taille très grande mais réservable peut aussi rendre l'ordinateur très lent avant tout message.
+- **Lenteur :** le calcul de la simulation est limité à 0,25 s par image. Au-delà, les générations en retard sont abandonnées : la simulation ralentit au lieu de s'emballer. Une seule génération très longue fige toutefois l'application pendant son calcul.
+
+### Vitesse mesurée
+
+Mesures sur un ordinateur de développement, en version **optimisée** (`Release`). En version `Debug`, utilisée par défaut dans CLion, tout est nettement plus lent. Les populations sont celles proposées au départ.
+
+| Carte | Animaux (pic sur 40 générations) | Une génération (moyenne) | Image 2D entière | Image 3D |
+| --- | --- | --- | --- | --- |
+| 48 × 27 | 1 000 | 3 ms | 6 ms | 14 ms |
+| 100 × 100 | 8 000 | 27 ms | 23 ms | 79 ms |
+| 200 × 200 | 32 000 | 130 ms | 91 ms | 290 ms |
+| 500 × 500 | 200 000 | 1,4 s | 100 ms | 1,7 s |
+| 1000 × 1000 | non mesuré | non mesuré | 280 ms | non mesurée |
+
+Les images sont mesurées avec la population de départ, avant que les animaux se multiplient : elles sont ensuite plus lentes.
+
 ## Génération de la carte
 
 La carte est construite par **bruit de valeur** : des valeurs sont tirées au sort sur une grille espacée, puis lissées entre elles, avec de grandes formes (tous les 8 cases) et des détails (tous les 4). Les cases voisines se ressemblent ainsi.
@@ -81,6 +120,10 @@ La carte est construite par **bruit de valeur** : des valeurs sont tirées au so
 **Aucune prairie n'est isolée.** Seule la plus grande zone de prairies reliées par un côté est gardée ; les autres poches deviennent de l'eau (si elles sont basses) ou des obstacles. Si la plus grande zone réunit moins de 95 % des prairies, d'autres reliefs sont essayés, 20 au maximum, et le moins morcelé est gardé. Les parts finales peuvent donc dépasser un peu les réglages : sur 1000 cartes de 42 × 26, la correction a retiré au plus 4 % de la carte pour les réglages (10 %, 10 %), (25 %, 20 %) et (30 %, 0 %), et au plus 8 % pour (50 %, 40 %), où il reste alors très peu de prairie. Un terrain réglé à 0 % n'est jamais ajouté.
 
 La même graine redonne la même carte.
+
+## Vue 2D
+
+Au départ, la carte tient entière à l'écran, centrée, avec des cases carrées aussi grandes que possible. Des bandes sombres apparaissent si ses proportions diffèrent de celles de l'écran. La molette zoome jusqu'à des cases de 80 pixels, ou davantage si la vue d'ensemble les montre déjà plus grandes. Quand les cases mesurent moins de 4 pixels, le sol est dessiné pixel par pixel, sans quadrillage, et les animaux les plus petits deviennent des points. Le zoom est conservé avec **Recommencer** tant que la taille ne change pas.
 
 ## Déplacements
 
@@ -144,7 +187,7 @@ Sur la carte, le bouton **Vue 3D** change l'affichage sans toucher à la simulat
 | Revenir à la vue d'ensemble | Bouton **Recentrer** |
 | Voir le détail d'une case | **Clic gauche** sur le sol de la case |
 
-Les obstacles sont des blocs, les cerfs des modèles jaunes, les lapins de petits modèles blancs les loups des modèles rouges plus hauts et les renards de petits modèles violets, orientés dans le sens du déplacement. La couleur des prairies suit la végétation. Des touffes d'herbe y poussent : une case rase (végétation inférieure à 5) n'en a pas, puis leur nombre (jusqu'à cinq) et leur hauteur augmentent avec la végétation. Elles raccourcissent quand un cerf ou un lapin broute et repoussent au fil des générations. Avec la repousse par défaut de 1 par génération, la croissance est progressive ; le réglage **Repousse végétation** l'accélère. La vue choisie et la position de la caméra sont conservées après **Recommencer** et le retour au menu.
+Les obstacles sont des blocs, les cerfs des modèles jaunes, les lapins de petits modèles blancs les loups des modèles rouges plus hauts et les renards de petits modèles violets, orientés dans le sens du déplacement. La couleur des prairies suit la végétation. Des touffes d'herbe y poussent : une case rase (végétation inférieure à 5) n'en a pas, puis leur nombre (jusqu'à cinq) et leur hauteur augmentent avec la végétation. Elles raccourcissent quand un cerf ou un lapin broute et repoussent au fil des générations. Avec la repousse par défaut de 1 par génération, la croissance est progressive ; le réglage **Repousse végétation** l'accélère. La vue choisie est conservée après **Recommencer** et le retour au menu ; la position de la caméra aussi, tant que la taille de la carte ne change pas.
 
 Limites de cette première version : le rendu est calculé par le processeur et dessiné avec Win32/GDI, sans carte graphique, textures ni éclairage dynamique. Les animaux proches les uns des autres peuvent se chevaucher à l'écran ; le panneau d'une case donne les effectifs réels. La caméra vise toujours le centre de la carte. La sélection vise le sol : cliquer sur le haut d'un obstacle peut choisir la case située derrière.
 

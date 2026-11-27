@@ -105,6 +105,11 @@ découpait en plusieurs classes, plus proche des principes SOLID mais plus longu
 Le projet a privilégié la simplicité : ajouter un écran demande de modifier ce contrôleur et
 le rendu.
 
+## La 2D
+
+ecosim::FlatView calcule où la carte apparaît à l'écran : vue d'ensemble, zoom et déplacement.
+La même vue sert au dessin et aux clics, qui restent ainsi toujours d'accord.
+
 ## La 3D
 
 La 3D n'utilise pas la carte graphique. ecosim::OrbitCamera projette chaque point de l'espace
@@ -117,6 +122,7 @@ plus loin au plus proche** (algorithme du peintre) : les objets proches recouvre
 - La vitesse d'un animal ne coûte pas d'énergie.
 - Les obstacles ne bloquent pas la vue des animaux.
 - La 3D n'a ni textures ni éclairage dynamique.
+- Les grandes cartes sont lentes, surtout en 3D, qui dessine toutes les cases.
 - Les préréglages sont conçus pour les quatre espèces actuelles.
 
 ## Compilation

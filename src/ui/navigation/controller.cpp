@@ -10,8 +10,19 @@ import ecosim.species;
 
 namespace ecosim {
     UiController::UiController(const int width, const int height, const int cellSize)
-        : width{width}, height{height}, cellSize{cellSize},
-          camera{std::max(1, width / cellSize), std::max(1, height / cellSize)} {}
+        : width{width}, height{height}, mapWidth{std::max(MinMapSize, width / cellSize)},
+          mapHeight{std::max(MinMapSize, height / cellSize)}, camera{mapWidth, mapHeight},
+          flat{mapWidth, mapHeight, {width, height}} {}
+
+    const FlatView& UiController::Flat() const { return flat; }
+
+    void UiController::PrepareViews(const SimulationSettings& settings) {
+        if (settings.mapWidth == mapWidth && settings.mapHeight == mapHeight) return;
+        mapWidth = settings.mapWidth;
+        mapHeight = settings.mapHeight;
+        camera = OrbitCamera{mapWidth, mapHeight};
+        flat = FlatView{mapWidth, mapHeight, {width, height}};
+    }
 
     bool UiController::IsExitDialogOpen() const { return exitDialogOpen; }
     bool UiController::IsShowingStats() const { return showingStats; }
@@ -24,7 +35,7 @@ namespace ecosim {
 
     bool UiController::IsCellPanelOnLeft() const {
         if (!selectedCell) return false;
-        if (!showing3D) return selectedCell->x * cellSize >= width / 2;
+        if (!showing3D) return flat.ScreenX(selectedCell->x + 0.5) >= width / 2;
         const auto centre = camera.Project({selectedCell->x + 0.5, 0.0, selectedCell->y + 0.5},
                                            {width, height});
         return centre && centre->x >= width / 2;
@@ -34,7 +45,7 @@ namespace ecosim {
                                   SimulationSettings& settings) {
         pointer = input.pointer;
         if (isHomeScreen) Type(input.typed, settings);
-        if (!isHomeScreen && showing3D && !showingStats && !exitDialogOpen) MoveCamera(input);
+        if (!isHomeScreen && !showingStats && !exitDialogOpen) MoveCamera(input);
         else dragOrigin.reset();
 
         if (input.escape) {
@@ -75,16 +86,21 @@ namespace ecosim {
     }
 
     void UiController::MoveCamera(const RawInput& input) {
-        if (input.wheel != 0) camera.Zoom(input.wheel);
+        if (input.wheel != 0) {
+            if (showing3D) camera.Zoom(input.wheel);
+            else if (input.pointer) flat.Zoom(input.wheel, {input.pointer->x, input.pointer->y});
+        }
         if (!input.rotating || !input.pointer) {
             dragOrigin.reset();
             return;
         }
         // La carte suit la souris : glisser vers le bas fait passer la caméra au-dessus.
-        if (dragOrigin) {
+        if (dragOrigin && showing3D) {
             constexpr double radiansPerPixel{0.006};
             camera.Rotate((dragOrigin->x - input.pointer->x) * radiansPerPixel,
                           (input.pointer->y - dragOrigin->y) * radiansPerPixel);
+        } else if (dragOrigin) {
+            flat.Pan(input.pointer->x - dragOrigin->x, input.pointer->y - dragOrigin->y);
         }
         dragOrigin = input.pointer;
     }
@@ -106,12 +122,13 @@ namespace ecosim {
         editor.Commit(settings);
         for (std::size_t i = 0; i < Presets.size(); ++i) {
             if (PresetButton(width, height, static_cast<int>(i)).Contains(mouse.x, mouse.y)) {
-                settings = PresetSettings(Presets[i], width / cellSize, height / cellSize);
+                settings = PresetSettings(Presets[i], settings.mapWidth, settings.mapHeight);
                 return UiAction::None;
             }
         }
         if (StartButton(width, height).Contains(mouse.x, mouse.y)) {
             selectedCell.reset();
+            PrepareViews(settings);
             return UiAction::StartOrRestart;
         }
         return ResetButton(width, height).Contains(mouse.x, mouse.y)
@@ -170,8 +187,9 @@ namespace ecosim {
             showing3D = !showing3D;
             return;
         }
-        if (showing3D && RecenterButton(width).Contains(mouse.x, mouse.y)) {
-            camera.Reset();
+        if (RecenterButton(width).Contains(mouse.x, mouse.y)) {
+            if (showing3D) camera.Reset();
+            else flat.Reset();
             return;
         }
         if (selectedCell) {
@@ -181,14 +199,10 @@ namespace ecosim {
                 return;
             }
         }
-        std::optional<Position> cell;
-        if (showing3D) {
-            cell = camera.PickCell({mouse.x, mouse.y}, {width, height});
-        } else if (mouse.x >= 0 && mouse.y >= 0 && mouse.x / cellSize < width / cellSize
-                   && mouse.y / cellSize < height / cellSize) {
-            // La bande restante au bord de l'écran ne contient pas de case.
-            cell = Position{mouse.x / cellSize, mouse.y / cellSize};
-        }
+        // Les bandes autour de la carte ne contiennent pas de case.
+        const std::optional<Position> cell = showing3D
+            ? camera.PickCell({mouse.x, mouse.y}, {width, height})
+            : flat.PickCell({mouse.x, mouse.y});
         if (!cell) return;
         // Un second clic sur la case choisie ferme le panneau.
         if (selectedCell == cell) selectedCell.reset();

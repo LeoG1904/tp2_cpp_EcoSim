@@ -60,3 +60,41 @@ TEST_CASE("La chance de naissance peut etre nulle ou certaine, et s'herite", "[s
     const Deer parent{1, {0, 0}, 90, settings.species[AnimalKind::Deer].options};
     REQUIRE(parent.CreateOffspring(2)->GetOptions().birthPercent == 100);
 }
+
+TEST_CASE("Changer la taille adapte les populations et garde les autres reglages", "[settings]") {
+    SimulationSettings settings = DefaultSettings(42, 26);
+    settings.waterPercent = 22;
+    settings.species[AnimalKind::Deer].initialCount = 7;
+    ResizeMap(settings, 42, 26);
+    REQUIRE(settings.species[AnimalKind::Deer].initialCount == 7); // meme taille : rien ne change
+
+    ResizeMap(settings, 84, 26);
+    REQUIRE(settings.mapWidth == 84);
+    REQUIRE(settings.waterPercent == 22);
+    REQUIRE(settings.species[AnimalKind::Deer].initialCount == 84 * 26 / 15);
+}
+
+TEST_CASE("Un prereglage intact reste actif apres un changement de taille", "[settings]") {
+    for (const Preset preset : Presets) {
+        SimulationSettings settings = PresetSettings(preset, 42, 26);
+        ResizeMap(settings, 90, 60);
+        REQUIRE(settings == PresetSettings(preset, 90, 60));
+    }
+}
+
+TEST_CASE("Une taille immense ne deborde pas", "[settings]") {
+    for (const Preset preset : Presets) {
+        const SimulationSettings settings = PresetSettings(preset, InputLimit, InputLimit);
+        for (const SpeciesSettings& species : settings.species.values) {
+            REQUIRE(species.initialCount > 0);
+            REQUIRE(species.initialCount <= InputLimit);
+        }
+    }
+}
+
+TEST_CASE("Le peuplement enregistre la population complete", "[settings]") {
+    Simulation simulation{World{20, 20}, std::mt19937{1}};
+    simulation.Seed(AnimalKind::Deer, 50);
+    REQUIRE(simulation.Stats().History().size() == 1);
+    REQUIRE(simulation.Stats().History().back().species[AnimalKind::Deer].population == 50);
+}

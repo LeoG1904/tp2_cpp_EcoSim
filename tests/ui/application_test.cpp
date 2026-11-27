@@ -18,7 +18,7 @@ namespace {
         int homeDraws{0};
         int simulationDraws{0};
         PlaybackState last{};
-        void DrawHome(const SimulationSettings&) override { ++homeDraws; }
+        void DrawHome(const SimulationSettings&, const std::string&) override { ++homeDraws; }
         void DrawSimulation(const Simulation&, const PlaybackState& playback) override {
             ++simulationDraws;
             last = playback;
@@ -112,4 +112,38 @@ TEST_CASE("Apres un pas manuel, la reprise enchaine sans retour en arriere", "[a
     scenario.Frame(UiAction::None, 0.125);
     REQUIRE(scenario.Generation() == 2);
     REQUIRE(scenario.view.last.progress == 0.125);
+}
+
+TEST_CASE("La simulation prend la taille choisie", "[application]") {
+    Scenario scenario;
+    REQUIRE(scenario.application.Settings().mapWidth == 20);
+    scenario.Frame(UiAction::StartOrRestart);
+    REQUIRE(scenario.application.CurrentSimulation()->GetWorld().GetWidth() == 20);
+    REQUIRE(scenario.application.CurrentSimulation()->GetWorld().GetHeight() == 12);
+}
+
+TEST_CASE("Une carte trop grande pour la memoire laisse sur l'accueil avec un message", "[application]") {
+    // Mille milliards de cases : aucun ordinateur de bureau ne peut les reserver.
+    class HugeInput final : public InputSource {
+    public:
+        bool first{true};
+        FrameInput Read(bool, bool, SimulationSettings& settings) override {
+            if (!std::exchange(first, false)) return {UiAction::ResetSettings, std::nullopt, false};
+            ResizeMap(settings, InputLimit, InputLimit);
+            return {UiAction::StartOrRestart, std::nullopt, false};
+        }
+    };
+    HugeInput input;
+    FakeView view;
+    Application application{input, view, 20, 12, 5u};
+
+    REQUIRE(application.RunFrame(0.0));
+    REQUIRE_FALSE(application.CurrentSimulation().has_value());
+    REQUIRE_FALSE(application.Notice().empty());
+    REQUIRE(view.homeDraws == 1);
+
+    // « Valeurs par defaut » rend la taille de depart et efface le message.
+    application.RunFrame(0.0);
+    REQUIRE(application.Settings().mapWidth == 20);
+    REQUIRE(application.Notice().empty());
 }

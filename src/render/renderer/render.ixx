@@ -107,7 +107,7 @@ namespace ecosim {
     /// @brief Dessine l'accueil et ses réglages.
     /// @ingroup affichage
     void DrawHomeScreen(Canvas& canvas, const SimulationSettings& current, const SettingEditor& editor,
-                        int cellSize);
+                        int cellSize, const std::string& notice);
     /// @brief Dessine l'écran des graphiques.
     /// @ingroup affichage
     void DrawStatsScreen(Canvas& canvas, const Simulation& simulation, const PlaybackState& playback,
@@ -115,7 +115,7 @@ namespace ecosim {
     /// @brief Dessine la carte vue de dessus.
     /// @ingroup affichage
     void DrawFlatMap(Canvas& canvas, const Simulation& simulation, double progress,
-                     std::optional<Position> selected, int cellSize);
+                     std::optional<Position> selected, const FlatView& view);
     /// @brief Dessine la carte en 3D.
     /// @ingroup affichage
     void DrawOrbitMap(Canvas& canvas, const Simulation& simulation, double progress,
@@ -142,7 +142,7 @@ export namespace ecosim {
         Win32Renderer(const Win32Window& window, const UiController& controller, int cellSize);
 
         /// @copydoc View::DrawHome
-        void DrawHome(const SimulationSettings& settings) override;
+        void DrawHome(const SimulationSettings& settings, const std::string& notice) override;
         /// @copydoc View::DrawSimulation
         void DrawSimulation(const Simulation& simulation, const PlaybackState& playback) override;
 
@@ -158,7 +158,7 @@ export namespace ecosim {
         int width;
         /// @brief Hauteur de l'écran.
         int height;
-        /// @brief Côté d'une case de la carte 2D, en pixels.
+        /// @brief Pas du quadrillage décoratif de l'accueil, en pixels.
         int cellSize;
     };
 }

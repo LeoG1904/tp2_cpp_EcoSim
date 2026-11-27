@@ -93,6 +93,9 @@ export namespace ecosim {
         /// @brief Historique et événements.
         SimulationStats stats;
 
+        /// @brief Crée un animal au centre d'une case, sans mesurer les populations.
+        /// @throws std::invalid_argument si la case n'est pas une prairie.
+        void Spawn(AnimalKind kind, Position position, std::optional<int> energy);
         /// @brief Joue les petits pas d'une génération : se déplacer, manger et chasser.
         void MoveAndInteract();
         /// @brief Fait vieillir les animaux, gère les naissances, puis retire les morts.

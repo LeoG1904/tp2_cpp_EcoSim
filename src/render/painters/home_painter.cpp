@@ -9,7 +9,7 @@ import ecosim.layout;
 
 namespace ecosim {
     void DrawHomeScreen(Canvas& canvas, const SimulationSettings& current, const SettingEditor& editor,
-                        const int cellSize) {
+                        const int cellSize, const std::string& notice) {
         // Copie : les accesseurs des champs demandent un objet modifiable.
         SimulationSettings settings = current;
         const int windowWidth = canvas.Width();
@@ -63,8 +63,8 @@ namespace ecosim {
         // Le préréglage reste surligné tant qu'aucune valeur n'a été modifiée.
         std::string description = "Préréglages : choisissez un scénario, puis ajustez-le si besoin.";
         for (std::size_t i = 0; i < Presets.size(); ++i) {
-            const bool active = current == PresetSettings(Presets[i], windowWidth / cellSize,
-                                                          windowHeight / cellSize);
+            const bool active = current == PresetSettings(Presets[i], current.mapWidth,
+                                                          current.mapHeight);
             if (active) description = PresetDescription(Presets[i]);
             canvas.Button(PresetButton(windowWidth, windowHeight, static_cast<int>(i)),
                           PresetName(Presets[i]), active ? ActiveColor : ButtonColor);
@@ -82,5 +82,8 @@ namespace ecosim {
                                fields[*active].minimum, fields[*active].maximum);
         }
         canvas.WriteCentered(centerX, windowHeight - 37, help, SoftText);
+        // Un échec de création passe avant l'avertissement de lenteur.
+        const std::string alert = notice.empty() ? MapWarning(current) : notice;
+        if (!alert.empty()) canvas.WriteCentered(centerX, windowHeight - 64, alert, {240, 180, 90});
     }
 }

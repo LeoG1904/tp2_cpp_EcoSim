@@ -2,7 +2,9 @@
 
 ## Le monde
 
-La carte est une **grille**. Chaque case a un terrain et une quantité d'herbe de 0 à 100.
+La carte est une **grille**, dont la largeur et la hauteur se choisissent à l'accueil (10 × 10 au
+minimum). Chaque case a un terrain et une quantité d'herbe de 0 à 100. Les populations de
+départ suivent la surface (ecosim::ResizeMap).
 
 | Terrain | Les animaux peuvent y aller ? | L'herbe y repousse ? |
 | --- | --- | --- |

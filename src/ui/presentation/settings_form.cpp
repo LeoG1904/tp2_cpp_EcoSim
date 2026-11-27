@@ -18,12 +18,18 @@ namespace {
              [](SimulationSettings& s) -> int& { return s.obstaclePercent; }},
             {0, "Repousse végétation", 0, 20,
              [](SimulationSettings& s) -> int& { return s.vegetationGrowth; }},
+            {0, "Largeur (X)", ecosim::MinMapSize, ecosim::InputLimit,
+             [](SimulationSettings& s) -> int& { return s.mapWidth; },
+             [](SimulationSettings& s, const int width) { ecosim::ResizeMap(s, width, s.mapHeight); }},
+            {0, "Hauteur (Y)", ecosim::MinMapSize, ecosim::InputLimit,
+             [](SimulationSettings& s) -> int& { return s.mapHeight; },
+             [](SimulationSettings& s, const int height) { ecosim::ResizeMap(s, s.mapWidth, height); }},
         };
         for (const ecosim::SpeciesInfo& info : ecosim::SpeciesCatalog()) {
             const ecosim::AnimalKind kind = info.kind;
             const ecosim::SpeciesStyle& style = ecosim::StyleOf(kind);
             const std::size_t column = 1 + static_cast<std::size_t>(kind);
-            fields.push_back({column, "Nombre au départ", 0, style.initialMaximum,
+            fields.push_back({column, "Nombre au départ", 0, ecosim::InputLimit,
                 [kind](SimulationSettings& s) -> int& { return s.species[kind].initialCount; }});
             fields.push_back({column, "Chance de naissance (%)", 0, 100,
                 [kind](SimulationSettings& s) -> int& {
@@ -70,6 +76,12 @@ namespace ecosim {
         return {};
     }
 
+    std::string MapWarning(const SimulationSettings& settings) {
+        const long long cells = static_cast<long long>(settings.mapWidth) * settings.mapHeight;
+        if (cells < LargeMapCells) return {};
+        return std::format("Grande carte ({} cases) : la simulation et la 3D risquent d'être lentes.", cells);
+    }
+
     void SettingEditor::Begin(const std::size_t index, SimulationSettings& settings) {
         text = std::to_string(SettingFields()[index].value(settings));
         field = index;
@@ -80,8 +92,10 @@ namespace ecosim {
         if (!field || digit < 0 || digit > 9) return;
         if (selected) text.clear();
         selected = false;
-        // Trois chiffres suffisent pour la plus grande borne.
-        if (text.size() < 3) text.push_back(static_cast<char>('0' + digit));
+        // Pas plus de chiffres que n'en a la limite haute.
+        if (text.size() < std::to_string(SettingFields()[*field].maximum).size()) {
+            text.push_back(static_cast<char>('0' + digit));
+        }
     }
 
     void SettingEditor::Erase() {
@@ -93,7 +107,9 @@ namespace ecosim {
     void SettingEditor::Commit(SimulationSettings& settings) {
         if (field && !text.empty()) {
             const SettingField& target = SettingFields()[*field];
-            target.value(settings) = std::clamp(std::stoi(text), target.minimum, target.maximum);
+            const int value = std::clamp(std::stoi(text), target.minimum, target.maximum);
+            if (target.apply) target.apply(settings, value);
+            else target.value(settings) = value;
         }
         Cancel();
     }

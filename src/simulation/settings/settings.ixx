@@ -24,9 +24,22 @@ export namespace ecosim {
     /// @ingroup moteur
     PerSpecies<SpeciesSettings> DefaultSpeciesSettings();
 
+    /// @brief Plus petite largeur et plus petite hauteur d'une carte, en cases.
+    /// @ingroup moteur
+    inline constexpr int MinMapSize{10};
+    /// @brief Plus grande valeur que la saisie accepte pour une taille ou un nombre d'animaux.
+    ///
+    /// Ce n'est pas une taille garantie : la mémoire et le temps de calcul s'épuisent bien avant.
+    /// @ingroup moteur
+    inline constexpr int InputLimit{999999};
+
     /// @brief Tous les réglages d'une simulation.
     /// @ingroup moteur
     struct SimulationSettings {
+        /// @brief Largeur de la carte, en cases.
+        int mapWidth{42};
+        /// @brief Hauteur de la carte, en cases.
+        int mapHeight{26};
         /// @brief Part d'eau, en %.
         int waterPercent{10};
         /// @brief Part d'obstacles, en %.
@@ -59,4 +72,9 @@ export namespace ecosim {
     /// @brief Réglages d'un scénario pour une carte de cette taille.
     /// @ingroup moteur
     SimulationSettings PresetSettings(Preset preset, int width, int height);
+    /// @brief Change la taille de la carte et adapte les populations de départ à sa surface.
+    ///
+    /// Un préréglage encore intact reste actif, recalculé pour la nouvelle taille. Sinon les nombres d'animaux sont recalculés et les autres réglages conservés. Sans changement de taille, rien n'est modifié.
+    /// @ingroup moteur
+    void ResizeMap(SimulationSettings& settings, int width, int height);
 }

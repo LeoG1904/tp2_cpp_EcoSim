@@ -46,7 +46,9 @@ export namespace ecosim {
     public:
         virtual ~View() = default;
         /// @brief Dessine l'accueil.
-        virtual void DrawHome(const SimulationSettings& settings) = 0;
+        /// @param settings Réglages à afficher.
+        /// @param notice Message à signaler, par exemple une carte impossible à créer ; vide sinon.
+        virtual void DrawHome(const SimulationSettings& settings, const std::string& notice) = 0;
         /// @brief Dessine la simulation.
         virtual void DrawSimulation(const Simulation& simulation, const PlaybackState& playback) = 0;
     };
@@ -59,12 +61,16 @@ export namespace ecosim {
     public:
         /// @brief Vitesse d'animation d'un pas avancé à la main (un quart de seconde).
         static constexpr double ManualStepsPerSecond{4.0};
+        /// @brief Temps de calcul maximal accordé à la simulation par image, en secondes.
+        ///
+        /// Au-delà, les générations en retard sont abandonnées : sur une grande carte, la simulation ralentit au lieu de figer l'application.
+        static constexpr double MaxSimulationSecondsPerFrame{0.25};
 
         /// @brief Crée l'application sur l'accueil.
         /// @param input Source des commandes, qui doit vivre aussi longtemps que l'application.
         /// @param view Affichage, qui doit vivre aussi longtemps que l'application.
-        /// @param mapWidth Largeur de la carte, en cases.
-        /// @param mapHeight Hauteur de la carte, en cases.
+        /// @param mapWidth Largeur de la carte proposée au départ, en cases.
+        /// @param mapHeight Hauteur de la carte proposée au départ, en cases.
         /// @param seed Graine des cartes à venir.
         Application(InputSource& input, View& view, int mapWidth, int mapHeight, std::uint32_t seed);
 
@@ -79,10 +85,14 @@ export namespace ecosim {
         const SimulationClock& Clock() const;
         /// @brief Les réglages choisis.
         const SimulationSettings& Settings() const;
+        /// @brief Le message affiché sur l'accueil ; vide s'il n'y a rien à signaler.
+        const std::string& Notice() const;
 
     private:
         /// @brief Exécute l'action demandée : démarrer, revenir au menu, pause, vitesse ou pas à pas.
         void Apply(UiAction action);
+        /// @brief Crée et lance une simulation ; si la mémoire manque, reste sur l'accueil avec un message.
+        void Start();
         /// @brief Remet l'horloge et l'animation à zéro.
         void ResetPlayback();
         /// @brief Fait passer le temps et calcule les générations dues.
@@ -94,9 +104,9 @@ export namespace ecosim {
         InputSource& input;
         /// @brief Affichage utilisé.
         View& view;
-        /// @brief Largeur des cartes, en cases.
+        /// @brief Largeur de la carte proposée au départ, en cases.
         int mapWidth;
-        /// @brief Hauteur des cartes, en cases.
+        /// @brief Hauteur de la carte proposée au départ, en cases.
         int mapHeight;
         /// @brief Fournit la graine de chaque nouvelle simulation.
         std::mt19937 seeds;
@@ -108,5 +118,7 @@ export namespace ecosim {
         SimulationClock clock;
         /// @brief Vrai pendant l'animation d'un pas avancé à la main.
         bool animatingStep{false};
+        /// @brief Message à afficher sur l'accueil.
+        std::string notice;
     };
 }

@@ -140,7 +140,8 @@ TEST_CASE("Le panneau change de cote, bloque les clics et se ferme", "[controlle
 TEST_CASE("Les boutons, les courbes et le bord de l'ecran ne choisissent pas de case", "[controller]") {
     UiController controller{Width, Height + 10, CellSize};
     SimulationSettings settings;
-    controller.Handle(Click({100, Height + 2, 1, 1}), false, false, settings);
+    // La carte est centree : il reste une bande de 5 pixels en haut et en bas.
+    controller.Handle(Click({100, Height + 6, 1, 1}), false, false, settings);
     REQUIRE_FALSE(controller.SelectedCell().has_value());
 
     controller.Handle(Click(GraphButton(Width)), false, false, settings);
@@ -172,7 +173,7 @@ TEST_CASE("Un prereglage remplace les reglages, y compris une saisie en cours", 
     for (std::size_t i = 0; i < Presets.size(); ++i) {
         const UiRect button = PresetButton(Width, Height, static_cast<int>(i));
         REQUIRE(controller.Handle(Click(button), true, false, settings) == UiAction::None);
-        REQUIRE(settings == PresetSettings(Presets[i], Width / CellSize, Height / CellSize));
+        REQUIRE(settings == PresetSettings(Presets[i], settings.mapWidth, settings.mapHeight));
         REQUIRE_FALSE(controller.Editor().Field().has_value());
     }
 }
@@ -187,4 +188,38 @@ TEST_CASE("Les prereglages respectent les limites du formulaire", "[controller]"
             }
         }
     }
+}
+
+TEST_CASE("En 2D, la molette zoome, le clic droit deplace et Recentrer revient", "[controller]") {
+    UiController controller{Width, Height, CellSize};
+    SimulationSettings settings;
+    RawInput wheel;
+    wheel.wheel = 3;
+    wheel.pointer = PointerPosition{960, 540};
+    controller.Handle(wheel, false, false, settings);
+    REQUIRE(controller.Flat().CellSize() > CellSize);
+
+    const double before = controller.Flat().ScreenX(0);
+    RawInput drag;
+    drag.rotating = true;
+    drag.pointer = PointerPosition{900, 500};
+    controller.Handle(drag, false, false, settings);
+    drag.pointer = PointerPosition{950, 500};
+    controller.Handle(drag, false, false, settings);
+    REQUIRE(controller.Flat().ScreenX(0) == Catch::Approx(before + 50));
+
+    controller.Handle(Click(RecenterButton(Width)), false, false, settings);
+    REQUIRE(controller.Flat().CellSize() == CellSize);
+}
+
+TEST_CASE("Demarrer adapte les vues a la taille choisie", "[controller]") {
+    UiController controller{Width, Height, CellSize};
+    SimulationSettings settings = DefaultSettings(27, 27);
+    controller.Handle(Click(StartButton(Width, Height)), true, false, settings);
+    // La carte carree est centree entre deux bandes de 420 pixels.
+    REQUIRE(controller.Flat().ScreenX(0) == 420.0);
+    controller.Handle(Click({100, 500, 1, 1}), false, false, settings);
+    REQUIRE_FALSE(controller.SelectedCell().has_value());
+    controller.Handle(Click({1480, 1060, 1, 1}), false, false, settings);
+    REQUIRE(controller.SelectedCell() == Position{26, 26});
 }

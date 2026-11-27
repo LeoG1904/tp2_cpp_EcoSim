@@ -6,6 +6,19 @@ module ecosim.settings;
 
 import std;
 
+namespace {
+    /// @brief Le nombre d'animaux pour une surface : un pour tant de cases, entre un minimum et InputLimit.
+    /// @param width Largeur de la carte.
+    /// @param height Hauteur de la carte.
+    /// @param cellsPerAnimal Cases pour un animal.
+    /// @param minimum Plus petit nombre rendu.
+    int AnimalsFor(const int width, const int height, const int cellsPerAnimal, const int minimum) {
+        // La surface d'une très grande carte dépasse la capacité d'un int.
+        const long long wanted = static_cast<long long>(width) * height / cellsPerAnimal;
+        return static_cast<int>(std::clamp<long long>(wanted, minimum, ecosim::InputLimit));
+    }
+}
+
 namespace ecosim {
     PerSpecies<SpeciesSettings> DefaultSpeciesSettings() {
         PerSpecies<SpeciesSettings> result;
@@ -17,9 +30,11 @@ namespace ecosim {
 
     SimulationSettings DefaultSettings(const int width, const int height) {
         SimulationSettings settings;
+        settings.mapWidth = width;
+        settings.mapHeight = height;
         for (const SpeciesInfo& info : SpeciesCatalog()) {
             settings.species[info.kind].initialCount =
-                std::max(info.minimumAtStart, width * height / info.cellsPerAnimal);
+                AnimalsFor(width, height, info.cellsPerAnimal, info.minimumAtStart);
             settings.species[info.kind].options.instinct = info.defaultInstinct;
         }
         return settings;
@@ -49,7 +64,7 @@ namespace ecosim {
                 break;
             case Preset::Invasion:
                 // Les loups sont bien plus nombreux au départ que les herbivores.
-                wolves.initialCount = std::clamp(width * height / 11, 10, 200);
+                wolves.initialCount = AnimalsFor(width, height, 11, 10);
                 // Les proies sont prises par surprise face à de larges meutes.
                 deer.options.instinct = 0;
                 rabbits.options.instinct = 0;
@@ -57,5 +72,21 @@ namespace ecosim {
                 break;
         }
         return settings;
+    }
+
+    void ResizeMap(SimulationSettings& settings, const int width, const int height) {
+        if (settings.mapWidth == width && settings.mapHeight == height) return;
+        for (const Preset preset : Presets) {
+            if (settings == PresetSettings(preset, settings.mapWidth, settings.mapHeight)) {
+                settings = PresetSettings(preset, width, height);
+                return;
+            }
+        }
+        settings.mapWidth = width;
+        settings.mapHeight = height;
+        for (const SpeciesInfo& info : SpeciesCatalog()) {
+            settings.species[info.kind].initialCount =
+                AnimalsFor(width, height, info.cellsPerAnimal, info.minimumAtStart);
+        }
     }
 }

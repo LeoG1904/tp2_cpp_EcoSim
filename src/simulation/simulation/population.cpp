@@ -52,6 +52,12 @@ namespace ecosim {
 
     void Simulation::AddAnimal(const AnimalKind kind, const Position position,
                                const std::optional<int> energy) {
+        Spawn(kind, position, energy);
+        stats.RecordSample(Measure());
+    }
+
+    void Simulation::Spawn(const AnimalKind kind, const Position position,
+                           const std::optional<int> energy) {
         if (!world.IsInside(position) || !world.GetCell(position).IsAccessible()) {
             throw std::invalid_argument{"Un animal doit naître sur une prairie"};
         }
@@ -59,7 +65,6 @@ namespace ecosim {
                                                  energy.value_or(Animal::StartingEnergy),
                                                  settings.species[kind].options));
         ++nextId;
-        stats.RecordSample(Measure());
     }
 
     void Simulation::Seed(const AnimalKind kind, const int count) {
@@ -81,11 +86,12 @@ namespace ecosim {
         std::uniform_real_distribution<double> direction{-std::numbers::pi, std::numbers::pi};
         for (int i = 0; i < count; ++i) {
             const Position cell = accessible[pick(rng)];
-            AddAnimal(kind, cell);
+            Spawn(kind, cell, std::nullopt);
             const double x = cell.x + within(rng);
             const double y = cell.y + within(rng);
             animals.back()->Place({x, y}, direction(rng));
         }
+        stats.RecordSample(Measure());
     }
 
     Simulation CreateRandomSimulation(const int width, const int height,

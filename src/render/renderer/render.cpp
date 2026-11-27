@@ -18,9 +18,9 @@ namespace ecosim {
         : controller{controller}, window{target.Handle()}, width{target.Width()},
           height{target.Height()}, cellSize{cellSize} {}
 
-    void Win32Renderer::DrawHome(const SimulationSettings& settings) {
+    void Win32Renderer::DrawHome(const SimulationSettings& settings, const std::string& notice) {
         Canvas canvas{window, width, height};
-        DrawHomeScreen(canvas, settings, controller.Editor(), cellSize);
+        DrawHomeScreen(canvas, settings, controller.Editor(), cellSize, notice);
         Finish(canvas);
     }
 
@@ -34,7 +34,8 @@ namespace ecosim {
                 DrawOrbitMap(canvas, simulation, playback.progress, controller.SelectedCell(),
                              controller.Camera());
             } else {
-                DrawFlatMap(canvas, simulation, playback.progress, controller.SelectedCell(), cellSize);
+                DrawFlatMap(canvas, simulation, playback.progress, controller.SelectedCell(),
+                            controller.Flat());
             }
             DrawHud(canvas, simulation, playback, controller.IsShowing3D());
             DrawCellPanel(canvas, simulation, controller.SelectedCell(), controller.IsCellPanelOnLeft());

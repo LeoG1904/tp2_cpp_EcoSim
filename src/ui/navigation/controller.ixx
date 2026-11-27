@@ -8,6 +8,7 @@ import std;
 export import ecosim.settings_form;
 export import ecosim.chart;
 export import ecosim.camera;
+export import ecosim.flat_view;
 
 export namespace ecosim {
     /// @brief Ce que l'utilisateur demande à l'application.
@@ -83,7 +84,7 @@ export namespace ecosim {
         /// @brief Crée le contrôleur.
         /// @param width Largeur de l'écran, en pixels.
         /// @param height Hauteur de l'écran.
-        /// @param cellSize Côté d'une case de la carte 2D.
+        /// @param cellSize Côté d'une case de la carte de départ, qui remplit l'écran.
         UiController(int width, int height, int cellSize);
 
         /// @brief Traite les entrées d'une image.
@@ -107,6 +108,8 @@ export namespace ecosim {
         const ChartSelection& Charts() const;
         /// @brief La caméra 3D.
         const OrbitCamera& Camera() const;
+        /// @brief La vue 2D : zoom et déplacement.
+        const FlatView& Flat() const;
         /// @brief La position de la souris.
         std::optional<PointerPosition> Pointer() const;
         /// @brief La case choisie, le cas échéant.
@@ -117,8 +120,10 @@ export namespace ecosim {
     private:
         /// @brief Transmet les touches tapées à la saisie en cours.
         void Type(const std::vector<KeyStroke>& typed, SimulationSettings& settings);
-        /// @brief Tourne et zoome la caméra avec la souris.
+        /// @brief Avec la souris, tourne et zoome la caméra en 3D, ou déplace et zoome la carte en 2D.
         void MoveCamera(const RawInput& input);
+        /// @brief Prépare les vues avant une simulation ; elles sont conservées si la taille ne change pas.
+        void PrepareViews(const SimulationSettings& settings);
         /// @brief Traite un clic sur l'accueil : case de saisie, préréglage ou bouton.
         UiAction ClickHome(PointerPosition mouse, SimulationSettings& settings);
         /// @brief Traite un clic dans la confirmation de sortie.
@@ -134,8 +139,10 @@ export namespace ecosim {
         int width;
         /// @brief Hauteur de l'écran, en pixels.
         int height;
-        /// @brief Côté d'une case de la carte 2D, en pixels.
-        int cellSize;
+        /// @brief Largeur de la carte affichée, en cases.
+        int mapWidth;
+        /// @brief Hauteur de la carte affichée, en cases.
+        int mapHeight;
         /// @brief Saisie d'un réglage sur l'accueil.
         SettingEditor editor;
         /// @brief Vrai si la confirmation de sortie est affichée.
@@ -144,15 +151,17 @@ export namespace ecosim {
         bool showingStats{false};
         /// @brief Vrai si la carte est en 3D ; conservé d'une simulation à l'autre.
         bool showing3D{false};
-        /// @brief Caméra 3D ; sa position est conservée d'une simulation à l'autre.
+        /// @brief Caméra 3D ; sa position est conservée d'une simulation à l'autre de même taille.
         OrbitCamera camera;
+        /// @brief Vue 2D ; son zoom est conservé d'une simulation à l'autre de même taille.
+        FlatView flat;
         /// @brief Graphiques choisis ; conservés d'une simulation à l'autre.
         ChartSelection charts;
         /// @brief Case dont le panneau est ouvert.
         std::optional<Position> selectedCell;
         /// @brief Dernière position connue de la souris.
         std::optional<PointerPosition> pointer;
-        /// @brief Position précédente de la souris pendant une rotation ; vide hors rotation.
+        /// @brief Position précédente de la souris pendant un glissement au clic droit ; vide sinon.
         std::optional<PointerPosition> dragOrigin;
     };
 }
