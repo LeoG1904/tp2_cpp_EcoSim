@@ -23,6 +23,54 @@ TEST_CASE("Le sol est dessine avant les volumes", "[scene3d]") {
     for (std::size_t i = 0; i < 24; ++i) REQUIRE(faces[i].kind == FaceKind::Ground);
 }
 
+TEST_CASE("Seul le relief ajoute des flancs", "[scene3d]") {
+    World world{5, 5};
+    const auto cliffs = [&world] {
+        return CountFaces(BuildScene(world, {}, 1.0, OrbitCamera{5, 5}, Screen, std::nullopt),
+                          FaceKind::Cliff);
+    };
+    REQUIRE(cliffs() == 0);
+    world.GetCell({2, 2}).SetElevation(2);
+    // La caméra de départ est au sud, dans l'axe du milieu : elle ne voit que le flanc de devant.
+    REQUIRE(cliffs() == 1);
+    world.GetCell({2, 3}).SetElevation(2);
+    // La case de devant cache le flanc de la première, qui n'a plus de raison d'être dessiné.
+    REQUIRE(cliffs() == 1);
+}
+
+TEST_CASE("Une hauteur est dessinee apres ce qu'elle cache, et porte ses animaux", "[scene3d]") {
+    World world{5, 7};
+    world.GetCell({2, 4}).SetElevation(4);
+    const auto sceneWith = [&world](const Point at) {
+        Path path;
+        path.fill(at);
+        const std::vector<AnimalSnapshot> animals{
+            {1, CellAt(at), AnimalKind::Deer, 10, 50, path, std::nullopt}};
+        return BuildScene(world, animals, 1.0, OrbitCamera{5, 7}, Screen, std::nullopt);
+    };
+    const auto indexOf = [](const std::vector<Face>& faces, const FaceKind kind) {
+        return std::ranges::find(faces, kind, &Face::kind) - faces.begin();
+    };
+    // La caméra est au sud : un cerf au nord de la hauteur est dessiné avant son flanc.
+    const auto behind = sceneWith({2.5, 1.5});
+    REQUIRE(indexOf(behind, FaceKind::Animal) < indexOf(behind, FaceKind::Cliff));
+    const auto inFront = sceneWith({2.5, 5.7});
+    REQUIRE(indexOf(inFront, FaceKind::Animal) > indexOf(inFront, FaceKind::Cliff));
+
+    // Sur la hauteur, le même cerf est dessiné plus haut qu'au sol.
+    const auto highest = [](const std::vector<Face>& faces) {
+        int top = Screen.height;
+        for (const Face& face : faces) {
+            if (face.kind != FaceKind::Animal) continue;
+            for (std::size_t i = 0; i < face.pointCount; ++i) top = std::min(top, face.points[i].y);
+        }
+        return top;
+    };
+    const int raised = highest(sceneWith({2.5, 4.5}));
+    world.GetCell({2, 4}).SetElevation(0);
+    REQUIRE(raised < highest(sceneWith({2.5, 4.5})));
+}
+
 TEST_CASE("La case choisie est encadree", "[scene3d]") {
     const World world{4, 4};
     const auto faces = BuildScene(world, {}, 1.0, OrbitCamera{4, 4}, Screen, Position{1, 1});

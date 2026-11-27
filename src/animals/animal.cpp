@@ -74,8 +74,15 @@ namespace ecosim {
                                                      std::numbers::pi};
             for (const double detour : detours) {
                 const double angle = heading + detour;
-                const Point next{location.x + std::cos(angle) * length,
-                                 location.y + std::sin(angle) * length};
+                // Près d'un palier plus haut dans cette direction, l'animal grimpe et ralentit.
+                const Point slope{location.x + std::cos(angle) * ClimbReach,
+                                  location.y + std::sin(angle) * ClimbReach};
+                const bool climbing = world.IsWalkable(slope)
+                    && world.GetCell(CellAt(slope)).GetElevation()
+                           > world.GetCell(CellAt(location)).GetElevation();
+                const double step = climbing ? length * ClimbPace : length;
+                const Point next{location.x + std::cos(angle) * step,
+                                 location.y + std::sin(angle) * step};
                 const Point ahead{next.x + std::cos(angle) * BodyMargin,
                                   next.y + std::sin(angle) * BodyMargin};
                 if (!world.IsWalkable(next) || !world.IsWalkable(ahead)

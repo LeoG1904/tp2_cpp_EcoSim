@@ -137,6 +137,8 @@ d.edge("compose", [(510, 308), (510, 340), (390, 340), (390, 370)])
 d.edge("compose", [(570, 308), (570, 370)])
 d.edge("compose", [(630, 308), (630, 340), (750, 340), (750, 370)])
 d.edge("compose", [(480, 308), (480, 325), (241, 325), (241, 370)])
+# en relief, le clic en 3D suit les hauteurs de la carte affichée
+d.edge("depend", [(620, 428), (620, 462), (722, 462), (722, 725), (780, 725), (780, 750)], "vise sa carte", (630, 456))
 # application
 d.edge("assoc", [(450, 515), (170, 515), (170, 304)], "reçoit les commandes", (182, 507))
 d.edge("assoc", [(690, 515), (1010, 515), (1010, 322)], "fait dessiner", (998, 507), "end")
@@ -159,7 +161,7 @@ d.save("classes_application.svg")
 
 # ====================================================== 2. le moteur
 d = Diagram(1480, 1035, "Diagramme de classes : le moteur de simulation")
-d.box("SimulationSettings", 60, 40, 250, ["eau, obstacles, repousse", "réglages de chaque espèce"], "structure")
+d.box("SimulationSettings", 60, 40, 250, ["eau, obstacles, relief, repousse", "réglages de chaque espèce"], "structure")
 d.box("Simulation", 600, 40, 280, ["Step()", "AddAnimal(), Seed()", "Animals(), Count()"])
 d.box("SimulationStats", 1150, 40, 260, ["RecordBirth(), RecordDeath()", "History(), Total()"])
 
@@ -168,7 +170,7 @@ d.box("Animal", 560, 300, 310, ["identifiant, âge, énergie", "position, direct
                                  "Advance()", "Steer()  (abstraite)", "Act()  (abstraite)"], "abstraite", "abstract")
 d.box("PopulationSample", 1150, 300, 260, ["effectifs, herbe", "énergie, événements"], "structure")
 
-d.box("Cell", 60, 560, 250, ["terrain", "herbe de 0 à 100"])
+d.box("Cell", 60, 560, 250, ["terrain, herbe de 0 à 100", "hauteur de 0 à 4"])
 d.box("Herbivore", 500, 560, 190, ["broute", "peut fuir"], "abstraite", "abstract")
 d.box("Deer", 500, 695, 90, ["herbe haute"])
 d.box("Rabbit", 600, 695, 90, ["herbe rase"])

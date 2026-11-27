@@ -138,6 +138,15 @@ La 3D n'utilise pas la carte graphique. ecosim::OrbitCamera projette chaque poin
 sur l'écran, ecosim::BuildScene produit une liste de polygones, et ceux-ci sont dessinés **du
 plus loin au plus proche** (algorithme du peintre) : les objets proches recouvrent les autres.
 
+Sur une carte plate, le sol ne cache rien : il est dessiné en premier, puis les volumes. Avec du
+relief, les cases sont rangées de la plus lointaine à la plus proche, et chacune est dessinée
+avec ses flancs puis ce qu'elle porte. L'écart à la caméra compté en colonnes plus lignes donne
+un ordre sûr : une case n'en cache jamais une qui est dessinée après elle. Un animal est rattaché
+à la plus proche des cases qu'il recouvre sans être plus haute que la sienne.
+
+Pour viser une case, ecosim::OrbitCamera::PickCell descend le rayon de la souris palier par
+palier : ecosim::InputSource lui transmet donc la carte affichée.
+
 ## Limites techniques
 
 - Le rendu utilise Win32/GDI : il ne fonctionne que sous Windows.

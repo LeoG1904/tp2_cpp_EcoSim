@@ -132,6 +132,26 @@ namespace {
         }
     }
 
+    /// @brief Découpe la terre en paliers de surfaces égales, du plus bas au plus haut ; l'eau reste au palier 0.
+    /// @param world Carte dont le terrain est définitif.
+    /// @param altitude Altitude de chaque case, ligne par ligne.
+    /// @param reliefLevels Palier le plus haut.
+    void RaiseLand(ecosim::World& world, const std::vector<double>& altitude, const int reliefLevels) {
+        if (reliefLevels == 0) return;
+        const auto cellAt = [&world](const std::size_t index) {
+            return ecosim::Position{static_cast<int>(index % world.GetWidth()),
+                                    static_cast<int>(index / world.GetWidth())};
+        };
+        std::vector<std::size_t> land = Ascending(altitude);
+        std::erase_if(land, [&](const std::size_t index) {
+            return world.GetCell(cellAt(index)).GetTerrain() == ecosim::Terrain::Eau;
+        });
+        for (std::size_t rank = 0; rank < land.size(); ++rank) {
+            world.GetCell(cellAt(land[rank])).SetElevation(
+                static_cast<int>(rank * (reliefLevels + 1) / land.size()));
+        }
+    }
+
     /// @brief Une carte proposée, avant de combler ses prairies isolées.
     struct Draft {
         /// @brief La carte.
@@ -186,6 +206,8 @@ namespace ecosim {
     int Cell::GetVegetation() const { return vegetation; }
     void Cell::SetVegetation(const int value) { vegetation = std::clamp(value, 0, MaxVegetation); }
     bool Cell::IsAccessible() const { return terrain == Terrain::Prairie; }
+    int Cell::GetElevation() const { return elevation; }
+    void Cell::SetElevation(const int value) { elevation = std::clamp(value, 0, MaxElevation); }
 
     World::World(const int width, const int height)
         : width{ValidDimension(width)},
@@ -229,9 +251,13 @@ namespace ecosim {
     }
 
     World GenerateRandomWorld(const int width, const int height, std::mt19937& rng,
-                              const int waterPercent, const int obstaclePercent) {
+                              const int waterPercent, const int obstaclePercent,
+                              const int reliefLevels) {
         if (waterPercent < 0 || obstaclePercent < 0 || waterPercent + obstaclePercent > 100) {
             throw std::invalid_argument{"Proportions de terrain invalides"};
+        }
+        if (reliefLevels < 0 || reliefLevels > Cell::MaxElevation) {
+            throw std::invalid_argument{"Relief invalide"};
         }
         std::optional<Draft> best;
         for (int attempt = 0; attempt < MaxAttempts; ++attempt) {
@@ -240,6 +266,8 @@ namespace ecosim {
             if (best->connectedShare >= ConnectedShare) break;
         }
         FillIsolatedPrairies(best->world, best->altitude, waterPercent, obstaclePercent);
+        // En dernier : le terrain ne changera plus.
+        RaiseLand(best->world, best->altitude, reliefLevels);
         return std::move(best->world);
     }
 }

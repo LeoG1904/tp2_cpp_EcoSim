@@ -17,7 +17,8 @@ export namespace ecosim {
         Win32Input(Win32Window& window, UiController& controller);
 
         /// @copydoc InputSource::Read
-        FrameInput Read(bool isHomeScreen, bool paused, SimulationSettings& settings) override;
+        FrameInput Read(bool isHomeScreen, bool paused, SimulationSettings& settings,
+                        const World* world) override;
 
     private:
         /// @brief Lit les touches reçues, puis la souris si la fenêtre a le focus.

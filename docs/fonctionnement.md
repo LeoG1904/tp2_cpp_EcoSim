@@ -3,8 +3,8 @@
 ## Le monde
 
 La carte est une **grille**, dont la largeur et la hauteur se choisissent à l'accueil (10 × 10 au
-minimum). Chaque case a un terrain et une quantité d'herbe de 0 à 100. Les populations de
-départ suivent la surface (ecosim::ResizeMap).
+minimum). Chaque case a un terrain, une quantité d'herbe de 0 à 100 et une hauteur de 0 à 4
+paliers. Les populations de départ suivent la surface (ecosim::ResizeMap).
 
 | Terrain | Les animaux peuvent y aller ? | L'herbe y repousse ? |
 | --- | --- | --- |
@@ -30,11 +30,21 @@ ecosim::GenerateRandomWorld() ne tire pas chaque case séparément : elle constr
      Humidité : elle fixe l'herbe de départ
             |
   4. Les prairies enfermées sont comblées
+            |
+  5. La terre est découpée en paliers selon l'altitude
 ```
 
 La part d'eau et d'obstacles suit les réglages. Pour qu'aucun animal ne naisse enfermé, seule la
 plus grande zone de prairies est gardée. Quand une carte est trop coupée, d'autres reliefs sont
 essayés avant de combler.
+
+## Le relief
+
+La même altitude découpe la terre en paliers de surfaces égales, jusqu'au réglage **Relief** (0
+donne une carte plate). L'eau reste en bas. Un animal garde une position à deux coordonnées : sa
+hauteur est celle de la case située sous lui. Elle ne joue que sur sa vitesse : un palier plus
+haut à moins de ecosim::Animal::ClimbReach case devant lui ne lui en laisse que la part
+ecosim::Animal::ClimbPace, la moitié.
 
 ## Une génération
 

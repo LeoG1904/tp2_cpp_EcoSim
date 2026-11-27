@@ -32,10 +32,10 @@ namespace ecosim {
         : window{window}, controller{controller} {}
 
     FrameInput Win32Input::Read(const bool isHomeScreen, const bool paused,
-                                SimulationSettings& settings) {
+                                SimulationSettings& settings, const World* world) {
         std::optional<int> speed;
         const RawInput input = ReadRawInput(speed);
-        const UiAction action = controller.Handle(input, isHomeScreen, paused, settings);
+        const UiAction action = controller.Handle(input, isHomeScreen, paused, settings, world);
         return {action, speed, controller.IsExitDialogOpen()};
     }
 

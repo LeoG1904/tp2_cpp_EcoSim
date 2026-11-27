@@ -44,6 +44,8 @@ export namespace ecosim {
         int waterPercent{10};
         /// @brief Part d'obstacles, en %.
         int obstaclePercent{10};
+        /// @brief Palier le plus haut de la carte ; 0 donne une carte plate.
+        int reliefLevels{3};
         /// @brief Herbe gagnée par prairie à chaque génération.
         int vegetationGrowth{1};
         /// @brief Réglages de chaque espèce.

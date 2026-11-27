@@ -38,7 +38,10 @@ namespace ecosim {
         std::vector<std::string> lines{
             // Colonnes et lignes numérotées à partir de 1 pour l'affichage.
             std::format("Case : colonne {}, ligne {}", position.x + 1, position.y + 1),
-            std::format("Terrain : {}", TerrainName(cell.GetTerrain())),
+            // La hauteur n'est précisée qu'au-dessus du sol.
+            cell.GetElevation() == 0
+                ? std::format("Terrain : {}", TerrainName(cell.GetTerrain()))
+                : std::format("Terrain : {}, palier {}", TerrainName(cell.GetTerrain()), cell.GetElevation()),
             cell.IsAccessible()
                 ? std::format("Végétation : {} / {}", cell.GetVegetation(), Cell::MaxVegetation)
                 : std::string{"Inaccessible aux animaux"},

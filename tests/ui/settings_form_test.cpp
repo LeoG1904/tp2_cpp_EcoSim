@@ -69,14 +69,28 @@ TEST_CASE("La taille de la carte a un minimum de 10 et accepte de grandes valeur
         for (const char digit : digits) editor.Type(digit - '0');
         editor.Commit(settings);
     };
-    // Les champs 3 et 4 du terrain : largeur puis hauteur.
-    REQUIRE(SettingFields()[3].label == "Largeur (X)");
-    REQUIRE(SettingFields()[4].label == "Hauteur (Y)");
-    type(3, "5");
-    type(4, "2000");
+    // Les champs 4 et 5 du terrain : largeur puis hauteur.
+    REQUIRE(SettingFields()[4].label == "Largeur (X)");
+    REQUIRE(SettingFields()[5].label == "Hauteur (Y)");
+    type(4, "5");
+    type(5, "2000");
     REQUIRE(settings.mapWidth == MinMapSize);
     REQUIRE(settings.mapHeight == 2000);
     REQUIRE(settings.species[AnimalKind::Deer].initialCount == MinMapSize * 2000 / 15);
+}
+
+TEST_CASE("Le relief se regle de 0 a son palier le plus haut", "[settings]") {
+    SimulationSettings settings;
+    REQUIRE(SettingFields()[2].label == "Relief (paliers)");
+    SettingEditor editor;
+    editor.Begin(2, settings);
+    editor.Type(9);
+    editor.Commit(settings);
+    REQUIRE(settings.reliefLevels == Cell::MaxElevation);
+    editor.Begin(2, settings);
+    editor.Type(0);
+    editor.Commit(settings);
+    REQUIRE(settings.reliefLevels == 0);
 }
 
 TEST_CASE("Seule une grande carte declenche un avertissement", "[settings]") {

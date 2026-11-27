@@ -30,6 +30,13 @@ TEST_CASE("Le panneau decrit le terrain et les animaux de la case", "[cell_info]
     REQUIRE(water[2] == "Inaccessible aux animaux");
 }
 
+TEST_CASE("Le panneau precise le palier au-dessus du sol", "[cell_info]") {
+    World world{1, 1};
+    world.GetCell({0, 0}).SetElevation(2);
+    Simulation simulation{std::move(world), std::mt19937{1}};
+    REQUIRE(DescribeCell(simulation.Snapshot(), {0, 0})[1] == "Terrain : Prairie, palier 2");
+}
+
 TEST_CASE("Une case tres peuplee limite la liste", "[cell_info]") {
     Simulation simulation{World{1, 1}, std::mt19937{2}};
     for (std::size_t i = 0; i < MaxListedAnimals + 3; ++i) simulation.AddAnimal(AnimalKind::Deer, {0, 0});

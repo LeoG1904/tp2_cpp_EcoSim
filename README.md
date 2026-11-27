@@ -36,7 +36,7 @@ Les boutons situés sous les colonnes remplacent tous les réglages. Chaque vale
 
 Ces résultats sont des tendances : la carte et les animaux restent tirés au hasard. Les cartes mesurées n'ont pas servi à choisir les valeurs des espèces.
 
-> **Ces résultats ne sont plus valables.** Ils ont été mesurés avant la [reproduction à deux](#reproduction), tout comme ceux du tableau des tailles ci-dessous. L'équilibre reste à refaire : avec les valeurs actuelles, sur 40 cartes de 42 × 26 et 400 générations d'« Équilibre », les cerfs et les loups ont disparu à chaque fois, les lapins ont survécu à chaque fois et les renards dans 12 cas. Sur ces 40 cartes, « Famine » et « Invasion » ne laissaient toujours ni cerf ni lapin.
+> **Ces résultats ne sont plus valables.** Ils ont été mesurés avant la [reproduction à deux](#reproduction), tout comme ceux du tableau des tailles ci-dessous. L'équilibre reste à refaire : avec les valeurs actuelles et le [relief](#relief) par défaut, sur 40 cartes de 42 × 26 et 400 générations d'« Équilibre », les cerfs et les loups ont disparu à chaque fois, les lapins ont survécu à chaque fois et les renards dans 11 cas (19 sur les mêmes graines en carte plate, 17 avec 4 paliers). Sur ces 40 cartes, « Famine » et « Invasion » ne laissaient toujours ni cerf ni lapin, quel que soit le relief.
 
 **Les préréglages dépendent de la taille.** « Équilibre » a été réglé pour une carte d'environ 42 × 26 :
 
@@ -53,7 +53,7 @@ Ces résultats sont des tendances : la carte et les animaux restent tirés au ha
 
 | Colonne | Réglages |
 | --- | --- |
-| Terrain | Part de la carte couverte d'eau (0 à 50 %) et d'obstacles (0 à 40 %), repousse de la végétation par génération (0 à 20), largeur et hauteur (10 au minimum, voir [Taille de la carte](#taille-de-la-carte)) |
+| Terrain | Part de la carte couverte d'eau (0 à 50 %) et d'obstacles (0 à 40 %), [relief](#relief) (0 à 4 paliers, 3 au départ), repousse de la végétation par génération (0 à 20), largeur et hauteur (10 au minimum, voir [Taille de la carte](#taille-de-la-carte)) |
 | Cerfs et lapins | Nombre au départ (0 à 999 999), chance de naissance (0 à 100 %), chance de fuir (0 à 100 %) |
 | Loups | Nombre au départ (0 à 999 999), chance de naissance (0 à 100 %), esprit de meute (0 à 4) |
 | Renards | Nombre au départ (0 à 999 999), chance de naissance (0 à 100 %), flair (0 à 4) |
@@ -126,6 +126,8 @@ Mesures sur un ordinateur de développement, en version **optimisée** (`Release
 
 Les images sont mesurées avec la population de départ, avant que les animaux se multiplient : elles sont ensuite plus lentes. Elles ont été mesurées avant l'ajout des collisions, qui n'ajoute pas de dessin.
 
+Elles datent aussi d'avant le relief. Comparé à une carte plate, de 42 × 26 à 200 × 120, un relief de 3 ou 4 paliers a allongé une image 3D de 5 à 20 % et une image 2D de 20 à 35 % (mesures en version `Debug`, utiles pour la comparaison seulement).
+
 ## Génération de la carte
 
 La carte est construite par **bruit de valeur** : des valeurs sont tirées au sort sur une grille espacée, puis lissées entre elles, avec de grandes formes (tous les 8 cases) et des détails (tous les 4). Les cases voisines se ressemblent ainsi.
@@ -139,6 +141,20 @@ La carte est construite par **bruit de valeur** : des valeurs sont tirées au so
 
 La même graine redonne la même carte.
 
+## Relief
+
+La carte n'est pas plate : chaque case a une **hauteur**, comptée en paliers. Le réglage **Relief** fixe le palier le plus haut, de 0 à 4 (3 au départ).
+
+- **Forme :** les paliers viennent de la même **altitude** que l'eau et les obstacles. La terre est découpée en paliers de surfaces égales ; l'eau reste au palier 0 et les obstacles se trouvent sur les hauteurs.
+- **Mêmes cartes :** le réglage ne change ni les terrains ni l'herbe d'une graine, seulement les hauteurs.
+- **Montée :** à moins d'une demi-case devant lui, un palier plus haut **divise par deux la vitesse** d'un animal. À plat et en descente, il garde sa vitesse. Tous les écarts de hauteur se franchissent : aucune falaise ne bloque le passage.
+- **Le reste ne change pas :** vision, captures, collisions, reproduction et herbe ignorent la hauteur.
+- **En 2D :** plus une case est haute, plus elle est claire, et une **ombre** longe le pied de chaque marche, du côté bas. Quand les cases mesurent moins de 4 pixels, seule la teinte reste.
+- **En 3D :** les cases sont surélevées et leurs flancs visibles ; une hauteur cache ce qui est derrière elle. Les animaux montent et descendent en douceur.
+- **Panneau d'une case :** au-dessus du sol, la ligne du terrain précise le palier.
+
+Avec 0, la carte est plate : la simulation et le dessin sont ceux d'une carte sans relief.
+
 ## Vue 2D
 
 Au départ, la carte tient entière à l'écran, centrée, avec des cases carrées aussi grandes que possible. Des bandes sombres apparaissent si ses proportions diffèrent de celles de l'écran. La molette zoome jusqu'à des cases de 80 pixels, ou davantage si la vue d'ensemble les montre déjà plus grandes. Quand les cases mesurent moins de 4 pixels, le sol est dessiné pixel par pixel, sans quadrillage, et les animaux les plus petits deviennent des points. Le zoom est conservé avec **Recommencer** tant que la taille ne change pas.
@@ -151,6 +167,7 @@ Une génération est découpée en **10 petits pas**. À chacun, un animal chois
 
 - il tourne **progressivement** vers cette direction (0,65 radian au plus par petit pas) ;
 - il avance selon sa **vitesse** : 100 correspond à une case par génération à pleine allure ;
+- il ralentit de moitié à l'approche d'un palier plus haut (voir [Relief](#relief)) ;
 - devant l'eau, un obstacle ou le bord, il essaie des directions de plus en plus écartées, et ne passe pas entre deux obstacles qui se touchent par un coin.
 
 | Espèce | Comportement |
@@ -258,11 +275,11 @@ Sur la carte, le bouton **Vue 3D** change l'affichage sans toucher à la simulat
 | Tourner autour de la carte et changer l'inclinaison | Maintenir le **clic droit** et glisser |
 | Se rapprocher ou s'éloigner | **Molette** |
 | Revenir à la vue d'ensemble | Bouton **Recentrer** |
-| Voir le détail d'une case | **Clic gauche** sur le sol de la case |
+| Voir le détail d'une case | **Clic gauche** sur le sol ou le flanc de la case |
 
 Les obstacles sont des blocs, les cerfs des modèles jaunes, les lapins de petits modèles clairs, les loups des modèles rouges plus hauts et les renards de petits modèles violets (avec des détails selon le [sexe](#mâles-et-femelles-à-lécran)), orientés dans le sens du déplacement. La couleur des prairies suit la végétation. Des touffes d'herbe y poussent : une case rase (végétation inférieure à 5) n'en a pas, puis leur nombre (jusqu'à cinq) et leur hauteur augmentent avec la végétation. Elles raccourcissent quand un cerf ou un lapin broute et repoussent au fil des générations. Avec la repousse par défaut de 1 par génération, la croissance est progressive ; le réglage **Repousse végétation** l'accélère. La vue choisie est conservée après **Recommencer** et le retour au menu ; la position de la caméra aussi, tant que la taille de la carte ne change pas.
 
-Limites de cette première version : le rendu est calculé par le processeur et dessiné avec Win32/GDI, sans carte graphique, textures ni éclairage dynamique. En 3D, les modèles d'animaux proches peuvent encore se chevaucher ; le panneau d'une case donne les effectifs réels. La caméra vise toujours le centre de la carte. La sélection vise le sol : cliquer sur le haut d'un obstacle peut choisir la case située derrière.
+Limites de cette première version : le rendu est calculé par le processeur et dessiné avec Win32/GDI, sans carte graphique, textures ni éclairage dynamique. En 3D, les modèles d'animaux proches peuvent encore se chevaucher ; le panneau d'une case donne les effectifs réels. La caméra vise toujours le centre de la carte. La sélection vise le dessus ou le flanc d'une case, mais ignore les blocs : cliquer sur le haut d'un obstacle peut choisir la case située derrière. Avec du relief, un animal qui touche le bord d'une marche peut paraître légèrement coupé par elle ou passer devant.
 
 ## Règles de la simulation
 

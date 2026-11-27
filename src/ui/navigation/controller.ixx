@@ -93,8 +93,9 @@ export namespace ecosim {
         /// @param paused Vrai si la simulation est en pause.
         /// @param settings Réglages, modifiés par la saisie sur l'accueil.
         /// @return L'action demandée.
+        /// @param world Carte affichée, pour viser une case en relief ; nul sur l'accueil.
         UiAction Handle(const RawInput& input, bool isHomeScreen, bool paused,
-                        SimulationSettings& settings);
+                        SimulationSettings& settings, const World* world = nullptr);
 
         /// @brief Vrai si la confirmation de sortie est affichée.
         bool IsExitDialogOpen() const;
@@ -129,11 +130,11 @@ export namespace ecosim {
         /// @brief Traite un clic dans la confirmation de sortie.
         UiAction ClickExitDialog(PointerPosition mouse);
         /// @brief Traite un clic pendant la simulation : commandes du temps, puis carte ou graphiques.
-        UiAction ClickSimulation(PointerPosition mouse, bool paused);
+        UiAction ClickSimulation(PointerPosition mouse, bool paused, const World* world);
         /// @brief Coche ou décoche les choix de l'écran des graphiques.
         void ClickStats(PointerPosition mouse);
         /// @brief Change de vue, recentre la caméra ou choisit une case.
-        void ClickMap(PointerPosition mouse);
+        void ClickMap(PointerPosition mouse, const World* world);
 
         /// @brief Largeur de l'écran, en pixels.
         int width;

@@ -27,7 +27,12 @@ export namespace ecosim {
     public:
         virtual ~InputSource() = default;
         /// @brief Lit les commandes ; sur l'accueil, peut modifier les réglages.
-        virtual FrameInput Read(bool isHomeScreen, bool paused, SimulationSettings& settings) = 0;
+        /// @param isHomeScreen Vrai sur l'accueil.
+        /// @param paused Vrai pendant la pause.
+        /// @param settings Réglages que l'accueil peut modifier.
+        /// @param world Carte affichée, pour viser une case en relief ; nul sur l'accueil.
+        virtual FrameInput Read(bool isHomeScreen, bool paused, SimulationSettings& settings,
+                                const World* world) = 0;
     };
 
     /// @brief L'état de la lecture, utile à l'affichage.

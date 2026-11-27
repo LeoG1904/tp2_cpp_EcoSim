@@ -37,6 +37,29 @@ TEST_CASE("Cliquer sur le dessin d'une case la retrouve, sous tous les angles", 
     }
 }
 
+TEST_CASE("Avec du relief, le dessus et le flanc d'une case haute la designent", "[camera]") {
+    World world{12, 12};
+    const Position hill{6, 6};
+    world.GetCell(hill).SetElevation(3);
+    OrbitCamera camera{12, 12};
+    const double top = 3 * LevelHeight;
+
+    const auto above = camera.Project({6.5, top, 6.5}, Screen);
+    REQUIRE(above.has_value());
+    REQUIRE(camera.PickCell(*above, Screen, &world) == hill);
+    // Sans la carte, le même point tombe plus loin sur le sol plat.
+    REQUIRE(camera.PickCell(*above, Screen) != hill);
+
+    // La caméra de départ voit le flanc du côté des grandes lignes.
+    const auto side = camera.Project({6.5, top * 0.5, 7.0}, Screen);
+    REQUIRE(side.has_value());
+    REQUIRE(camera.PickCell(*side, Screen, &world) == hill);
+
+    const auto ground = camera.Project({2.5, 0.0, 8.5}, Screen);
+    REQUIRE(ground.has_value());
+    REQUIRE(camera.PickCell(*ground, Screen, &world) == Position{2, 8});
+}
+
 TEST_CASE("Un clic dans le ciel ne choisit aucune case", "[camera]") {
     OrbitCamera camera{48, 27};
     camera.Rotate(0.0, -5.0);

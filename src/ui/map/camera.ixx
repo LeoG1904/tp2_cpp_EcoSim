@@ -19,6 +19,10 @@ export namespace ecosim {
         double z;
     };
 
+    /// @brief Hauteur d'un palier du relief en 3D, en cases.
+    /// @ingroup interface
+    inline constexpr double LevelHeight{0.3};
+
     /// @brief Un point de l'écran, en pixels.
     /// @ingroup interface
     struct ScreenPoint {
@@ -67,8 +71,12 @@ export namespace ecosim {
 
         /// @brief Projette un point de l'espace sur l'écran ; vide s'il est derrière la caméra.
         std::optional<ScreenPoint> Project(Vec3 point, Viewport viewport) const;
-        /// @brief La case du sol située sous un point de l'écran.
-        std::optional<Position> PickCell(ScreenPoint screen, Viewport viewport) const;
+        /// @brief La case située sous un point de l'écran ; le dessus et le flanc d'un palier la désignent tous les deux.
+        /// @param screen Point visé.
+        /// @param viewport Taille de l'image.
+        /// @param world Carte dont le relief est pris en compte ; nul pour un sol plat.
+        std::optional<Position> PickCell(ScreenPoint screen, Viewport viewport,
+                                         const World* world = nullptr) const;
 
     private:
         /// @brief Les trois axes de la caméra, de longueur 1.

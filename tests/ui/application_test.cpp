@@ -10,7 +10,9 @@ namespace {
     class FakeInput final : public InputSource {
     public:
         FrameInput next;
-        FrameInput Read(bool, bool, SimulationSettings&) override { return std::exchange(next, {}); }
+        FrameInput Read(bool, bool, SimulationSettings&, const World*) override {
+            return std::exchange(next, {});
+        }
     };
 
     class FakeView final : public View {
@@ -135,7 +137,7 @@ TEST_CASE("Une carte trop grande pour la memoire laisse sur l'accueil avec un me
     class HugeInput final : public InputSource {
     public:
         bool first{true};
-        FrameInput Read(bool, bool, SimulationSettings& settings) override {
+        FrameInput Read(bool, bool, SimulationSettings& settings, const World*) override {
             if (!std::exchange(first, false)) return {UiAction::ResetSettings, std::nullopt, false};
             ResizeMap(settings, InputLimit, InputLimit);
             return {UiAction::StartOrRestart, std::nullopt, false};

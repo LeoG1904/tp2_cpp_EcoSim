@@ -60,6 +60,10 @@ export namespace ecosim {
     /// @brief L'apparence d'une espèce.
     /// @ingroup interface
     const SpeciesStyle& StyleOf(AnimalKind kind);
+    /// @brief La couleur d'un sol, d'autant plus claire que son palier est haut.
+    /// @ingroup interface
+    Color LevelTint(Color ground, int elevation);
+
     /// @brief Vrai à cet âge pour un jeune, qui ne peut pas encore se reproduire (Animal::AdultAge).
     /// @ingroup interface
     bool IsYoung(int age);

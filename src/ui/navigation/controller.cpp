@@ -42,7 +42,7 @@ namespace ecosim {
     }
 
     UiAction UiController::Handle(const RawInput& input, const bool isHomeScreen, const bool paused,
-                                  SimulationSettings& settings) {
+                                  SimulationSettings& settings, const World* world) {
         pointer = input.pointer;
         if (isHomeScreen) Type(input.typed, settings);
         if (!isHomeScreen && !showingStats && !exitDialogOpen) MoveCamera(input);
@@ -66,7 +66,7 @@ namespace ecosim {
         if (!input.click) return UiAction::None;
         if (exitDialogOpen) return ClickExitDialog(*input.click);
         if (isHomeScreen) return ClickHome(*input.click, settings);
-        return ClickSimulation(*input.click, paused);
+        return ClickSimulation(*input.click, paused, world);
     }
 
     void UiController::Type(const std::vector<KeyStroke>& typed, SimulationSettings& settings) {
@@ -151,7 +151,8 @@ namespace ecosim {
     }
 
     // Les commandes du temps sont communes à la carte et aux statistiques.
-    UiAction UiController::ClickSimulation(const PointerPosition mouse, const bool paused) {
+    UiAction UiController::ClickSimulation(const PointerPosition mouse, const bool paused,
+                                           const World* world) {
         if (RestartButton(width).Contains(mouse.x, mouse.y)) {
             showingStats = false;
             selectedCell.reset();
@@ -163,7 +164,7 @@ namespace ecosim {
         }
         if (showingStats) ClickStats(mouse);
         else if (GraphButton(width).Contains(mouse.x, mouse.y)) showingStats = true;
-        else ClickMap(mouse);
+        else ClickMap(mouse, world);
         return UiAction::None;
     }
 
@@ -182,7 +183,7 @@ namespace ecosim {
         if (CumulativeButton().Contains(mouse.x, mouse.y)) charts.cumulative = !charts.cumulative;
     }
 
-    void UiController::ClickMap(const PointerPosition mouse) {
+    void UiController::ClickMap(const PointerPosition mouse, const World* world) {
         if (ViewButton(width).Contains(mouse.x, mouse.y)) {
             showing3D = !showing3D;
             return;
@@ -201,7 +202,7 @@ namespace ecosim {
         }
         // Les bandes autour de la carte ne contiennent pas de case.
         const std::optional<Position> cell = showing3D
-            ? camera.PickCell({mouse.x, mouse.y}, {width, height})
+            ? camera.PickCell({mouse.x, mouse.y}, {width, height}, world)
             : flat.PickCell({mouse.x, mouse.y});
         if (!cell) return;
         // Un second clic sur la case choisie ferme le panneau.

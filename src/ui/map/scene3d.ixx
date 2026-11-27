@@ -14,6 +14,7 @@ export namespace ecosim {
     /// @ingroup interface
     enum class FaceKind {
         Ground, ///< Sol d'une case.
+        Cliff, ///< Flanc d'une case plus haute que sa voisine.
         Selection, ///< Cadre de la case choisie.
         Obstacle, ///< Bloc d'un obstacle.
         Grass, ///< Touffe d'herbe.
@@ -55,7 +56,7 @@ export namespace ecosim {
 
     /// @brief Transforme la simulation en polygones.
     ///
-    /// Ils sont rangés dans l'ordre de dessin : le sol, puis les volumes du plus loin au plus près.
+    /// Ils sont rangés dans l'ordre de dessin. Sur une carte plate : le sol, puis les volumes du plus loin au plus près. Avec du relief, les cases sont dessinées de la plus lointaine à la plus proche, chacune suivie de ce qu'elle porte : une hauteur cache ce qui est derrière elle.
     /// @ingroup interface
     std::vector<Face> BuildScene(const World& world, const std::vector<AnimalSnapshot>& animals,
                                  double progress, const OrbitCamera& camera, Viewport viewport,

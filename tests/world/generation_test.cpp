@@ -135,3 +135,40 @@ TEST_CASE("L'herbe de depart varie doucement d'une case a l'autre", "[generation
     REQUIRE(total / (42 * 26) >= 48);
     REQUIRE(total / (42 * 26) <= 51);
 }
+
+TEST_CASE("Le relief ne change pas les terrains et decoupe la terre en paliers", "[generation]") {
+    std::mt19937 first{7};
+    std::mt19937 second{7};
+    const World flat = GenerateRandomWorld(42, 26, first, 10, 10);
+    const World hilly = GenerateRandomWorld(42, 26, second, 10, 10, 3);
+    // Le relief ne consomme pas de hasard : la suite de la partie reste la même.
+    REQUIRE(first == second);
+
+    std::array<int, Cell::MaxElevation + 1> land{};
+    for (int y = 0; y < flat.GetHeight(); ++y) {
+        for (int x = 0; x < flat.GetWidth(); ++x) {
+            const Cell& cell = hilly.GetCell({x, y});
+            REQUIRE(flat.GetCell({x, y}).GetElevation() == 0);
+            REQUIRE(cell.GetTerrain() == flat.GetCell({x, y}).GetTerrain());
+            REQUIRE(cell.GetVegetation() == flat.GetCell({x, y}).GetVegetation());
+            if (cell.GetTerrain() == Terrain::Eau) REQUIRE(cell.GetElevation() == 0);
+            else ++land[cell.GetElevation()];
+        }
+    }
+    // Quatre paliers de surfaces égales, à une case près, et rien au-dessus.
+    for (int level = 1; level <= 3; ++level) REQUIRE(std::abs(land[level] - land[0]) <= 1);
+    REQUIRE(land[4] == 0);
+}
+
+TEST_CASE("La hauteur reste dans ses limites", "[generation]") {
+    Cell cell;
+    cell.SetElevation(-2);
+    REQUIRE(cell.GetElevation() == 0);
+    cell.SetElevation(99);
+    REQUIRE(cell.GetElevation() == Cell::MaxElevation);
+
+    std::mt19937 rng{1};
+    REQUIRE_THROWS_AS(GenerateRandomWorld(20, 20, rng, 10, 10, -1), std::invalid_argument);
+    REQUIRE_THROWS_AS(GenerateRandomWorld(20, 20, rng, 10, 10, Cell::MaxElevation + 1),
+                      std::invalid_argument);
+}

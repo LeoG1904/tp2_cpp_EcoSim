@@ -86,9 +86,9 @@ namespace ecosim {
             static_cast<int>(std::lround(viewport.height / 2.0 - Dot(relative, axes.up) * scale))};
     }
 
-    std::optional<Position> OrbitCamera::PickCell(const ScreenPoint screen,
-                                                  const Viewport viewport) const {
-        // Rayon partant de la caméra, prolongé jusqu'au sol.
+    std::optional<Position> OrbitCamera::PickCell(const ScreenPoint screen, const Viewport viewport,
+                                                  const World* world) const {
+        // Rayon partant de la caméra, qui descend de palier en palier jusqu'au sol.
         const Basis axes = Axes();
         const double focal = FocalLength(viewport);
         const double across = (screen.x - viewport.width / 2.0) / focal;
@@ -98,10 +98,16 @@ namespace ecosim {
                        axes.forward.z + axes.right.z * across + axes.up.z * above};
         if (ray.y >= 0.0) return std::nullopt;
         const Vec3 eye = Position3d();
-        const double travel = -eye.y / ray.y;
-        const double x = eye.x + ray.x * travel;
-        const double z = eye.z + ray.z * travel;
-        if (x < 0.0 || z < 0.0 || x >= mapWidth || z >= mapHeight) return std::nullopt;
-        return Position{static_cast<int>(x), static_cast<int>(z)};
+        for (int level = world ? Cell::MaxElevation : 0; level >= 0; --level) {
+            const double travel = (level * LevelHeight - eye.y) / ray.y;
+            if (travel < 0.0) continue;
+            const double x = eye.x + ray.x * travel;
+            const double z = eye.z + ray.z * travel;
+            if (x < 0.0 || z < 0.0 || x >= mapWidth || z >= mapHeight) continue;
+            const Position cell{static_cast<int>(x), static_cast<int>(z)};
+            // Le rayon est arrivé à cette hauteur dans une case au moins aussi haute : il la touche.
+            if (!world || level == 0 || world->GetCell(cell).GetElevation() >= level) return cell;
+        }
+        return std::nullopt;
     }
 }

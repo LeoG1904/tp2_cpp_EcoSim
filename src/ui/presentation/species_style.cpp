@@ -37,6 +37,11 @@ namespace ecosim {
         return styles.at(static_cast<std::size_t>(kind));
     }
 
+    Color LevelTint(const Color ground, const int elevation) {
+        const auto lighter = [elevation](const int channel) { return std::min(255, channel + elevation * 13); };
+        return {lighter(ground.red), lighter(ground.green), lighter(ground.blue)};
+    }
+
     bool IsYoung(const int age) { return age < Animal::AdultAge; }
 
     const SexLook& LookOf(const AnimalKind kind, const Sex sex, const int age) {

@@ -109,7 +109,8 @@ namespace ecosim {
                                       const SimulationSettings& settings, const std::uint32_t seed) {
         std::mt19937 rng{seed};
         World world = GenerateRandomWorld(width, height, rng,
-                                          settings.waterPercent, settings.obstaclePercent);
+                                          settings.waterPercent, settings.obstaclePercent,
+                                          settings.reliefLevels);
         Simulation simulation{std::move(world), std::mt19937{static_cast<std::uint32_t>(rng())},
                               settings};
         for (const SpeciesInfo& info : SpeciesCatalog()) {

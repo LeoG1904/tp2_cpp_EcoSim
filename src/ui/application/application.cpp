@@ -43,7 +43,10 @@ namespace ecosim {
     }
 
     bool Application::RunFrame(const double elapsedSeconds) {
-        const FrameInput frame = input.Read(!runner, clock.IsPaused(), settings);
+        // La photo est gardée le temps de la lecture : sa carte reste valable.
+        const std::shared_ptr<const SimulationSnapshot> shown = CurrentSimulation();
+        const FrameInput frame = input.Read(!runner, clock.IsPaused(), settings,
+                                            shown ? &shown->world : nullptr);
         if (frame.action == UiAction::Quit) return false;
         Apply(frame.action);
         if (runner && runner->State().failed) Abandon();

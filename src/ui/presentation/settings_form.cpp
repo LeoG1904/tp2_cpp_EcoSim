@@ -16,6 +16,8 @@ namespace {
             {0, "Eau (%)", 0, 50, [](SimulationSettings& s) -> int& { return s.waterPercent; }},
             {0, "Obstacles (%)", 0, 40,
              [](SimulationSettings& s) -> int& { return s.obstaclePercent; }},
+            {0, "Relief (paliers)", 0, ecosim::Cell::MaxElevation,
+             [](SimulationSettings& s) -> int& { return s.reliefLevels; }},
             {0, "Repousse végétation", 0, 20,
              [](SimulationSettings& s) -> int& { return s.vegetationGrowth; }},
             {0, "Largeur (X)", ecosim::MinMapSize, ecosim::InputLimit,

@@ -53,12 +53,14 @@ export namespace ecosim {
         Obstacle ///< Inaccessible.
     };
 
-    /// @brief Une case : son terrain et sa quantité d'herbe.
+    /// @brief Une case : son terrain, sa quantité d'herbe et sa hauteur.
     /// @ingroup moteur
     class Cell {
     public:
         /// @brief Quantité d'herbe maximale d'une case.
         static constexpr int MaxVegetation{100};
+        /// @brief Palier le plus haut ; le plus bas est 0.
+        static constexpr int MaxElevation{4};
 
         /// @brief Crée une case.
         /// @param terrain Nature de la case.
@@ -73,12 +75,18 @@ export namespace ecosim {
         void SetVegetation(int value);
         /// @brief Vrai pour une prairie.
         bool IsAccessible() const;
+        /// @brief La hauteur de la case, en paliers.
+        int GetElevation() const;
+        /// @brief Change la hauteur de la case, ramenée entre 0 et MaxElevation.
+        void SetElevation(int value);
 
     private:
         /// @brief Nature de la case.
         Terrain terrain{Terrain::Prairie};
         /// @brief Quantité d'herbe, de 0 à MaxVegetation.
         int vegetation{0};
+        /// @brief Palier, de 0 à MaxElevation.
+        int elevation{0};
     };
 
     /// @brief La carte : une grille rectangulaire de cases.
@@ -127,14 +135,15 @@ export namespace ecosim {
 
     /// @brief Crée une carte cohérente à partir de deux reliefs de bruit tirés au hasard.
     ///
-    /// L'altitude place l'eau dans les creux et les obstacles sur les hauteurs ; l'humidité fixe l'herbe de départ. Les prairies restantes sont toutes reliées entre elles ; si une carte est trop morcelée, d'autres reliefs sont essayés.
+    /// L'altitude place l'eau dans les creux et les obstacles sur les hauteurs, puis découpe la terre en paliers de surfaces égales ; l'eau reste au palier 0. L'humidité fixe l'herbe de départ. Les prairies restantes sont toutes reliées entre elles ; si une carte est trop morcelée, d'autres reliefs sont essayés.
     /// @param width Nombre de colonnes.
     /// @param height Nombre de lignes.
     /// @param rng Générateur : la même graine redonne la même carte.
     /// @param waterPercent Part de la carte couverte d'eau, en %, avant de combler les prairies isolées.
     /// @param obstaclePercent Part de la carte couverte d'obstacles, en %, avant de combler les prairies isolées.
-    /// @throws std::invalid_argument si les proportions sont négatives ou dépassent 100 au total.
+    /// @param reliefLevels Palier le plus haut, de 0 (carte plate) à Cell::MaxElevation. La même graine donne les mêmes terrains quel que soit le relief.
+    /// @throws std::invalid_argument si les proportions sont négatives ou dépassent 100 au total, ou si le relief sort de ses limites.
     /// @ingroup moteur
     World GenerateRandomWorld(int width, int height, std::mt19937& rng,
-                              int waterPercent = 10, int obstaclePercent = 10);
+                              int waterPercent = 10, int obstaclePercent = 10, int reliefLevels = 0);
 }

@@ -46,3 +46,23 @@ TEST_CASE("Un animal contourne un obstacle sans jamais y entrer", "[movement]") 
     }
     REQUIRE(Distance({1.5, 1.5}, animal.GetLocation()) > 0.5);
 }
+
+TEST_CASE("Monter ralentit un animal, descendre non", "[movement]") {
+    // Un palier au milieu de la carte, franchi vers la droite pendant le trajet.
+    const auto travel = [](const int leftLevel, const int rightLevel) {
+        World world{12, 12};
+        for (int y = 0; y < 12; ++y) {
+            for (int x = 0; x < 12; ++x) world.GetCell({x, y}).SetElevation(x < 3 ? leftLevel : rightLevel);
+        }
+        Deer animal{1, {2, 6}};
+        animal.Place({2.5, 6.5}, 0.0);
+        for (int tick = 0; tick < TicksPerGeneration; ++tick) animal.Advance(world, {0.0, 1.0}, tick);
+        return Distance({2.5, 6.5}, animal.GetLocation());
+    };
+    const double flat = travel(0, 0);
+    REQUIRE(flat == Catch::Approx(Deer::Traits.speed / 100.0));
+    REQUIRE(travel(2, 0) == Catch::Approx(flat));
+    REQUIRE(travel(0, 1) < flat - 0.2);
+    // La pente passée, l'animal reprend sa vitesse : il n'a perdu qu'une partie du trajet.
+    REQUIRE(travel(0, 1) > flat * Animal::ClimbPace);
+}

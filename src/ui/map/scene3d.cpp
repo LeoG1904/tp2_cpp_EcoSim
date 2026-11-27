@@ -103,16 +103,60 @@ namespace {
     /// @param context Caméra, image et liste à remplir.
     /// @param x Bord de la case sur l'axe des colonnes.
     /// @param z Bord de la case sur l'axe des lignes.
+    /// @param y Hauteur de la dalle.
     /// @param color Couleur de la dalle.
     /// @param kind Ce que représente la dalle.
     void AddTile(const Context& context, const double x, const double z, const double margin,
-                 const Color color, const FaceKind kind) {
+                 const double y, const Color color, const FaceKind kind) {
         const double left = x + margin;
         const double right = x + 1.0 - margin;
         const double back = z + margin;
         const double front = z + 1.0 - margin;
-        AddFace(context, std::array<Vec3, 4>{{{left, 0, back}, {right, 0, back}, {right, 0, front}, {left, 0, front}}},
+        AddFace(context, std::array<Vec3, 4>{{{left, y, back}, {right, y, back}, {right, y, front}, {left, y, front}}},
                 color, kind);
+    }
+
+    /// @brief La hauteur du dessus d'une case.
+    double TopOf(const ecosim::World& world, const ecosim::Position cell) {
+        return world.GetCell(cell).GetElevation() * ecosim::LevelHeight;
+    }
+
+    /// @brief Ajoute les flancs visibles d'une case : ceux qui dominent une voisine, ou le bord de la carte, du côté de la caméra.
+    void AddCliffs(const Context& context, const ecosim::World& world, const ecosim::Position cell) {
+        const double top = TopOf(world, cell);
+        if (top <= 0.0) return;
+        const double x = cell.x;
+        const double z = cell.y;
+        /// @brief Un côté : la voisine d'en face, les deux bouts de son bord et sa part de lumière.
+        struct Side {
+            /// @brief Case voisine, qui peut être hors de la carte.
+            ecosim::Position neighbor;
+            /// @brief Premier bout du bord.
+            std::pair<double, double> from;
+            /// @brief Second bout du bord.
+            std::pair<double, double> to;
+            /// @brief Vrai si la caméra est de ce côté.
+            bool faces;
+            /// @brief Part de lumière.
+            double light;
+        };
+        const std::array<Side, 4> sides{{
+            {{cell.x - 1, cell.y}, {x, z}, {x, z + 1}, context.eye.x < x, 0.72},
+            {{cell.x + 1, cell.y}, {x + 1, z}, {x + 1, z + 1}, context.eye.x > x + 1, 0.72},
+            {{cell.x, cell.y - 1}, {x, z}, {x + 1, z}, context.eye.z < z, 0.92},
+            {{cell.x, cell.y + 1}, {x, z + 1}, {x + 1, z + 1}, context.eye.z > z + 1, 0.92}}};
+        for (const Side& side : sides) {
+            if (!side.faces) continue;
+            const double bottom = world.IsInside(side.neighbor) ? TopOf(world, side.neighbor) : 0.0;
+            if (bottom >= top) continue;
+            const Color soil = Shade(ecosim::LevelTint({112, 86, 56}, world.GetCell(cell).GetElevation()),
+                                     side.light);
+            AddFace(context, std::array<Vec3, 4>{{{side.from.first, bottom, side.from.second},
+                                                  {side.to.first, bottom, side.to.second},
+                                                  {side.to.first, top, side.to.second},
+                                                  {side.from.first, top, side.from.second}}},
+                    soil, FaceKind::Cliff);
+        }
     }
 
     /// @brief Ajoute le dessus et les côtés d'un bloc tournés vers la caméra.
@@ -168,9 +212,9 @@ namespace {
         return (value % 1000u) / 999.0;
     }
 
-    /// @brief Ajoute les touffes d'herbe d'une prairie.
+    /// @brief Ajoute les touffes d'herbe d'une prairie, posées à la hauteur donnée.
     void AddGrass(const Context& context, std::vector<Object>& objects, const int x, const int z,
-                  const int vegetation) {
+                  const int vegetation, const double ground) {
         // Places des touffes dans la case ; un petit décalage évite l'effet de quadrillage.
         constexpr std::array<std::pair<double, double>, ecosim::MaxGrassTufts> places{{
             {0.50, 0.50}, {0.24, 0.26}, {0.74, 0.72}, {0.73, 0.28}, {0.27, 0.74}}};
@@ -184,7 +228,7 @@ namespace {
             const double top = height * (0.75 + 0.25 * Noise(x, z, i + 13));
             const double lean = (Noise(x, z, i + 29) - 0.5) * 0.08;
             const auto corner = [&](const double side, const double y) {
-                return Vec3{baseX + rightX * side, y, baseZ + rightZ * side};
+                return Vec3{baseX + rightX * side, ground + y, baseZ + rightZ * side};
             };
             // Vert foncé : les touffes se détachent du sol, même sur une prairie bien verte.
             const int shade = static_cast<int>(Noise(x, z, i + 41) * 30.0);
@@ -193,8 +237,23 @@ namespace {
                              corner(0.03, top * 0.30), corner(0.11 + lean, top * 0.65),
                              corner(0.09, 0.0)},
                             {25 + shade / 2, 105 + shade, 35}};
-            objects.push_back({SquaredDistance(context.eye, {baseX, top / 2, baseZ}), {}, tuft});
+            objects.push_back({SquaredDistance(context.eye, {baseX, ground + top / 2, baseZ}), {}, tuft});
         }
+    }
+
+    /// @brief Distance autour de son centre, en cases, où un animal est supposé recouvrir le sol.
+    constexpr double BodyReach{0.3};
+
+    /// @brief La hauteur du sol sous un animal ; elle varie en douceur quand son trajet change de palier.
+    double GroundUnder(const ecosim::World& world, const ecosim::Path& path, const double progress) {
+        const double along = std::clamp(progress, 0.0, 1.0) * ecosim::TicksPerGeneration;
+        const std::size_t step = std::min(static_cast<std::size_t>(along),
+                                          static_cast<std::size_t>(ecosim::TicksPerGeneration - 1));
+        const auto height = [&world](const ecosim::Point point) {
+            const ecosim::Position cell = ecosim::CellAt(point);
+            return world.IsInside(cell) ? TopOf(world, cell) : 0.0;
+        };
+        return std::lerp(height(path[step]), height(path[step + 1]), along - static_cast<double>(step));
     }
 
     /// @brief Construit le modèle d'un animal, orienté dans le sens de sa marche, avec les détails de son sexe ou de son jeune âge.
@@ -303,45 +362,100 @@ namespace ecosim {
                                  const Viewport viewport, const std::optional<Position> selected) {
         std::vector<Face> faces;
         const Context context{camera, viewport, camera.Position3d(), faces};
-        std::vector<Object> objects;
+        const auto indexOf = [&world](const Position cell) {
+            return static_cast<std::size_t>(cell.y) * world.GetWidth() + cell.x;
+        };
 
-        // Le sol est plat : il ne cache jamais un volume et peut être dessiné en premier.
+        std::vector<Position> order;
+        bool flat = true;
         for (int z = 0; z < world.GetHeight(); ++z) {
             for (int x = 0; x < world.GetWidth(); ++x) {
-                const Cell& cell = world.GetCell(Position{x, z});
-                if (selected == Position{x, z}) {
-                    AddTile(context, x, z, 0.0, {255, 255, 255}, FaceKind::Selection);
-                    AddTile(context, x, z, 0.12, GroundColor(cell), FaceKind::Ground);
-                } else {
-                    AddTile(context, x, z, 0.025, GroundColor(cell), FaceKind::Ground);
-                }
-                if (cell.GetTerrain() == Terrain::Prairie) {
-                    AddGrass(context, objects, x, z, cell.GetVegetation());
-                }
-                if (cell.GetTerrain() == Terrain::Obstacle) {
-                    const Box rock{x + 0.5, z + 0.5, 0.4, 0.4, 0.0, 0.55, 0.0,
-                                   {132, 132, 126}, FaceKind::Obstacle};
-                    objects.push_back({SquaredDistance(context.eye, {x + 0.5, 0.27, z + 0.5}), {rock}});
-                }
+                order.push_back({x, z});
+                flat = flat && world.GetCell(order.back()).GetElevation() == 0;
+            }
+        }
+        // Avec du relief, les cases sont rangées de la plus lointaine à la plus proche. Cet écart en
+        // colonnes plus lignes garantit qu'une case n'en cache jamais une qui est dessinée après elle.
+        if (!flat) {
+            std::ranges::stable_sort(order, std::greater{}, [&context](const Position cell) {
+                return std::abs(cell.x + 0.5 - context.eye.x) + std::abs(cell.y + 0.5 - context.eye.z);
+            });
+        }
+        // Un groupe réunit des sols dessinés ensemble, puis ce qu'ils portent. Un sol plat ne cache
+        // jamais un volume : il forme un seul groupe. Avec du relief, chaque case a le sien.
+        std::vector<std::size_t> groupOf(order.size(), 0);
+        if (!flat) {
+            for (std::size_t rank = 0; rank < order.size(); ++rank) groupOf[indexOf(order[rank])] = rank;
+        }
+        std::vector<std::vector<Object>> content(flat ? 1 : order.size());
+
+        for (const Position position : order) {
+            const Cell& cell = world.GetCell(position);
+            std::vector<Object>& objects = content[groupOf[indexOf(position)]];
+            const double ground = TopOf(world, position);
+            if (cell.GetTerrain() == Terrain::Prairie) {
+                AddGrass(context, objects, position.x, position.y, cell.GetVegetation(), ground);
+            }
+            if (cell.GetTerrain() == Terrain::Obstacle) {
+                const Box rock{position.x + 0.5, position.y + 0.5, 0.4, 0.4, ground, ground + 0.55, 0.0,
+                               {132, 132, 126}, FaceKind::Obstacle};
+                objects.push_back({SquaredDistance(context.eye, {rock.x, ground + 0.27, rock.z}), {rock}});
             }
         }
 
         for (const AnimalSnapshot& animal : animals) {
             const Point point = PathPoint(animal.path, progress);
-            objects.push_back({SquaredDistance(context.eye, {point.x, 0.15, point.y}),
-                               AnimalModel(animal.kind, animal.sex, animal.age, point.x, point.y,
-                                           PathHeading(animal.path, progress))});
+            const double ground = GroundUnder(world, animal.path, progress);
+            std::vector<Box> model = AnimalModel(animal.kind, animal.sex, animal.age, point.x, point.y,
+                                                 PathHeading(animal.path, progress));
+            for (Box& box : model) {
+                box.bottom += ground;
+                box.top += ground;
+            }
+            // L'animal est dessiné avec la plus proche des cases qu'il recouvre sans qu'elle le domine :
+            // le sol voisin ne le recouvre pas, mais une hauteur placée devant lui le cache.
+            std::size_t group = 0;
+            if (!flat && world.IsInside(CellAt(point))) {
+                const int level = world.GetCell(CellAt(point)).GetElevation();
+                for (const double dx : {-BodyReach, 0.0, BodyReach}) {
+                    for (const double dz : {-BodyReach, 0.0, BodyReach}) {
+                        const Position under = CellAt({point.x + dx, point.y + dz});
+                        if (!world.IsInside(under) || world.GetCell(under).GetElevation() > level) continue;
+                        group = std::max(group, groupOf[indexOf(under)]);
+                    }
+                }
+            }
+            content[group].push_back(
+                {SquaredDistance(context.eye, {point.x, ground + 0.15, point.y}), std::move(model)});
         }
 
-        // Algorithme du peintre : les volumes proches recouvrent les volumes lointains.
-        std::ranges::stable_sort(objects, std::greater{}, &Object::distance);
-        for (Object& object : objects) {
-            std::ranges::stable_sort(object.boxes, std::greater{}, [&context](const Box& box) {
-                return SquaredDistance(context.eye, {box.x, (box.bottom + box.top) / 2, box.z});
-            });
-            for (const Box& box : object.boxes) AddBox(context, box);
-            if (object.tuft) {
-                AddFace(context, object.tuft->corners, object.tuft->color, FaceKind::Grass);
+        for (std::size_t group = 0; group < content.size(); ++group) {
+            const std::size_t first = flat ? 0 : group;
+            const std::size_t last = flat ? order.size() : group + 1;
+            for (std::size_t rank = first; rank < last; ++rank) {
+                const Position position = order[rank];
+                const Cell& cell = world.GetCell(position);
+                const double ground = TopOf(world, position);
+                const Color color = LevelTint(GroundColor(cell), cell.GetElevation());
+                AddCliffs(context, world, position);
+                if (selected == position) {
+                    AddTile(context, position.x, position.y, 0.0, ground, {255, 255, 255},
+                            FaceKind::Selection);
+                    AddTile(context, position.x, position.y, 0.12, ground, color, FaceKind::Ground);
+                } else {
+                    AddTile(context, position.x, position.y, 0.025, ground, color, FaceKind::Ground);
+                }
+            }
+            // Algorithme du peintre : les volumes proches recouvrent les volumes lointains.
+            std::ranges::stable_sort(content[group], std::greater{}, &Object::distance);
+            for (Object& object : content[group]) {
+                std::ranges::stable_sort(object.boxes, std::greater{}, [&context](const Box& box) {
+                    return SquaredDistance(context.eye, {box.x, (box.bottom + box.top) / 2, box.z});
+                });
+                for (const Box& box : object.boxes) AddBox(context, box);
+                if (object.tuft) {
+                    AddFace(context, object.tuft->corners, object.tuft->color, FaceKind::Grass);
+                }
             }
         }
         return faces;

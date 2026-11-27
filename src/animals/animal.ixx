@@ -176,6 +176,10 @@ export namespace ecosim {
         static constexpr int NewbornEnergy{30};
         /// @brief Virage maximal par petit pas, en radians : les trajectoires restent courbes.
         static constexpr double MaxTurnPerTick{0.65};
+        /// @brief Part de sa vitesse qu'un animal garde pendant qu'il monte.
+        static constexpr double ClimbPace{0.5};
+        /// @brief Distance devant l'animal, en cases, à partir de laquelle un palier plus haut le ralentit.
+        static constexpr double ClimbReach{0.5};
 
         virtual ~Animal() = default;
         Animal(const Animal&) = delete;

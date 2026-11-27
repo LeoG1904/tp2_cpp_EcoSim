@@ -40,7 +40,7 @@ export namespace ecosim {
     /// @brief Colonnes de l'accueil : le terrain, puis une par espèce.
     inline constexpr int SettingColumns{1 + static_cast<int>(SpeciesCount)};
     /// @brief Nombre de lignes de réglages.
-    inline constexpr int SettingRows{5};
+    inline constexpr int SettingRows{6};
     /// @brief Hauteur d'une ligne de réglage.
     inline constexpr int SettingRowHeight{40};
     /// @brief Largeur d'une colonne de réglages.
@@ -55,7 +55,7 @@ export namespace ecosim {
     }
     /// @brief Position verticale de la première ligne.
     int SettingsTop(const int height) {
-        const int centered = height / 2 - 60;
+        const int centered = height / 2 - 100;
         return centered > 170 ? centered : 170;
     }
     /// @brief Case de saisie d'un réglage.

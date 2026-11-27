@@ -18,8 +18,8 @@ import ecosim.species_style;
 import ecosim.species;
 
 namespace {
-    /// @brief Couleur d'une case en 2D, selon le terrain et l'herbe.
-    ecosim::Color ColorOf(const ecosim::Cell& cell) {
+    /// @brief Couleur d'une case sans tenir compte de sa hauteur, selon le terrain et l'herbe.
+    ecosim::Color TerrainColor(const ecosim::Cell& cell) {
         switch (cell.GetTerrain()) {
             case ecosim::Terrain::Eau: return {60, 120, 200};
             case ecosim::Terrain::Obstacle: return {90, 90, 90};
@@ -27,6 +27,37 @@ namespace {
         }
         const double ratio = static_cast<double>(cell.GetVegetation()) / ecosim::Cell::MaxVegetation;
         return {static_cast<int>(150 - ratio * 90), static_cast<int>(110 + ratio * 90), 70};
+    }
+
+    /// @brief Couleur d'une case en 2D : son terrain, éclairci selon son palier.
+    ecosim::Color ColorOf(const ecosim::Cell& cell) {
+        return ecosim::LevelTint(TerrainColor(cell), cell.GetElevation());
+    }
+
+    /// @brief Dessine l'ombre au pied d'une case plus haute, à l'intérieur de la case basse.
+    /// @param canvas Image à compléter.
+    /// @param world Carte.
+    /// @param cell La case basse.
+    /// @param area Rectangle de la case basse, en pixels.
+    void DrawSlopeShadows(ecosim::Canvas& canvas, const ecosim::World& world, const ecosim::Position cell,
+                          const ecosim::UiRect area) {
+        const int elevation = world.GetCell(cell).GetElevation();
+        const int thickness = std::max(1, area.width / 9);
+        // La couleur de la case assombrie : une ombre, et non un mur.
+        const ecosim::Color base = ColorOf(world.GetCell(cell));
+        const ecosim::Color shade{base.red * 3 / 5, base.green * 3 / 5, base.blue * 3 / 5};
+        for (const ecosim::Position neighbor : world.Neighbors(cell)) {
+            if (world.GetCell(neighbor).GetElevation() <= elevation) continue;
+            ecosim::UiRect shadow = area;
+            if (neighbor.x != cell.x) {
+                shadow.width = thickness;
+                if (neighbor.x > cell.x) shadow.x = area.x + area.width - thickness;
+            } else {
+                shadow.height = thickness;
+                if (neighbor.y > cell.y) shadow.y = area.y + area.height - thickness;
+            }
+            canvas.Fill(shadow, shade);
+        }
     }
 
     /// @brief Rayon, en pixels, à partir duquel les détails d'un animal sont dessinés.
@@ -155,8 +186,9 @@ namespace {
                 for (int x = visible.left; x < visible.right; ++x) {
                     const int left = edge(view.ScreenX(x));
                     // Un pixel de retrait dessine le quadrillage.
-                    canvas.Fill({left, top, edge(view.ScreenX(x + 1)) - left - 1, tall - 1},
-                                ColorOf(world.GetCell(ecosim::Position{x, y})));
+                    const ecosim::UiRect area{left, top, edge(view.ScreenX(x + 1)) - left - 1, tall - 1};
+                    canvas.Fill(area, ColorOf(world.GetCell(ecosim::Position{x, y})));
+                    DrawSlopeShadows(canvas, world, {x, y}, area);
                 }
             }
             return;
