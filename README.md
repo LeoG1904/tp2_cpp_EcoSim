@@ -28,17 +28,17 @@ Avant de démarrer, cliquez sur une case et tapez la nouvelle valeur : le premie
 
 Les boutons situés sous les colonnes remplacent tous les réglages. Chaque valeur reste modifiable ensuite, et le bouton choisi n'est plus surligné dès qu'une valeur change. **Valeurs par défaut** revient aux réglages d'origine.
 
-| Préréglage | Ce qui change par rapport aux valeurs par défaut | Comportement observé (carte 42 × 26, 100 cartes) |
+| Préréglage | Ce qui change par rapport aux valeurs par défaut | Comportement observé (carte 42 × 26) |
 | --- | --- | --- |
-| **Équilibre** | Fuite des cerfs et des lapins 50 %, ni meute ni flair | Les quatre espèces sont encore présentes à 400 générations dans 92 simulations sur 100, et à 1000 générations dans 83 sur 100 |
-| **Famine** | Aucune repousse, un seul loup et un seul renard | Plus aucun cerf ni lapin à 150 générations (la moitié des extinctions avant la génération 80 environ). La faim cause 92 % des morts chez les cerfs et 70 % chez les lapins |
-| **Invasion** | Beaucoup plus de loups au départ (une case sur onze, 200 au maximum), aucune fuite, meute 3 | La moitié des extinctions de cerfs et de lapins a lieu avant la génération 16 environ, presque uniquement par capture. À la génération 100, des cerfs restent dans 1 simulation et des lapins dans 3 |
+| **Équilibre** | Fuite des cerfs et des lapins 50 %, ni meute ni flair | Sur 400 cartes, les quatre espèces sont encore présentes à 400 générations dans 91 % des cas (de 86 à 95 % selon la série de 100), et à 1000 générations dans 86 % (de 81 à 91 %) |
+| **Famine** | Aucune repousse, un seul loup et un seul renard | Plus aucun cerf ni lapin à 150 générations (la moitié des extinctions avant la génération 80 environ). Sur 100 cartes, la faim cause 93 % des morts chez les cerfs et 68 % chez les lapins |
+| **Invasion** | Beaucoup plus de loups au départ (une case sur onze, 200 au maximum), aucune fuite, meute 3 | Sur 100 cartes, la moitié des extinctions de cerfs et de lapins a lieu avant la génération 12 environ, par capture. À la génération 100, il ne reste ni cerf ni lapin dans les 100 simulations |
 
 Ces résultats sont des tendances : la carte et les animaux restent tirés au hasard. Les cartes mesurées n'ont pas servi à choisir les valeurs des espèces.
 
 | Colonne | Réglages |
 | --- | --- |
-| Terrain | Pourcentage d'eau (0 à 50) et d'obstacles (0 à 40), repousse de la végétation par génération (0 à 20) |
+| Terrain | Part de la carte couverte d'eau (0 à 50 %) et d'obstacles (0 à 40 %), repousse de la végétation par génération (0 à 20) |
 | Cerfs et lapins | Nombre au départ (0 à 500), chance de naissance (0 à 100 %), chance de fuir (0 à 100 %) |
 | Loups | Nombre au départ (0 à 200), chance de naissance (0 à 100 %), esprit de meute (0 à 4) |
 | Renards | Nombre au départ (0 à 200), chance de naissance (0 à 100 %), flair (0 à 4) |
@@ -68,6 +68,19 @@ La touche `Échap` fige la simulation et affiche un choix : **Menu** revient à 
 Quand il ne reste plus aucun animal, la simulation s'arrête à la dernière génération. La carte et les courbes restent accessibles pour consulter le résultat final.
 
 Le bouton **Recommencer** repart à la génération 0, réinitialise la vitesse à x1 et affiche la nouvelle carte.
+
+## Génération de la carte
+
+La carte est construite par **bruit de valeur** : des valeurs sont tirées au sort sur une grille espacée, puis lissées entre elles, avec de grandes formes (tous les 8 cases) et des détails (tous les 4). Les cases voisines se ressemblent ainsi.
+
+| Relief | Ce qu'il décide |
+| --- | --- |
+| **Altitude** | Les cases les plus basses deviennent de l'**eau**, les plus hautes des **obstacles**, selon les parts réglées à l'accueil. |
+| **Humidité** | La **végétation de départ** : des régions riches et des régions pauvres. Toutes les quantités de 0 à 100 sont réparties à parts égales. |
+
+**Aucune prairie n'est isolée.** Seule la plus grande zone de prairies reliées par un côté est gardée ; les autres poches deviennent de l'eau (si elles sont basses) ou des obstacles. Si la plus grande zone réunit moins de 95 % des prairies, d'autres reliefs sont essayés, 20 au maximum, et le moins morcelé est gardé. Les parts finales peuvent donc dépasser un peu les réglages : sur 1000 cartes de 42 × 26, la correction a retiré au plus 4 % de la carte pour les réglages (10 %, 10 %), (25 %, 20 %) et (30 %, 0 %), et au plus 8 % pour (50 %, 40 %), où il reste alors très peu de prairie. Un terrain réglé à 0 % n'est jamais ajouté.
+
+La même graine redonne la même carte.
 
 ## Déplacements
 

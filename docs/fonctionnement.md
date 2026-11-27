@@ -14,6 +14,26 @@ Les animaux, eux, **ne sont pas enfermés dans les cases** : ils ont une positio
 d'un animal est simplement celle qui se trouve sous lui. Plusieurs animaux peuvent partager
 une case.
 
+## La carte naît de deux reliefs
+
+ecosim::GenerateRandomWorld() ne tire pas chaque case séparément : elle construit des reliefs
+**continus**, par « bruit de valeur ».
+
+```
+  1. Des valeurs au sort, tous les 8 cases, puis tous les 4
+            |
+  2. Lissage entre ces valeurs : les voisines se ressemblent
+            |
+  3. Altitude : les creux deviennent de l'eau, les sommets des obstacles
+     Humidité : elle fixe l'herbe de départ
+            |
+  4. Les prairies enfermées sont comblées
+```
+
+La part d'eau et d'obstacles suit les réglages. Pour qu'aucun animal ne naisse enfermé, seule la
+plus grande zone de prairies est gardée. Quand une carte est trop coupée, d'autres reliefs sont
+essayés avant de combler.
+
 ## Une génération
 
 ecosim::Simulation::Step() applique toujours les mêmes étapes, dans cet ordre.

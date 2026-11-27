@@ -125,12 +125,14 @@ export namespace ecosim {
         std::vector<Cell> cells;
     };
 
-    /// @brief Crée une carte au hasard.
+    /// @brief Crée une carte cohérente à partir de deux reliefs de bruit tirés au hasard.
+    ///
+    /// L'altitude place l'eau dans les creux et les obstacles sur les hauteurs ; l'humidité fixe l'herbe de départ. Les prairies restantes sont toutes reliées entre elles ; si une carte est trop morcelée, d'autres reliefs sont essayés.
     /// @param width Nombre de colonnes.
     /// @param height Nombre de lignes.
     /// @param rng Générateur : la même graine redonne la même carte.
-    /// @param waterPercent Chance, en %, qu'une case soit de l'eau.
-    /// @param obstaclePercent Chance, en %, qu'une case soit un obstacle.
+    /// @param waterPercent Part de la carte couverte d'eau, en %, avant de combler les prairies isolées.
+    /// @param obstaclePercent Part de la carte couverte d'obstacles, en %, avant de combler les prairies isolées.
     /// @throws std::invalid_argument si les proportions sont négatives ou dépassent 100 au total.
     /// @ingroup moteur
     World GenerateRandomWorld(int width, int height, std::mt19937& rng,
