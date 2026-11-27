@@ -92,7 +92,21 @@ La largeur (X) et la hauteur (Y) se saisissent à l'accueil, dans la colonne **T
 - **Populations :** quand la taille change, les nombres d'animaux au départ sont recalculés pour garder la même densité (un cerf et un lapin pour 15 cases, un loup pour 150, un renard pour 135, avec un minimum). Les autres réglages sont conservés. Un préréglage encore intact reste actif, recalculé pour la nouvelle taille.
 - **Grande carte :** à partir de 20 000 cases, l'accueil prévient que la simulation et la 3D risquent d'être lentes.
 - **Mémoire insuffisante :** si la réservation de mémoire échoue, l'application reste sur l'accueil avec un message. Une taille très grande mais réservable peut aussi rendre l'ordinateur très lent avant tout message.
-- **Lenteur :** le calcul de la simulation est limité à 0,25 s par image. Au-delà, les générations en retard sont abandonnées : la simulation ralentit au lieu de s'emballer. Une seule génération très longue fige toutefois l'application pendant son calcul.
+- **Lenteur :** la simulation est calculée dans son propre thread : la fenêtre continue de répondre pendant une génération longue. Quand le calcul ne suit pas la vitesse demandée, les générations en retard sont abandonnées et la simulation ralentit. Le dessin, lui, reste fait par le thread principal : une grande carte en 3D peut toujours rendre la fenêtre saccadée. Revenir au menu, recommencer ou quitter attend la fin de la génération en cours.
+- **Mémoire :** l'écran reçoit des copies de la simulation. Une grande carte occupe donc plus de mémoire que la simulation seule.
+
+### Réactivité
+
+Mesures en version `Release`, **sans le dessin**, à partir du démarrage et pendant 6 secondes :
+
+| Carte et vitesse demandée | Générations calculées par seconde | Plus longue image | Retour au menu |
+| --- | --- | --- | --- |
+| 48 × 27, x10 | 9,8 | 0,1 ms | 5 ms |
+| 100 × 100, x10 | 9,8 | 0,2 ms | 39 ms |
+| 200 × 200, x10 | 6,2 | 0,03 ms | 170 ms |
+| 500 × 500, x1 | 0,8 | 0,03 ms | 210 ms |
+
+La première génération arrive après le temps d'une génération à la vitesse choisie, d'où un peu moins que la vitesse demandée sur une durée courte.
 
 ### Vitesse mesurée
 
@@ -220,7 +234,7 @@ Les fichiers `.ixx` exposent les modules C++ ; leurs implémentations sont dans 
 | `src/simulation/stats/` | Classe `SimulationStats` : historique et événements. |
 | `src/simulation/settings/` | Réglages, valeurs par défaut et préréglages. |
 | `src/simulation/clock/` | Classe `SimulationClock` : vitesses et pause. |
-| `src/ui/application/` | Déroulement de l'application et interfaces `InputSource` et `View`. |
+| `src/ui/application/` | Déroulement de l'application, interfaces `InputSource` et `View`, et classe `SimulationRunner` : le thread de calcul. |
 | `src/ui/navigation/` | Classe `UiController` : clavier, souris et changement d'écran. |
 | `src/ui/map/` | Caméra et scène 3D, lecture des trajets et texte du panneau d'une case. |
 | `src/ui/presentation/` | Formulaire des réglages, apparence des espèces, graphiques et placement. |

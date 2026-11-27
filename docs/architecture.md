@@ -2,7 +2,8 @@
 
 ## Le trajet d'une image
 
-La boucle principale (`src/app/main.cpp`) répète ces étapes tant que la fenêtre est ouverte.
+La boucle principale (`src/app/main.cpp`) répète ces étapes tant que la fenêtre est ouverte. Les
+générations sont calculées par un **second thread**.
 
 ```
   clavier et souris
@@ -14,17 +15,36 @@ La boucle principale (`src/app/main.cpp`) répète ces étapes tant que la fenê
   UiController     choisit une action : Pause...
         |
         v
-  Application      applique l'action et demande
+  Application      applique l'action et demande          THREAD DE CALCUL
         |          à l'horloge combien simuler
+        |  -------- demande de générations --------->  SimulationRunner
+        |                                             fait avancer Simulation
+        |  <------- dernière photo publiée ----------  SimulationSnapshot
         v
-  Simulation       calcule ces générations
-        |
-        v
-  Win32Renderer    dessine l'écran demandé
+  Win32Renderer    dessine la photo
 ```
 
 Le calcul ne dépend donc pas du dessin : à la vitesse x10, ecosim::SimulationClock demande
 simplement dix fois plus de générations par seconde.
+
+## Les deux threads
+
+| Thread | Son travail |
+| --- | --- |
+| Principal | clavier, souris, horloge et dessin |
+| De calcul | ecosim::SimulationRunner : fait avancer la simulation |
+
+- Après sa création, **seul le thread de calcul touche à ecosim::Simulation**.
+- Il publie des **photos** (ecosim::SimulationSnapshot) : des copies qui ne changent plus. Le
+  thread principal les lit sans risque pendant que le calcul continue.
+- Un `std::mutex` protège seulement l'échange : la demande de générations, le pointeur vers la
+  dernière photo et l'état du thread. La copie elle-même se fait hors du verrou.
+- Le thread dort tant que rien n'est demandé (`std::condition_variable_any`). C'est un
+  `std::jthread` : sa destruction lui demande de s'arrêter et attend la fin de la génération en
+  cours.
+
+La fenêtre répond ainsi pendant le calcul. **Une génération n'est pas calculée plus vite** : la
+copie ajoute même un travail, et le dessin reste fait par le thread principal.
 
 ## Les liens entre les classes
 

@@ -6,6 +6,7 @@ export module ecosim.application;
 
 import std;
 export import ecosim.simulation;
+export import ecosim.runner;
 export import ecosim.controller;
 
 export namespace ecosim {
@@ -50,7 +51,8 @@ export namespace ecosim {
         /// @param notice Message à signaler, par exemple une carte impossible à créer ; vide sinon.
         virtual void DrawHome(const SimulationSettings& settings, const std::string& notice) = 0;
         /// @brief Dessine la simulation.
-        virtual void DrawSimulation(const Simulation& simulation, const PlaybackState& playback) = 0;
+        virtual void DrawSimulation(const SimulationSnapshot& simulation,
+                                    const PlaybackState& playback) = 0;
     };
 
     /// @brief Relie les commandes, la simulation, l'horloge et l'affichage.
@@ -61,10 +63,6 @@ export namespace ecosim {
     public:
         /// @brief Vitesse d'animation d'un pas avancé à la main (un quart de seconde).
         static constexpr double ManualStepsPerSecond{4.0};
-        /// @brief Temps de calcul maximal accordé à la simulation par image, en secondes.
-        ///
-        /// Au-delà, les générations en retard sont abandonnées : sur une grande carte, la simulation ralentit au lieu de figer l'application.
-        static constexpr double MaxSimulationSecondsPerFrame{0.25};
 
         /// @brief Crée l'application sur l'accueil.
         /// @param input Source des commandes, qui doit vivre aussi longtemps que l'application.
@@ -79,8 +77,10 @@ export namespace ecosim {
         /// @return Faux quand l'utilisateur quitte.
         bool RunFrame(double elapsedSeconds);
 
-        /// @brief La simulation en cours ; vide sur l'accueil.
-        const std::optional<Simulation>& CurrentSimulation() const;
+        /// @brief La dernière photo de la simulation en cours ; vide sur l'accueil.
+        std::shared_ptr<const SimulationSnapshot> CurrentSimulation() const;
+        /// @brief Attend que le thread ait calculé les générations demandées. Sert aux tests.
+        void WaitForSimulation() const;
         /// @brief L'horloge.
         const SimulationClock& Clock() const;
         /// @brief Les réglages choisis.
@@ -95,8 +95,15 @@ export namespace ecosim {
         void Start();
         /// @brief Remet l'horloge et l'animation à zéro.
         void ResetPlayback();
-        /// @brief Fait passer le temps et calcule les générations dues.
-        void Advance(const FrameInput& frame, double elapsedSeconds);
+        /// @brief Fait passer le temps et compte les générations dues.
+        /// @param frame Commandes de l'image.
+        /// @param elapsedSeconds Temps écoulé.
+        /// @param state État du thread au début de l'image.
+        void Advance(const FrameInput& frame, double elapsedSeconds, const RunnerState& state);
+        /// @brief Envoie au thread les générations dues, s'il est libre.
+        void Dispatch();
+        /// @brief Abandonne la simulation dont le calcul a échoué et le signale sur l'accueil.
+        void Abandon();
         /// @brief Crée une simulation avec les réglages choisis et une nouvelle graine.
         Simulation CreateSimulation();
 
@@ -112,8 +119,10 @@ export namespace ecosim {
         std::mt19937 seeds;
         /// @brief Réglages de l'accueil, conservés au retour au menu.
         SimulationSettings settings;
-        /// @brief La simulation en cours ; vide sur l'accueil.
-        std::optional<Simulation> simulation;
+        /// @brief Le thread de la simulation en cours ; vide sur l'accueil.
+        std::unique_ptr<SimulationRunner> runner;
+        /// @brief Générations dues et pas encore demandées au thread.
+        int due{0};
         /// @brief Vitesse, pause et temps écoulé.
         SimulationClock clock;
         /// @brief Vrai pendant l'animation d'un pas avancé à la main.

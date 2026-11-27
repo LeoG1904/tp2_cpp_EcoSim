@@ -31,6 +31,16 @@ namespace ecosim {
 
     const SimulationStats& Simulation::Stats() const { return stats; }
 
+    SimulationSnapshot Simulation::Snapshot() const {
+        return {world, Animals(), generation, stats.History()};
+    }
+
+    std::size_t SimulationSnapshot::Count(const AnimalKind kind) const {
+        return static_cast<std::size_t>(std::ranges::count(animals, kind, &AnimalSnapshot::kind));
+    }
+
+    bool SimulationSnapshot::IsFinished() const { return animals.empty(); }
+
     PopulationSample Simulation::Measure() const {
         PopulationSample sample{generation};
         for (const auto& animal : animals) {

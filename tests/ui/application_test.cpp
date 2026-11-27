@@ -19,7 +19,7 @@ namespace {
         int simulationDraws{0};
         PlaybackState last{};
         void DrawHome(const SimulationSettings&, const std::string&) override { ++homeDraws; }
-        void DrawSimulation(const Simulation&, const PlaybackState& playback) override {
+        void DrawSimulation(const SimulationSnapshot&, const PlaybackState& playback) override {
             ++simulationDraws;
             last = playback;
         }
@@ -30,18 +30,21 @@ namespace {
         FakeView view;
         Application application{input, view, 20, 12, 5u};
 
+        // Une image, puis on attend le thread : les tests restent reproductibles.
         bool Frame(const UiAction action = UiAction::None, const double seconds = 0.0) {
             input.next.action = action;
-            return application.RunFrame(seconds);
+            const bool running = application.RunFrame(seconds);
+            application.WaitForSimulation();
+            return running;
         }
-        int Generation() const { return application.CurrentSimulation()->GetGeneration(); }
+        int Generation() const { return application.CurrentSimulation()->generation; }
     };
 }
 
 TEST_CASE("L'application demarre sur l'accueil, lance puis quitte une simulation", "[application]") {
     Scenario scenario;
     REQUIRE(scenario.Frame(UiAction::None, 10.0));
-    REQUIRE_FALSE(scenario.application.CurrentSimulation().has_value());
+    REQUIRE_FALSE(scenario.application.CurrentSimulation());
     REQUIRE(scenario.view.homeDraws == 1);
 
     scenario.Frame(UiAction::StartOrRestart);
@@ -52,7 +55,7 @@ TEST_CASE("L'application demarre sur l'accueil, lance puis quitte une simulation
     REQUIRE(scenario.Generation() == 1);
 
     scenario.Frame(UiAction::ReturnHome);
-    REQUIRE_FALSE(scenario.application.CurrentSimulation().has_value());
+    REQUIRE_FALSE(scenario.application.CurrentSimulation());
     REQUIRE_FALSE(scenario.Frame(UiAction::Quit));
 }
 
@@ -65,6 +68,9 @@ TEST_CASE("Pause, pas manuel anime et reprise", "[application]") {
 
     scenario.Frame(UiAction::NextGeneration);
     REQUIRE(scenario.Generation() == 1);
+    // L'image qui demande le calcul montre encore la fin de l'ancien trajet.
+    REQUIRE(scenario.view.last.progress == 1.0);
+    scenario.Frame();
     REQUIRE(scenario.view.last.progress == 0.0);
     scenario.Frame(UiAction::None, 1.0);
     REQUIRE(scenario.view.last.progress == 1.0);
@@ -81,6 +87,7 @@ TEST_CASE("La confirmation fige la simulation et ignore les vitesses", "[applica
 
     scenario.input.next = {UiAction::None, 10, false};
     scenario.application.RunFrame(0.1);
+    scenario.application.WaitForSimulation();
     REQUIRE(scenario.application.Clock().GetSpeed() == 10);
     REQUIRE(scenario.Generation() == 1);
 }
@@ -111,6 +118,7 @@ TEST_CASE("Apres un pas manuel, la reprise enchaine sans retour en arriere", "[a
     scenario.Frame(UiAction::TogglePause);
     scenario.Frame(UiAction::None, 0.125);
     REQUIRE(scenario.Generation() == 2);
+    scenario.Frame();
     REQUIRE(scenario.view.last.progress == 0.125);
 }
 
@@ -118,8 +126,8 @@ TEST_CASE("La simulation prend la taille choisie", "[application]") {
     Scenario scenario;
     REQUIRE(scenario.application.Settings().mapWidth == 20);
     scenario.Frame(UiAction::StartOrRestart);
-    REQUIRE(scenario.application.CurrentSimulation()->GetWorld().GetWidth() == 20);
-    REQUIRE(scenario.application.CurrentSimulation()->GetWorld().GetHeight() == 12);
+    REQUIRE(scenario.application.CurrentSimulation()->world.GetWidth() == 20);
+    REQUIRE(scenario.application.CurrentSimulation()->world.GetHeight() == 12);
 }
 
 TEST_CASE("Une carte trop grande pour la memoire laisse sur l'accueil avec un message", "[application]") {
@@ -138,7 +146,7 @@ TEST_CASE("Une carte trop grande pour la memoire laisse sur l'accueil avec un me
     Application application{input, view, 20, 12, 5u};
 
     REQUIRE(application.RunFrame(0.0));
-    REQUIRE_FALSE(application.CurrentSimulation().has_value());
+    REQUIRE_FALSE(application.CurrentSimulation());
     REQUIRE_FALSE(application.Notice().empty());
     REQUIRE(view.homeDraws == 1);
 

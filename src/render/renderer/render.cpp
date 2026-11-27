@@ -24,7 +24,7 @@ namespace ecosim {
         Finish(canvas);
     }
 
-    void Win32Renderer::DrawSimulation(const Simulation& simulation, const PlaybackState& playback) {
+    void Win32Renderer::DrawSimulation(const SimulationSnapshot& simulation, const PlaybackState& playback) {
         Canvas canvas{window, width, height};
         // L'écran affiché est un choix de navigation, fait par le contrôleur.
         if (controller.IsShowingStats()) {

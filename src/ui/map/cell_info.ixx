@@ -13,8 +13,8 @@ export namespace ecosim {
     inline constexpr std::size_t MaxListedAnimals{7};
 
     /// @brief Décrit une case, une chaîne par ligne du panneau.
-    /// @param simulation Simulation observée.
+    /// @param simulation Photo de la simulation observée.
     /// @param position Case, qui doit être dans la carte.
     /// @ingroup interface
-    std::vector<std::string> DescribeCell(const Simulation& simulation, Position position);
+    std::vector<std::string> DescribeCell(const SimulationSnapshot& simulation, Position position);
 }

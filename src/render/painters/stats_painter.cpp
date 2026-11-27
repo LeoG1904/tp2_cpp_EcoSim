@@ -149,9 +149,9 @@ namespace {
 }
 
 namespace ecosim {
-    void DrawStatsScreen(Canvas& canvas, const Simulation& simulation, const PlaybackState& playback,
+    void DrawStatsScreen(Canvas& canvas, const SimulationSnapshot& simulation, const PlaybackState& playback,
                          const ChartSelection& selection, const std::optional<PointerPosition> pointer) {
-        const std::vector<PopulationSample>& history = simulation.Stats().History();
+        const std::vector<PopulationSample>& history = simulation.history;
         const int windowWidth = canvas.Width();
         const int windowHeight = canvas.Height();
         canvas.Fill({0, 0, windowWidth, windowHeight}, {24, 29, 38});
@@ -183,7 +183,7 @@ namespace ecosim {
         if (simulation.IsFinished()) status = "Fin de la simulation : plus aucun animal";
         else if (playback.paused) status = std::format("En pause   Vitesse x{}", playback.speed);
         else status = std::format("Vitesse x{}", playback.speed);
-        std::string counts = std::format("Génération {}", simulation.GetGeneration());
+        std::string counts = std::format("Génération {}", simulation.generation);
         for (const SpeciesInfo& species : SpeciesCatalog()) {
             counts += std::format("    {} {}", species.pluralName, simulation.Count(species.kind));
         }

@@ -20,12 +20,14 @@ namespace {
 }
 
 namespace ecosim {
-    std::vector<std::string> DescribeCell(const Simulation& simulation, const Position position) {
-        const Cell& cell = simulation.GetWorld().GetCell(position);
-        std::vector<AnimalSnapshot> present = simulation.Animals();
-        std::erase_if(present, [position](const AnimalSnapshot& animal) {
-            return animal.position != position;
-        });
+    std::vector<std::string> DescribeCell(const SimulationSnapshot& simulation, const Position position) {
+        const Cell& cell = simulation.world.GetCell(position);
+        // Seuls les animaux de la case sont copiés.
+        std::vector<AnimalSnapshot> present;
+        std::ranges::copy_if(simulation.animals, std::back_inserter(present),
+                             [position](const AnimalSnapshot& animal) {
+                                 return animal.position == position;
+                             });
         std::string counts;
         for (const SpeciesInfo& species : SpeciesCatalog()) {
             const auto number = std::ranges::count(present, species.kind, &AnimalSnapshot::kind);

@@ -16,11 +16,11 @@ import ecosim.scene3d;
 import ecosim.layout;
 
 namespace ecosim {
-    void DrawOrbitMap(Canvas& canvas, const Simulation& simulation, const double progress,
+    void DrawOrbitMap(Canvas& canvas, const SimulationSnapshot& simulation, const double progress,
                       const std::optional<Position> selected, const OrbitCamera& camera) {
-        std::vector<AnimalSnapshot> animals = simulation.Animals();
+        std::vector<AnimalSnapshot> animals = simulation.animals;
         AttachNewbornsToParents(animals);
-        const std::vector<Face> faces = BuildScene(simulation.GetWorld(), animals, progress, camera,
+        const std::vector<Face> faces = BuildScene(simulation.world, animals, progress, camera,
                                                    {canvas.Width(), canvas.Height()}, selected);
         const HDC buffer = static_cast<HDC>(canvas.Context());
         canvas.Fill({0, 0, canvas.Width(), canvas.Height()}, {22, 30, 42});

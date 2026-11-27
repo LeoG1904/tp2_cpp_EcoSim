@@ -37,6 +37,26 @@ export namespace ecosim {
         std::optional<std::uint64_t> parentId;
     };
 
+    /// @brief Une copie complète de ce qu'il faut afficher, à la fin d'une génération.
+    ///
+    /// Elle ne dépend plus de la simulation : on peut la lire pendant qu'un autre thread calcule la suite.
+    /// @ingroup moteur
+    struct SimulationSnapshot {
+        /// @brief La carte et son herbe.
+        World world;
+        /// @brief Les animaux vivants.
+        std::vector<AnimalSnapshot> animals;
+        /// @brief Numéro de la génération.
+        int generation;
+        /// @brief Une mesure par génération, la génération 0 comprise.
+        std::vector<PopulationSample> history;
+
+        /// @brief Nombre d'animaux vivants d'une espèce.
+        std::size_t Count(AnimalKind kind) const;
+        /// @brief Vrai quand il ne reste plus aucun animal.
+        bool IsFinished() const;
+    };
+
     /// @brief Le monde, ses animaux et les règles qui les font évoluer.
     ///
     /// Elle fonctionne sans affichage.
@@ -61,6 +81,8 @@ export namespace ecosim {
         std::vector<AnimalSnapshot> Animals() const;
         /// @brief L'historique et les événements.
         const SimulationStats& Stats() const;
+        /// @brief Copie l'état à afficher.
+        SimulationSnapshot Snapshot() const;
 
         /// @brief Ajoute un animal au centre d'une case.
         /// @param kind Espèce.

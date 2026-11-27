@@ -9,7 +9,7 @@ import ecosim.layout;
 import ecosim.species;
 
 namespace ecosim {
-    void DrawHud(Canvas& canvas, const Simulation& simulation, const PlaybackState& playback,
+    void DrawHud(Canvas& canvas, const SimulationSnapshot& simulation, const PlaybackState& playback,
                  const bool threeD) {
         const int width = canvas.Width();
         const std::string help = threeD
@@ -24,7 +24,7 @@ namespace ecosim {
             status = std::format("Vitesse x{}   (Tab ou touches 1 à 4 : x1 x2 x5 x10 ; {})",
                                  playback.speed, help);
         }
-        std::string counts = std::format("Génération {}", simulation.GetGeneration());
+        std::string counts = std::format("Génération {}", simulation.generation);
         for (const SpeciesInfo& species : SpeciesCatalog()) {
             counts += std::format("   {} {}", species.pluralName, simulation.Count(species.kind));
         }

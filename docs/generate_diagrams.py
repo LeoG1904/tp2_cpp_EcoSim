@@ -97,10 +97,10 @@ class Diagram:
         io.open(OUT + filename, "w", encoding="utf-8", newline="\n").write(svg)
 
 # ====================================================== 1. de l'application au moteur
-d = Diagram(1400, 835, "Diagramme de classes : affichage, interface et lien avec le moteur")
+d = Diagram(1400, 965, "Diagramme de classes : affichage, interface et lien avec le moteur")
 d.band(10, 170, "AFFICHAGE (Windows)", "#fff6ea", "#a8641a")
-d.band(192, 400, "INTERFACE (C++ pur)", "#f0f6ff", "#2b5f99")
-d.band(604, 160, "MOTEUR (C++ pur)", "#eefaf0", "#2c7a3f")
+d.band(192, 510, "INTERFACE (C++ pur)", "#f0f6ff", "#2b5f99")
+d.band(714, 180, "MOTEUR (C++ pur)", "#eefaf0", "#2c7a3f")
 
 d.box("Win32Input", 60, 55, 220, ["Read()"])
 d.box("Win32Window", 350, 55, 220, ["ProcessEvents()", "TakeKeys(), TakeWheel()"])
@@ -116,9 +116,12 @@ d.box("OrbitCamera", 490, 370, 160, ["vue 3D"])
 d.box("ChartSelection", 670, 370, 160, ["graphiques choisis"], "structure")
 d.box("Application", 450, 490, 240, ["RunFrame()", "applique les actions"])
 
-d.box("SimulationClock", 150, 640, 220, ["vitesse et pause"])
-d.box("Simulation", 450, 640, 240, ["Step() : une génération"])
-d.box("SimulationSettings", 1040, 640, 240, ["réglages choisis"], "structure")
+d.box("SimulationRunner", 450, 610, 240, ["thread de calcul", "Request(), State()"])
+
+d.box("SimulationClock", 150, 750, 220, ["vitesse et pause"])
+d.box("Simulation", 450, 750, 240, ["Step() : une génération"])
+d.box("SimulationSnapshot", 760, 750, 200, ["photo à afficher"], "structure")
+d.box("SimulationSettings", 1040, 750, 240, ["réglages choisis"], "structure")
 
 # affichage -> interfaces et objets partagés
 d.edge("implement", [(210, 113), (210, 232)])
@@ -128,7 +131,7 @@ d.edge("assoc", [(250, 113), (250, 160), (480, 160), (480, 232)], "commande", (2
 d.edge("assoc", [(830, 131), (830, 160), (660, 160), (660, 232)], "lit l'état", (720, 153))
 d.edge("depend", [(780, 80), (570, 80)], "prend sa taille et son identifiant", (675, 72), "middle")
 d.edge("depend", [(1000, 80), (1070, 80)], "crée", (1035, 72), "middle")
-d.edge("depend", [(60, 95), (18, 95), (18, 668), (150, 668)], "lit les vitesses", (46, 660))
+d.edge("depend", [(60, 95), (18, 95), (18, 778), (150, 778)], "lit les vitesses", (46, 770))
 # parties du contrôleur
 d.edge("compose", [(510, 308), (510, 340), (390, 340), (390, 370)])
 d.edge("compose", [(570, 308), (570, 370)])
@@ -137,17 +140,21 @@ d.edge("compose", [(480, 308), (480, 325), (241, 325), (241, 370)])
 # application
 d.edge("assoc", [(450, 515), (170, 515), (170, 304)], "reçoit les commandes", (182, 507))
 d.edge("assoc", [(690, 515), (1010, 515), (1010, 322)], "fait dessiner", (998, 507), "end")
-d.edge("compose", [(500, 564), (500, 590), (260, 590), (260, 640)], "1", (268, 630))
-d.edge("compose", [(570, 564), (570, 640)], "0..1", (578, 630))
-d.edge("compose", [(640, 564), (640, 578), (1100, 578), (1100, 640)], "1", (1108, 630))
+d.edge("compose", [(500, 564), (500, 590), (260, 590), (260, 750)], "1", (268, 740))
+d.edge("compose", [(570, 564), (570, 610)], "0..1", (578, 598))
+d.edge("compose", [(640, 564), (640, 578), (1100, 578), (1100, 750)], "1", (1108, 740))
+# le thread possède la simulation et publie ses photos
+d.edge("compose", [(570, 686), (570, 750)], "1", (578, 740))
+d.edge("depend", [(690, 648), (800, 648), (800, 750)], "publie", (730, 640))
+d.edge("depend", [(690, 778), (760, 778)], "copie", (725, 770), "middle")
 # la simulation et les réglages ; ce que l'interface fait des objets du moteur
-d.edge("compose", [(690, 668), (1040, 668)], "1", (1024, 660), "end")
-d.edge("depend", [(900, 290), (875, 290), (875, 610), (660, 610), (660, 640)], "dessine", (700, 603))
-d.edge("depend", [(1120, 280), (1220, 280), (1220, 640)], "dessine", (1228, 440))
-d.edge("depend", [(690, 262), (855, 262), (855, 625), (1065, 625), (1065, 640)], "modifie", (847, 360), "end")
-d.edge("depend", [(400, 428), (400, 726), (1080, 726), (1080, 712)], "modifie", (408, 721))
-d.edge("depend", [(60, 262), (34, 262), (34, 748), (1130, 748), (1130, 712)], "le modifie", (46, 743))
-d.legend(785)
+d.edge("compose", [(640, 808), (640, 828), (1050, 828), (1050, 808)], "1", (1030, 823), "end")
+d.edge("depend", [(900, 290), (875, 290), (875, 750)], "dessine", (883, 700))
+d.edge("depend", [(1120, 280), (1220, 280), (1220, 750)], "dessine", (1228, 440))
+d.edge("depend", [(690, 262), (855, 262), (855, 725), (1065, 725), (1065, 750)], "modifie", (847, 360), "end")
+d.edge("depend", [(400, 428), (400, 848), (1080, 848), (1080, 808)], "modifie", (408, 843))
+d.edge("depend", [(60, 262), (34, 262), (34, 872), (1130, 872), (1130, 808)], "le modifie", (46, 867))
+d.legend(915)
 d.save("classes_application.svg")
 
 # ====================================================== 2. le moteur

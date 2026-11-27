@@ -81,10 +81,11 @@ namespace {
 }
 
 namespace ecosim {
-    void DrawFlatMap(Canvas& canvas, const Simulation& simulation, const double progress,
+    void DrawFlatMap(Canvas& canvas, const SimulationSnapshot& simulation, const double progress,
                      const std::optional<Position> selected, const FlatView& view) {
-        const World& world = simulation.GetWorld();
-        std::vector<AnimalSnapshot> animals = simulation.Animals();
+        const World& world = simulation.world;
+        // Copie modifiable : les nouveau-nés sont rattachés au trajet de leur parent.
+        std::vector<AnimalSnapshot> animals = simulation.animals;
         AttachNewbornsToParents(animals);
         const HDC buffer = static_cast<HDC>(canvas.Context());
         canvas.Fill({0, 0, canvas.Width(), canvas.Height()}, {30, 30, 30});

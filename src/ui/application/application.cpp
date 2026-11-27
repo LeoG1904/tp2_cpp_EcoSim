@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief Enchaînement des actions et du temps à chaque image.
+ * @brief Enchaînement des actions et du temps à chaque image ; le calcul est confié au thread.
  */
 module ecosim.application;
 
@@ -12,7 +12,12 @@ namespace ecosim {
         : input{input}, view{view}, mapWidth{mapWidth}, mapHeight{mapHeight}, seeds{seed},
           settings{DefaultSettings(mapWidth, mapHeight)} {}
 
-    const std::optional<Simulation>& Application::CurrentSimulation() const { return simulation; }
+    std::shared_ptr<const SimulationSnapshot> Application::CurrentSimulation() const {
+        return runner ? runner->State().snapshot : nullptr;
+    }
+    void Application::WaitForSimulation() const {
+        if (runner) runner->Wait();
+    }
     const SimulationClock& Application::Clock() const { return clock; }
     const SimulationSettings& Application::Settings() const { return settings; }
     const std::string& Application::Notice() const { return notice; }
@@ -20,9 +25,9 @@ namespace ecosim {
     void Application::Start() {
         const std::string tooLarge{"Carte trop grande pour la mémoire de cet ordinateur : réduisez sa taille."};
         // L'ancienne simulation est libérée d'abord : sa mémoire peut servir à la nouvelle.
-        simulation.reset();
+        runner.reset();
         try {
-            simulation = CreateSimulation();
+            runner = std::make_unique<SimulationRunner>(CreateSimulation());
             notice.clear();
         } catch (const std::bad_alloc&) {
             notice = tooLarge;
@@ -31,16 +36,28 @@ namespace ecosim {
         }
     }
 
+    void Application::Abandon() {
+        runner.reset();
+        ResetPlayback();
+        notice = "Le calcul a échoué, sans doute faute de mémoire : réduisez la taille de la carte.";
+    }
+
     bool Application::RunFrame(const double elapsedSeconds) {
-        const FrameInput frame = input.Read(!simulation.has_value(), clock.IsPaused(), settings);
+        const FrameInput frame = input.Read(!runner, clock.IsPaused(), settings);
         if (frame.action == UiAction::Quit) return false;
         Apply(frame.action);
-        if (!simulation) {
+        if (runner && runner->State().failed) Abandon();
+        if (!runner) {
             view.DrawHome(settings, notice);
             return true;
         }
-        Advance(frame, elapsedSeconds);
-        view.DrawSimulation(*simulation, {clock.GetSpeed(), clock.IsPaused(), clock.Progress()});
+        Advance(frame, elapsedSeconds, runner->State());
+        Dispatch();
+        // La photo et l'activité sont lues ensemble : le dessin reste cohérent.
+        const RunnerState state = runner->State();
+        // En attendant la suite, les animaux restent au bout du trajet connu au lieu de le rejouer.
+        const double progress = state.busy || due > 0 ? 1.0 : clock.Progress();
+        view.DrawSimulation(*state.snapshot, {clock.GetSpeed(), clock.IsPaused(), progress});
         return true;
     }
 
@@ -49,19 +66,21 @@ namespace ecosim {
             settings = DefaultSettings(mapWidth, mapHeight);
             notice.clear();
         } else if (action == UiAction::ReturnHome) {
-            simulation.reset();
+            runner.reset();
             ResetPlayback();
         } else if (action == UiAction::StartOrRestart) {
             Start();
             ResetPlayback();
-        } else if (simulation && !simulation->IsFinished()) {
+        } else if (runner && !runner->State().snapshot->IsFinished()) {
             if (action == UiAction::TogglePause) {
                 clock.SetPaused(!clock.IsPaused());
                 animatingStep = false;
+                // La pause oublie le retard ; la génération déjà commencée se termine.
+                due = 0;
             }
             if (action == UiAction::CycleSpeed) clock.CycleSpeed();
             if (action == UiAction::NextGeneration && clock.IsPaused()) {
-                simulation->Step();
+                due = 1;
                 clock.SetProgress(0.0);
                 animatingStep = true;
             }
@@ -71,25 +90,31 @@ namespace ecosim {
     void Application::ResetPlayback() {
         clock = SimulationClock{};
         animatingStep = false;
+        due = 0;
     }
 
     // La simulation continue pendant la consultation des courbes.
-    void Application::Advance(const FrameInput& frame, const double elapsedSeconds) {
+    void Application::Advance(const FrameInput& frame, const double elapsedSeconds,
+                              const RunnerState& state) {
         if (frame.speed && !frame.exitDialogOpen) clock.SetSpeed(*frame.speed);
-        if (frame.action != UiAction::None || frame.exitDialogOpen || simulation->IsFinished()) return;
-        if (animatingStep && clock.IsPaused()) {
+        if (frame.action != UiAction::None || frame.exitDialogOpen) return;
+        if (state.snapshot->IsFinished()) {
+            due = 0;
+            return;
+        }
+        if (animatingStep && clock.IsPaused() && !state.busy && due == 0) {
             // L'horloge garde la position atteinte : la reprise ne fait pas reculer les animaux.
             clock.SetProgress(clock.Progress() + elapsedSeconds * ManualStepsPerSecond);
             animatingStep = clock.Progress() < 1.0;
         }
-        const int steps = clock.Advance(elapsedSeconds);
-        const auto start = std::chrono::steady_clock::now();
-        for (int i = 0; i < steps && !simulation->IsFinished(); ++i) {
-            simulation->Step();
-            // Au moins une génération est calculée ; le retard restant n'est pas rattrapé.
-            const std::chrono::duration<double> spent = std::chrono::steady_clock::now() - start;
-            if (spent.count() > MaxSimulationSecondsPerFrame) break;
-        }
+        due += clock.Advance(elapsedSeconds);
+        // Pendant un calcul, au plus une génération attend : le retard ne s'accumule pas.
+        if (state.busy) due = std::min(due, 1);
+    }
+
+    void Application::Dispatch() {
+        if (due == 0 || runner->State().busy) return;
+        runner->Request(std::exchange(due, 0));
     }
 
     Simulation Application::CreateSimulation() {

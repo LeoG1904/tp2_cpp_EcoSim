@@ -110,23 +110,23 @@ namespace ecosim {
                         int cellSize, const std::string& notice);
     /// @brief Dessine l'écran des graphiques.
     /// @ingroup affichage
-    void DrawStatsScreen(Canvas& canvas, const Simulation& simulation, const PlaybackState& playback,
+    void DrawStatsScreen(Canvas& canvas, const SimulationSnapshot& simulation, const PlaybackState& playback,
                          const ChartSelection& selection, std::optional<PointerPosition> pointer);
     /// @brief Dessine la carte vue de dessus.
     /// @ingroup affichage
-    void DrawFlatMap(Canvas& canvas, const Simulation& simulation, double progress,
+    void DrawFlatMap(Canvas& canvas, const SimulationSnapshot& simulation, double progress,
                      std::optional<Position> selected, const FlatView& view);
     /// @brief Dessine la carte en 3D.
     /// @ingroup affichage
-    void DrawOrbitMap(Canvas& canvas, const Simulation& simulation, double progress,
+    void DrawOrbitMap(Canvas& canvas, const SimulationSnapshot& simulation, double progress,
                       std::optional<Position> selected, const OrbitCamera& camera);
     /// @brief Dessine les compteurs, l'aide et les boutons par-dessus la carte.
     /// @ingroup affichage
-    void DrawHud(Canvas& canvas, const Simulation& simulation, const PlaybackState& playback,
+    void DrawHud(Canvas& canvas, const SimulationSnapshot& simulation, const PlaybackState& playback,
                  bool threeD);
     /// @brief Dessine le panneau d'information de la case choisie.
     /// @ingroup affichage
-    void DrawCellPanel(Canvas& canvas, const Simulation& simulation, std::optional<Position> selected,
+    void DrawCellPanel(Canvas& canvas, const SimulationSnapshot& simulation, std::optional<Position> selected,
                        bool onLeft);
     /// @brief Dessine la confirmation de sortie.
     /// @ingroup affichage
@@ -144,7 +144,7 @@ export namespace ecosim {
         /// @copydoc View::DrawHome
         void DrawHome(const SimulationSettings& settings, const std::string& notice) override;
         /// @copydoc View::DrawSimulation
-        void DrawSimulation(const Simulation& simulation, const PlaybackState& playback) override;
+        void DrawSimulation(const SimulationSnapshot& simulation, const PlaybackState& playback) override;
 
     private:
         /// @brief Affiche l'image, puis attend un court instant avant la suivante.
