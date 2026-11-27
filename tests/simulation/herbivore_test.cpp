@@ -2,6 +2,7 @@
 
 import std;
 import ecosim.simulation;
+import ecosim.grid_habitat;
 
 using namespace ecosim;
 
@@ -89,7 +90,9 @@ TEST_CASE("Le trajet d'une generation est continu et reste sur les prairies", "[
             // Un trajet commence où le précédent s'est arrêté.
             if (previous.contains(animal.id)) REQUIRE(animal.path.front() == previous[animal.id]);
             for (std::size_t i = 1; i < animal.path.size(); ++i) {
-                REQUIRE(Distance(animal.path[i - 1], animal.path[i]) <= 1.2 / TicksPerGeneration + 1e-9);
+                // Le pas de l'animal, plus au maximum la poussée d'une collision.
+                REQUIRE(Distance(animal.path[i - 1], animal.path[i])
+                        <= 1.2 / TicksPerGeneration + MaxPushPerTick + 1e-9);
                 REQUIRE(simulation.GetWorld().IsWalkable(animal.path[i]));
             }
             REQUIRE(animal.position == CellAt(animal.path.back()));

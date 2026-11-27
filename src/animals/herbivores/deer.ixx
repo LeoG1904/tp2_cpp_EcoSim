@@ -14,7 +14,8 @@ export namespace ecosim {
     public:
         /// @brief Les caractéristiques fixes du cerf.
         static constexpr SpeciesTraits Traits{.energyLoss = 2, .maxAge = 80, .foodEnergy = 12,
-                                              .reproductionEnergy = 80, .speed = 120};
+                                              .reproductionEnergy = 80, .speed = 120,
+                                              .bodyRadius = 0.18};
         /// @brief Chance de naissance, en %, proposée au départ.
         static constexpr int DefaultBirthPercent{25};
         /// @brief À partir de cette quantité d'herbe sous lui, il reste brouter.

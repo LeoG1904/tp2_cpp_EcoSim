@@ -19,13 +19,17 @@ namespace {
 namespace ecosim {
     const std::vector<SpeciesInfo>& SpeciesCatalog() {
         static const std::vector<SpeciesInfo> catalog{
-            {AnimalKind::Deer, "Cerf", "Cerfs", Deer::DefaultBirthPercent, 15, 12, true, 25,
+            {AnimalKind::Deer, "Cerf", "Cerfs", Deer::DefaultBirthPercent, 15, 12, true,
+             Deer::Traits.bodyRadius, 25,
              &Create<Deer>},
-            {AnimalKind::Rabbit, "Lapin", "Lapins", Rabbit::DefaultBirthPercent, 15, 12, true, 25,
+            {AnimalKind::Rabbit, "Lapin", "Lapins", Rabbit::DefaultBirthPercent, 15, 12, true,
+             Rabbit::Traits.bodyRadius, 25,
              &Create<Rabbit>},
-            {AnimalKind::Wolf, "Loup", "Loups", Wolf::DefaultBirthPercent, 150, 3, false, 2,
+            {AnimalKind::Wolf, "Loup", "Loups", Wolf::DefaultBirthPercent, 150, 3, false,
+             Wolf::Traits.bodyRadius, 2,
              &Create<Wolf>},
-            {AnimalKind::Fox, "Renard", "Renards", Fox::DefaultBirthPercent, 135, 3, false, 1,
+            {AnimalKind::Fox, "Renard", "Renards", Fox::DefaultBirthPercent, 135, 3, false,
+             Fox::Traits.bodyRadius, 1,
              &Create<Fox>},
         };
         return catalog;

@@ -23,6 +23,59 @@ namespace ecosim {
         buckets[Index(animal.GetPosition())].push_back(&animal);
     }
 
+    Point GridHabitat::PushOn(const Animal& animal) const {
+        const Point here = animal.GetLocation();
+        const double radius = animal.GetTraits().bodyRadius;
+        Point push{0.0, 0.0};
+        ForEachNear(here, radius + MaxBodyRadius, [&](const Animal& other, const double distance) {
+            if (&other == &animal) return;
+            const double otherRadius = other.GetTraits().bodyRadius;
+            const double overlap = radius + otherRadius - distance;
+            if (overlap <= 0.0) return;
+            // Chacun recule d'autant plus que l'autre est gros, selon les surfaces des deux corps.
+            const double share = otherRadius * otherRadius
+                                 / (radius * radius + otherRadius * otherRadius);
+            double awayX = here.x - other.GetLocation().x;
+            double awayY = here.y - other.GetLocation().y;
+            if (distance < 1e-9) {
+                // Exactement superposés, comme un nouveau-né : les identifiants choisissent un axe,
+                // sans tirage au sort, et les deux partent en sens opposés.
+                const std::uint64_t first = std::min(animal.GetId(), other.GetId());
+                const double angle = static_cast<double>(first) * 2.399963;
+                const double side = animal.GetId() == first ? 1.0 : -1.0;
+                awayX = side * std::cos(angle);
+                awayY = side * std::sin(angle);
+            } else {
+                awayX /= distance;
+                awayY /= distance;
+            }
+            push.x += awayX * overlap * share;
+            push.y += awayY * overlap * share;
+        });
+        const double length = std::hypot(push.x, push.y);
+        if (length > MaxPushPerTick) {
+            push.x *= MaxPushPerTick / length;
+            push.y *= MaxPushPerTick / length;
+        }
+        return push;
+    }
+
+    void GridHabitat::Separate(const int tick) {
+        std::vector<std::pair<Animal*, Point>> pushes;
+        for (const std::vector<Animal*>& bucket : buckets) {
+            for (Animal* animal : bucket) {
+                if (!animal->IsAlive()) continue;
+                const Point push = PushOn(*animal);
+                if (push.x != 0.0 || push.y != 0.0) pushes.emplace_back(animal, push);
+            }
+        }
+        for (const auto& [animal, push] : pushes) {
+            const Position before = animal->GetPosition();
+            animal->Push(world, push, tick);
+            Moved(*animal, before);
+        }
+    }
+
     World& GridHabitat::GetWorld() { return world; }
     const World& GridHabitat::GetWorld() const { return world; }
 

@@ -41,6 +41,8 @@ namespace ecosim {
                     animal->Act(habitat, tick);
                 }
             }
+            // Les captures sont déjà faites : une collision ne sauve pas une proie atteinte.
+            habitat.Separate(tick);
         }
     }
 

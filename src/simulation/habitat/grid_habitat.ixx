@@ -9,6 +9,10 @@ export import ecosim.animal;
 export import ecosim.stats;
 
 export namespace ecosim {
+    /// @brief Part de la plus longue poussée permise en un petit pas, en cases : dans une foule, personne n'est projeté.
+    /// @ingroup moteur
+    inline constexpr double MaxPushPerTick{0.1};
+
     /// @brief L'habitat réel d'une génération.
     ///
     /// Les animaux sont rangés par case : chercher ses voisins ne demande de parcourir que les cases proches. Elle ne possède pas les animaux.
@@ -26,6 +30,12 @@ export namespace ecosim {
         /// @param animal Animal déplacé.
         /// @param from Case qu'il occupait.
         void Moved(Animal& animal, Position from);
+
+        /// @brief Écarte les animaux dont les corps se superposent : les collisions souples.
+        ///
+        /// Toutes les poussées sont calculées avant d'être appliquées : le résultat ne favorise pas les premiers de la liste. Le plus petit corps recule davantage. Un petit chevauchement peut subsister dans une foule ou contre un obstacle.
+        /// @param tick Numéro du petit pas qui vient d'être joué.
+        void Separate(int tick);
 
         /// @brief La carte, modifiable.
         World& GetWorld() override;
@@ -50,6 +60,8 @@ export namespace ecosim {
         /// @tparam Visit Fonction recevant l'animal et sa distance.
         template <typename Visit>
         void ForEachNear(Point from, double radius, const Visit& visit) const;
+        /// @brief La poussée que les voisins exercent sur un animal, limitée à MaxPushPerTick.
+        Point PushOn(const Animal& animal) const;
         /// @brief La proie la plus proche dans le rayon parmi celles que le chasseur mange, ou nullptr.
         Animal* ClosestPrey(const Animal& hunter, Point from, double radius) const;
 

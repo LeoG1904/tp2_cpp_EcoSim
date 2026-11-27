@@ -105,7 +105,8 @@ namespace ecosim {
             const HBRUSH body = CreateSolidBrush(RGB(style.color.red, style.color.green, style.color.blue));
             const HBRUSH head = CreateSolidBrush(RGB(style.color.red * 7 / 10, style.color.green * 7 / 10,
                                                      style.color.blue * 7 / 10));
-            const double radius = cellSize * style.length * 0.72;
+            // Le disque a la taille du corps utilisée par les collisions.
+            const double radius = cellSize * species.bodyRadius;
             const HGDIOBJ previousBrush = SelectObject(buffer, body);
             for (const AnimalSnapshot& animal : animals) {
                 if (animal.kind != species.kind) continue;

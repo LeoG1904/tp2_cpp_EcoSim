@@ -14,7 +14,8 @@ export namespace ecosim {
     public:
         /// @brief Les caractéristiques fixes du renard.
         static constexpr SpeciesTraits Traits{.energyLoss = 2, .maxAge = 100, .foodEnergy = 40,
-                                              .reproductionEnergy = 70, .speed = 110};
+                                              .reproductionEnergy = 70, .speed = 110,
+                                              .bodyRadius = 0.16};
         /// @brief Chance de naissance, en %, proposée au départ.
         static constexpr int DefaultBirthPercent{6};
         /// @brief Distance de vue, en cases, avant le bonus de flair.

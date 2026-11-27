@@ -15,6 +15,7 @@ TEST_CASE("Le catalogue decrit chaque espece de facon coherente", "[catalog]") {
         const auto animal = info.create(1, {0, 0}, 50, {info.defaultBirthPercent});
         REQUIRE(animal->GetKind() == info.kind);
         REQUIRE(animal->IsPrey() == info.canBeEaten);
+        REQUIRE(animal->GetTraits().bodyRadius == info.bodyRadius);
         REQUIRE(animal->GetOptions().birthPercent == info.defaultBirthPercent);
     }
 }

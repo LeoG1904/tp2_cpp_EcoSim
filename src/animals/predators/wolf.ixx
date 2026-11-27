@@ -14,7 +14,8 @@ export namespace ecosim {
     public:
         /// @brief Les caractéristiques fixes du loup.
         static constexpr SpeciesTraits Traits{.energyLoss = 2, .maxAge = 80, .foodEnergy = 25,
-                                              .reproductionEnergy = 80, .speed = 80};
+                                              .reproductionEnergy = 80, .speed = 80,
+                                              .bodyRadius = 0.20};
         /// @brief Chance de naissance, en %, proposée au départ.
         static constexpr int DefaultBirthPercent{6};
         /// @brief Distance de vue, en cases, avant le bonus de meute.

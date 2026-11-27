@@ -15,7 +15,7 @@ export namespace ecosim {
         /// @brief Les caractéristiques fixes du lapin ; il offre un petit repas.
         static constexpr SpeciesTraits Traits{.energyLoss = 1, .maxAge = 60, .foodEnergy = 5,
                                               .reproductionEnergy = 50, .speed = 100,
-                                              .mealPercent = 50};
+                                              .mealPercent = 50, .bodyRadius = 0.12};
         /// @brief Chance de naissance, en %, proposée au départ.
         static constexpr int DefaultBirthPercent{70};
         /// @brief À partir de cette quantité d'herbe sous lui, il reste brouter.

@@ -80,6 +80,28 @@ namespace ecosim {
                 break;
             }
         }
+        FollowPath(tick);
+    }
+
+    void Animal::Push(const World& world, const Point offset, const int tick) {
+        // Le déplacement entier d'abord, puis chacun des deux axes seul.
+        const std::array<Point, 3> attempts{offset, Point{offset.x, 0.0}, Point{0.0, offset.y}};
+        for (const Point attempt : attempts) {
+            const double length = std::hypot(attempt.x, attempt.y);
+            if (length < 1e-12) continue;
+            const Point next{location.x + attempt.x, location.y + attempt.y};
+            const Point ahead{next.x + attempt.x / length * BodyMargin,
+                              next.y + attempt.y / length * BodyMargin};
+            if (!world.IsWalkable(next) || !world.IsWalkable(ahead) || !CanCross(world, location, next)) {
+                continue;
+            }
+            location = next;
+            break;
+        }
+        FollowPath(tick);
+    }
+
+    void Animal::FollowPath(const int tick) {
         // Le reste du trajet suit la position atteinte.
         for (std::size_t i = static_cast<std::size_t>(tick) + 1; i < path.size(); ++i) path[i] = location;
     }

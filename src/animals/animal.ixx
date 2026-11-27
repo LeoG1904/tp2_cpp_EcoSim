@@ -54,6 +54,12 @@ export namespace ecosim {
         double pace{0.0};
     };
 
+    /// @brief Plus grand rayon de corps qu'une espèce puisse avoir, en cases.
+    ///
+    /// Il borne la recherche des animaux qui se touchent.
+    /// @ingroup moteur
+    inline constexpr double MaxBodyRadius{0.25};
+
     /// @brief Ce qui fait une espèce : des caractéristiques fixes, que l'utilisateur ne règle pas.
     /// @ingroup moteur
     struct SpeciesTraits {
@@ -69,6 +75,8 @@ export namespace ecosim {
         int speed;
         /// @brief Taille du repas offert au chasseur, en % de son énergie par proie.
         int mealPercent{100};
+        /// @brief Rayon du corps rond de l'animal, en cases, au plus MaxBodyRadius.
+        double bodyRadius{0.15};
 
         /// @brief Vrai si les deux valeurs sont identiques.
         bool operator==(const SpeciesTraits&) const = default;
@@ -176,6 +184,13 @@ export namespace ecosim {
         /// @param steering Direction et allure voulues.
         /// @param tick Numéro du petit pas, de 0 à TicksPerGeneration - 1.
         void Advance(const World& world, Steering steering, int tick);
+        /// @brief Déplace l'animal parce qu'un autre le pousse.
+        ///
+        /// Devant un obstacle, il glisse le long d'un axe, ou reste en place : il n'est jamais poussé hors des prairies. Sa direction ne change pas.
+        /// @param world Carte à respecter.
+        /// @param offset Déplacement voulu, en cases.
+        /// @param tick Numéro du petit pas qui vient d'être joué.
+        void Push(const World& world, Point offset, int tick);
         /// @brief Vieillit d'une génération et perd de l'énergie.
         void SpendGeneration();
         /// @brief Tue l'animal.
@@ -216,6 +231,9 @@ export namespace ecosim {
         virtual std::unique_ptr<Animal> MakeOffspring(std::uint64_t id) const = 0;
 
     private:
+        /// @brief Écrit la position actuelle dans le trajet, du petit pas donné jusqu'à la fin.
+        void FollowPath(int tick);
+
         /// @brief Identifiant unique, attribué par la simulation.
         std::uint64_t id;
         /// @brief Identifiant du parent ; vide pour un animal placé au départ.

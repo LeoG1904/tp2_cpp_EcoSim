@@ -28,6 +28,8 @@ export namespace ecosim {
         int minimumAtStart;
         /// @brief Vrai pour une proie.
         bool canBeEaten;
+        /// @brief Rayon du corps, en cases ; l'affichage dessine l'animal à cette taille.
+        double bodyRadius;
         /// @brief Instinct activé dans l'application.
         int defaultInstinct;
         /// @brief Fonction qui crée un animal de cette espèce.
