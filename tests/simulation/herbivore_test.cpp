@@ -92,7 +92,7 @@ TEST_CASE("Le trajet d'une generation est continu et reste sur les prairies", "[
             for (std::size_t i = 1; i < animal.path.size(); ++i) {
                 // Le pas de l'animal, plus au maximum la poussée d'une collision.
                 REQUIRE(Distance(animal.path[i - 1], animal.path[i])
-                        <= 1.2 / TicksPerGeneration + MaxPushPerTick + 1e-9);
+                        <= Deer::Traits.speed / 100.0 / TicksPerGeneration + MaxPushPerTick + 1e-9);
                 REQUIRE(simulation.GetWorld().IsWalkable(animal.path[i]));
             }
             REQUIRE(animal.position == CellAt(animal.path.back()));

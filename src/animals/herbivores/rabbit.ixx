@@ -13,7 +13,7 @@ export namespace ecosim {
     class Rabbit final : public Herbivore {
     public:
         /// @brief Les caractéristiques fixes du lapin ; il offre un petit repas.
-        static constexpr SpeciesTraits Traits{.energyLoss = 1, .maxAge = 60, .foodEnergy = 5,
+        static constexpr SpeciesTraits Traits{.energyLoss = 1, .maxAge = 70, .foodEnergy = 5,
                                               .reproductionEnergy = 50, .speed = 100,
                                               .mealPercent = 50, .bodyRadius = 0.12};
         /// @brief Chance de naissance, en %, proposée au départ.

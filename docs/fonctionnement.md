@@ -48,6 +48,7 @@ ecosim::Simulation::Step() applique toujours les mêmes étapes, dans cet ordre.
      - les cerfs et les lapins avancent
      - puis les loups et les renards avancent et chassent
      (les herbivores mangent au dernier pas)
+     - enfin, les animaux qui se superposent sont écartés
             |
   3. Métabolisme
      chaque survivant vieillit et perd de l'énergie
@@ -61,6 +62,16 @@ ecosim::Simulation::Step() applique toujours les mêmes étapes, dans cet ordre.
 
 Les morts sont retirés et les nouveau-nés ajoutés **après** le parcours des animaux : un
 nouveau-né n'agit qu'à la génération suivante, et personne n'est mis à jour deux fois.
+
+## Les collisions
+
+Chaque animal a un **corps rond** : le lapin est le plus petit, le loup le plus gros. Après
+chaque petit pas, ecosim::GridHabitat::Separate() écarte ceux qui se superposent.
+
+- C'est une collision **souple** : on se pousse, sans jamais rester bloqué net. Un petit
+  chevauchement peut subsister dans une foule.
+- Le plus petit recule davantage. Personne n'est poussé hors des prairies.
+- Les captures passent avant : une poussée ne sauve pas une proie déjà atteinte.
 
 ## Pourquoi 10 petits pas ?
 
@@ -84,9 +95,9 @@ Les deux espèces d'herbivores partagent ces règles, mais pas leurs atouts.
 | Reste brouter si l'herbe sous lui atteint | 30 | 5 : il se contente d'une herbe rase |
 | Herbe qu'il ne peut pas brouter | les 5 derniers points | aucune |
 | Herbe mangée au maximum par génération | 12 | 5 |
-| Vitesse (% de case par génération) | 120 | 100 |
+| Vitesse (% de case par génération) | 130 | 100 |
 | Énergie perdue par génération | 2 | 1 |
-| Âge maximum | 80 | 60 |
+| Âge maximum | 80 | 70 |
 | Énergie pour se reproduire | 80 | 50 |
 | Repas offert au chasseur | entier | la moitié |
 
@@ -106,14 +117,14 @@ l'espèce. Les chasseurs ont aussi les leurs.
 | --- | --- | --- |
 | Proies | cerfs et lapins | lapins seulement |
 | Distance de vue, avant l'instinct | 3 cases | 1,5 case |
-| Vitesse (% de case par génération) | 80 | 110 |
-| Énergie par proie entière | 25 | 40 |
+| Vitesse (% de case par génération) | 80 | 90 |
+| Énergie par proie entière | 25 | 35 |
 | Énergie perdue par génération | 2 | 2 |
-| Âge maximum | 80 | 100 |
+| Âge maximum | 80 | 140 |
 | Énergie pour se reproduire | 80 | 70 |
 | En groupe | peut chasser en meute | toujours seul |
 
-Un lapin ne vaut qu'une demi-proie : un renard en tire 20 points d'énergie, un loup 12.
+Un lapin ne vaut qu'une demi-proie : un renard en tire 17 points d'énergie, un loup 12.
 
 ## Ce qui se règle
 

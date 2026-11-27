@@ -1,6 +1,6 @@
 # EcoSim
 
-EcoSim est une simulation d'écosystème cellulaire en **C++23**. Une grille de prairies, d'eau et d'obstacles porte la végétation ; des cerfs, des lapins, des loups et des renards s'y déplacent **librement**, dans toutes les directions. Plusieurs animaux peuvent se trouver sur la même case. La simulation évolue par générations et son moteur fonctionne indépendamment de l'affichage.
+EcoSim est une simulation d'écosystème cellulaire en **C++23**. Une grille de prairies, d'eau et d'obstacles porte la végétation ; des cerfs, des lapins, des loups et des renards s'y déplacent **librement**, dans toutes les directions. Plusieurs animaux peuvent se trouver sur la même case, et ils se poussent quand leurs corps se touchent. La simulation évolue par générations et son moteur fonctionne indépendamment de l'affichage.
 
 L'application affiche la carte en direct, en **2D** ou dans une **première version 3D**, et permet de consulter l'évolution des statistiques sur des graphiques.
 
@@ -30,9 +30,9 @@ Les boutons situés sous les colonnes remplacent tous les réglages. Chaque vale
 
 | Préréglage | Ce qui change par rapport aux valeurs par défaut | Comportement observé (carte 42 × 26) |
 | --- | --- | --- |
-| **Équilibre** | Fuite des cerfs et des lapins 50 %, ni meute ni flair | Sur 400 cartes, les quatre espèces sont encore présentes à 400 générations dans 91 % des cas (de 86 à 95 % selon la série de 100), et à 1000 générations dans 86 % (de 81 à 91 %) |
-| **Famine** | Aucune repousse, un seul loup et un seul renard | Plus aucun cerf ni lapin à 150 générations (la moitié des extinctions avant la génération 80 environ). Sur 100 cartes, la faim cause 93 % des morts chez les cerfs et 68 % chez les lapins |
-| **Invasion** | Beaucoup plus de loups au départ (une case sur onze, 200 au maximum), aucune fuite, meute 3 | Sur 100 cartes, la moitié des extinctions de cerfs et de lapins a lieu avant la génération 12 environ, par capture. À la génération 100, il ne reste ni cerf ni lapin dans les 100 simulations |
+| **Équilibre** | Fuite des cerfs et des lapins 50 %, ni meute ni flair | Les quatre espèces sont encore présentes à 400 générations dans 93 % des cas (400 cartes, de 91 à 96 % selon la série de 100), et à 1000 générations dans 88 % (200 cartes) |
+| **Famine** | Aucune repousse, un seul loup et un seul renard | Sur 100 cartes, plus aucun cerf ni lapin à 150 générations (la moitié des extinctions avant la génération 80 environ). La faim cause 94 % des morts chez les cerfs et 78 % chez les lapins |
+| **Invasion** | Beaucoup plus de loups au départ (une case sur onze), aucune fuite, meute 3 | Sur 100 cartes, la moitié des extinctions a lieu avant la génération 13 environ pour les cerfs et 11 pour les lapins, par capture. À la génération 100, des lapins restent dans 1 simulation et aucun cerf |
 
 Ces résultats sont des tendances : la carte et les animaux restent tirés au hasard. Les cartes mesurées n'ont pas servi à choisir les valeurs des espèces.
 
@@ -40,12 +40,12 @@ Ces résultats sont des tendances : la carte et les animaux restent tirés au ha
 
 | Taille | Les quatre espèces à 400 générations | Plus aucun cerf ni lapin |
 | --- | --- | --- |
-| 10 × 10 | 0 % (200 cartes) | 84 % |
-| 20 × 14 | 7 % (200 cartes) | 8 % |
-| 30 × 20 | 59 % (200 cartes) | 1 % |
-| 42 × 26 | 90 % (200 cartes) | 0 % |
+| 10 × 10 | 0 % (200 cartes) | 83 % |
+| 20 × 14 | 12 % (200 cartes) | 3 % |
+| 30 × 20 | 67 % (200 cartes) | 0 % |
+| 42 × 26 | 93 % (400 cartes) | 0 % |
 | 48 × 27 | 96 % (200 cartes) | 0 % |
-| 80 × 45 | 100 % (60 cartes) | 0 % |
+| 80 × 45 | 100 % (40 cartes) | 0 % |
 
 « Famine » et « Invasion » gardent leur effet aux tailles mesurées (10 × 10, 20 × 14, 48 × 27 et 80 × 45) : à la fin de l'observation, il ne reste ni cerf ni lapin dans presque toutes les simulations (au moins 39 sur 40). Au-delà de 80 × 45, aucun préréglage n'a été mesuré.
 
@@ -89,7 +89,7 @@ Le bouton **Recommencer** repart à la génération 0, réinitialise la vitesse 
 
 La largeur (X) et la hauteur (Y) se saisissent à l'accueil, dans la colonne **Terrain**. Le minimum est de **10 × 10**. Aucun plafond de taille n'est imposé : la saisie accepte jusqu'à 999 999 par côté, bien au-delà de ce qu'un ordinateur peut calculer. La taille proposée au départ est celle qui remplit l'écran avec des cases de 40 pixels.
 
-- **Populations :** quand la taille change, les nombres d'animaux au départ sont recalculés pour garder la même densité (un cerf et un lapin pour 15 cases, un loup pour 150, un renard pour 135, avec un minimum). Les autres réglages sont conservés. Un préréglage encore intact reste actif, recalculé pour la nouvelle taille.
+- **Populations :** quand la taille change, les nombres d'animaux au départ sont recalculés pour garder la même densité (un cerf et un lapin pour 15 cases, un loup pour 150, un renard pour 109, avec un minimum). Les autres réglages sont conservés. Un préréglage encore intact reste actif, recalculé pour la nouvelle taille.
 - **Grande carte :** à partir de 20 000 cases, l'accueil prévient que la simulation et la 3D risquent d'être lentes.
 - **Mémoire insuffisante :** si la réservation de mémoire échoue, l'application reste sur l'accueil avec un message. Une taille très grande mais réservable peut aussi rendre l'ordinateur très lent avant tout message.
 - **Lenteur :** la simulation est calculée dans son propre thread : la fenêtre continue de répondre pendant une génération longue. Quand le calcul ne suit pas la vitesse demandée, les générations en retard sont abandonnées et la simulation ralentit. Le dessin, lui, reste fait par le thread principal : une grande carte en 3D peut toujours rendre la fenêtre saccadée. Revenir au menu, recommencer ou quitter attend la fin de la génération en cours.
@@ -101,10 +101,12 @@ Mesures en version `Release`, **sans le dessin**, à partir du démarrage et pen
 
 | Carte et vitesse demandée | Générations calculées par seconde | Plus longue image | Retour au menu |
 | --- | --- | --- | --- |
-| 48 × 27, x10 | 9,8 | 0,1 ms | 5 ms |
-| 100 × 100, x10 | 9,8 | 0,2 ms | 39 ms |
-| 200 × 200, x10 | 6,2 | 0,03 ms | 170 ms |
-| 500 × 500, x1 | 0,8 | 0,03 ms | 210 ms |
+| 48 × 27, x10 | 9,8 | 0,2 ms | 1 ms |
+| 100 × 100, x10 | 9,8 | 0,1 ms | 1 ms |
+| 200 × 200, x10 | 5,2 | 0,03 ms | 125 ms |
+| 500 × 500, x1 | 0,8 | 0,01 ms | 5 ms |
+
+Le retour au menu dépend de l'avancement de la génération en cours au moment du clic.
 
 La première génération arrive après le temps d'une génération à la vitesse choisie, d'où un peu moins que la vitesse demandée sur une durée courte.
 
@@ -114,13 +116,13 @@ Mesures sur un ordinateur de développement, en version **optimisée** (`Release
 
 | Carte | Animaux (pic sur 40 générations) | Une génération (moyenne) | Image 2D entière | Image 3D |
 | --- | --- | --- | --- | --- |
-| 48 × 27 | 1 000 | 3 ms | 6 ms | 14 ms |
-| 100 × 100 | 8 000 | 27 ms | 23 ms | 79 ms |
-| 200 × 200 | 32 000 | 130 ms | 91 ms | 290 ms |
-| 500 × 500 | 200 000 | 1,4 s | 100 ms | 1,7 s |
+| 48 × 27 | 1 000 | 5 ms | 6 ms | 14 ms |
+| 100 × 100 | 9 000 | 50 ms | 23 ms | 79 ms |
+| 200 × 200 | 34 000 | 210 ms | 91 ms | 290 ms |
+| 500 × 500 | 214 000 | 2,1 s | 100 ms | 1,7 s |
 | 1000 × 1000 | non mesuré | non mesuré | 280 ms | non mesurée |
 
-Les images sont mesurées avec la population de départ, avant que les animaux se multiplient : elles sont ensuite plus lentes.
+Les images sont mesurées avec la population de départ, avant que les animaux se multiplient : elles sont ensuite plus lentes. Elles ont été mesurées avant l'ajout des collisions, qui n'ajoute pas de dessin.
 
 ## Génération de la carte
 
@@ -160,23 +162,36 @@ Le vieillissement, la perte d'énergie, les naissances et la repousse ont toujou
 
 | Caractéristique fixe | Cerf | Lapin | Loup | Renard |
 | --- | --- | --- | --- | --- |
-| Vitesse (% de case par génération) | 120 | 100 | 80 | 110 |
+| Vitesse (% de case par génération) | 130 | 100 | 80 | 90 |
 | Énergie perdue par génération | 2 | 1 | 2 | 2 |
-| Âge maximum | 80 | 60 | 80 | 100 |
-| Herbe mangée au maximum, ou énergie par proie | 12 | 5 | 25 | 40 |
+| Âge maximum | 80 | 70 | 80 | 140 |
+| Herbe mangée au maximum, ou énergie par proie | 12 | 5 | 25 | 35 |
 | Énergie pour se reproduire | 80 | 50 | 80 | 70 |
 | Reste brouter sur une herbe d'au moins | 30 | 5 | | |
 | Herbe qu'il ne peut pas brouter | 5 | 0 | | |
 | Repas offert au chasseur | 100 % | 50 % | | |
 | Distance de vue avant l'instinct (cases) | | | 3 | 1,5 |
 | Proies | | | cerfs et lapins | lapins |
+| Rayon du corps (cases) | 0,18 | 0,12 | 0,20 | 0,16 |
 
 | Réglage proposé au départ | Cerf | Lapin | Loup | Renard |
 | --- | --- | --- | --- | --- |
-| Chance de naissance | 25 % | 70 % | 6 % | 6 % |
+| Chance de naissance | 30 % | 70 % | 4 % | 8 % |
 | Instinct | fuite 25 % | fuite 25 % | meute 2 | flair 1 |
 
 Chaque caractéristique fixe est écrite à un seul endroit, dans la classe de l'espèce (`Deer::Traits`, `Rabbit::Traits`, `Wolf::Traits`, `Fox::Traits`, le seuil d'herbe `GrazingThreshold`, la réserve `Deer::UngrazableVegetation`, la vue `Sight` et le régime `Eats`).
+
+## Collisions
+
+Chaque animal a un **corps rond**, dont le rayon est fixé par son espèce. Après chaque petit pas, ceux qui se superposent sont **écartés** : ce sont des collisions souples.
+
+- Le plus petit corps recule davantage : chacun recule selon la surface de l'autre.
+- Toutes les poussées sont calculées avant d'être appliquées. Une poussée est limitée à 0,1 case par petit pas.
+- Personne n'est poussé dans l'eau, dans un obstacle ou hors de la carte.
+- Deux animaux exactement au même point, comme un nouveau-né sur son parent, partent en sens opposés, sans tirage au sort.
+- Les captures ont lieu **avant** l'écartement. Les corps d'un chasseur et de sa proie se touchent à moins de 0,45 case : ils ne l'empêchent pas de l'attraper.
+
+Un chevauchement partiel peut subsister dans une foule ou contre un obstacle. Sur 10 simulations de 42 × 26 avec « Équilibre », la part des animaux couverts à plus de moitié par un autre est passée de **29 % sans collisions à 7 %**. Le calcul d'une génération en est nettement plus long.
 
 ## Fuite et meutes
 
@@ -203,14 +218,14 @@ Sur la carte, le bouton **Vue 3D** change l'affichage sans toucher à la simulat
 
 Les obstacles sont des blocs, les cerfs des modèles jaunes, les lapins de petits modèles blancs les loups des modèles rouges plus hauts et les renards de petits modèles violets, orientés dans le sens du déplacement. La couleur des prairies suit la végétation. Des touffes d'herbe y poussent : une case rase (végétation inférieure à 5) n'en a pas, puis leur nombre (jusqu'à cinq) et leur hauteur augmentent avec la végétation. Elles raccourcissent quand un cerf ou un lapin broute et repoussent au fil des générations. Avec la repousse par défaut de 1 par génération, la croissance est progressive ; le réglage **Repousse végétation** l'accélère. La vue choisie est conservée après **Recommencer** et le retour au menu ; la position de la caméra aussi, tant que la taille de la carte ne change pas.
 
-Limites de cette première version : le rendu est calculé par le processeur et dessiné avec Win32/GDI, sans carte graphique, textures ni éclairage dynamique. Les animaux proches les uns des autres peuvent se chevaucher à l'écran ; le panneau d'une case donne les effectifs réels. La caméra vise toujours le centre de la carte. La sélection vise le sol : cliquer sur le haut d'un obstacle peut choisir la case située derrière.
+Limites de cette première version : le rendu est calculé par le processeur et dessiné avec Win32/GDI, sans carte graphique, textures ni éclairage dynamique. En 3D, les modèles d'animaux proches peuvent encore se chevaucher ; le panneau d'une case donne les effectifs réels. La caméra vise toujours le centre de la carte. La sélection vise le sol : cliquer sur le haut d'un obstacle peut choisir la case située derrière.
 
 ## Règles de la simulation
 
 À chaque génération :
 
 1. La végétation repousse sur les prairies.
-2. Pendant 10 petits pas, les cerfs et les lapins, puis les loups et les renards, se déplacent ; les chasseurs capturent les proies qu'ils atteignent (au plus une chacun).
+2. Pendant 10 petits pas, les cerfs et les lapins, puis les loups et les renards, se déplacent ; les chasseurs capturent les proies qu'ils atteignent (au plus une chacun). Après chaque petit pas, les animaux qui se superposent sont écartés.
 3. Les cerfs et les lapins encore vivants mangent la végétation de la case où ils se trouvent.
 4. Les survivants vieillissent et perdent de l'énergie. Les individus suffisamment âgés et nourris peuvent se reproduire.
 5. Les animaux morts sont retirés ; les effectifs, la végétation totale et les événements de la génération sont enregistrés par `SimulationStats`.

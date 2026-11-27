@@ -17,7 +17,7 @@ export namespace ecosim {
                                               .reproductionEnergy = 80, .speed = 80,
                                               .bodyRadius = 0.20};
         /// @brief Chance de naissance, en %, proposée au départ.
-        static constexpr int DefaultBirthPercent{6};
+        static constexpr int DefaultBirthPercent{4};
         /// @brief Distance de vue, en cases, avant le bonus de meute.
         static constexpr double Sight{3.0};
         /// @brief Distance dans laquelle les loups partagent le repas.

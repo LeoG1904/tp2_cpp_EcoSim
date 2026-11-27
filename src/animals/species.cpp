@@ -28,7 +28,7 @@ namespace ecosim {
             {AnimalKind::Wolf, "Loup", "Loups", Wolf::DefaultBirthPercent, 150, 3, false,
              Wolf::Traits.bodyRadius, 2,
              &Create<Wolf>},
-            {AnimalKind::Fox, "Renard", "Renards", Fox::DefaultBirthPercent, 135, 3, false,
+            {AnimalKind::Fox, "Renard", "Renards", Fox::DefaultBirthPercent, 109, 3, false,
              Fox::Traits.bodyRadius, 1,
              &Create<Fox>},
         };

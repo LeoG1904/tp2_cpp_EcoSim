@@ -14,10 +14,10 @@ export namespace ecosim {
     public:
         /// @brief Les caractéristiques fixes du cerf.
         static constexpr SpeciesTraits Traits{.energyLoss = 2, .maxAge = 80, .foodEnergy = 12,
-                                              .reproductionEnergy = 80, .speed = 120,
+                                              .reproductionEnergy = 80, .speed = 130,
                                               .bodyRadius = 0.18};
         /// @brief Chance de naissance, en %, proposée au départ.
-        static constexpr int DefaultBirthPercent{25};
+        static constexpr int DefaultBirthPercent{30};
         /// @brief À partir de cette quantité d'herbe sous lui, il reste brouter.
         static constexpr int GrazingThreshold{30};
         /// @brief Herbe qu'il ne peut pas brouter : le ras du sol reste aux lapins.

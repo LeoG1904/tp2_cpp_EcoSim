@@ -179,7 +179,7 @@ d.box("Habitat", 1150, 560, 260, ["NearestPrey()", "ThreatsNear(), MatesNear()",
 
 d.box("SpeciesInfo", 500, 800, 430, ["nom, valeurs de départ, create()",
                                      "catalogue : SpeciesCatalog(), SpeciesOf()"], "structure")
-d.box("GridHabitat", 1150, 800, 260, ["animaux rangés par case", "créé à chaque génération"])
+d.box("GridHabitat", 1150, 800, 260, ["animaux rangés par case", "Separate() : collisions"])
 
 # possessions
 d.edge("compose", [(600, 80), (310, 80)], "1", (322, 72))

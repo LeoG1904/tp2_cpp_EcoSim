@@ -110,7 +110,8 @@ Un animal a besoin de savoir ce qui l'entoure, mais pas de connaître toute la s
 passe par ecosim::Habitat. On peut ainsi tester une espèce seule avec un faux habitat.
 
 En interne, la simulation range les animaux **par case** : pour trouver ses voisins, un animal
-ne regarde que les cases proches au lieu de parcourir toute la population.
+ne regarde que les cases proches au lieu de parcourir toute la population. Ce rangement sert
+aussi aux collisions, qui écartent les corps superposés (ecosim::GridHabitat::Separate).
 
 ### 3. Les interfaces InputSource et View
 
