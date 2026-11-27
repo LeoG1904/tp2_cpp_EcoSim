@@ -61,6 +61,8 @@ namespace ecosim {
         for (int i = 0; i < size; ++i) {
             const Sex sex = female(rng) ? Sex::Female : Sex::Male;
             newborns.push_back(mother.CreateOffspring(nextId++, sex));
+            // Sans la soif, personne ne boit : le petit naît désaltéré, sinon il resterait stérile.
+            if (!HasThirst()) newborns.back()->Drink();
             stats.RecordBirth(mother.GetKind());
         }
     }

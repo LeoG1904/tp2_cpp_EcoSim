@@ -130,7 +130,7 @@ export namespace ecosim {
         void Spawn(AnimalKind kind, Position position, std::optional<int> energy);
         /// @brief Joue les petits pas d'une génération : se déplacer, manger et chasser.
         void MoveAndInteract();
-        /// @brief Ajoute aux nouveau-nés la portée d'une mère, de sexes tirés au sort, et compte les naissances.
+        /// @brief Ajoute aux nouveau-nés la portée d'une mère, de sexes tirés au sort, et compte les naissances. Quand la soif est coupée, les petits naissent désaltérés.
         void GiveBirth(const Animal& mother, std::vector<std::unique_ptr<Animal>>& newborns);
         /// @brief Fait vieillir les animaux, gère les naissances, puis retire les morts.
         void LiveAndReproduce();

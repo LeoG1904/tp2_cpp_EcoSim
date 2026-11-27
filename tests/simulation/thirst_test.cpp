@@ -104,6 +104,76 @@ TEST_CASE("Un nouveau-ne commence avec moins d'eau et nait assoiffe", "[thirst]"
     REQUIRE(child->GetHydration() == Animal::MaxHydration);
 }
 
+TEST_CASE("Un animal assoiffe ne se reproduit pas", "[thirst]") {
+    World world = Strip(12);
+    SimulationStats stats;
+    std::vector<std::unique_ptr<Animal>> animals;
+    animals.push_back(std::make_unique<Deer>(1, Position{5, 0}, Animal::MaxEnergy));
+    animals.push_back(std::make_unique<Deer>(2, Position{5, 0}, Animal::MaxEnergy));
+    Animal& female = *animals[0];
+    Animal& male = *animals[1];
+    female.SetSex(Sex::Female);
+    male.SetSex(Sex::Male);
+    for (int i = 0; i < Animal::AdultAge; ++i) {
+        female.SpendGeneration();
+        male.SpendGeneration();
+    }
+    REQUIRE(female.CanBreedWith(male));
+
+    // Un seul des deux a soif : aucun couple ne se forme.
+    Dry(male, 14);
+    REQUIRE(male.IsThirsty());
+    REQUIRE_FALSE(male.CanReproduce());
+    REQUIRE_FALSE(female.CanBreedWith(male));
+    GridHabitat habitat{world, animals, stats};
+    REQUIRE_FALSE(habitat.NearestMate(female, female.GetLocation(), Animal::MateSight).has_value());
+    habitat.FormCouples();
+    REQUIRE(female.GetPartner() == nullptr);
+
+    male.Drink();
+    habitat.FormCouples();
+    REQUIRE(female.GetPartner() == &male);
+}
+
+TEST_CASE("Les petits naissent desalteres quand la soif est coupee", "[thirst]") {
+    for (const int thirst : {0, 1}) {
+        SimulationSettings settings;
+        settings.thirstEnabled = thirst;
+        settings.vegetationGrowth = 20;
+        settings.species[AnimalKind::Rabbit].options.birthPercent = 100;
+        Simulation simulation{World{1, 1}, std::mt19937{3}, settings};
+        simulation.AddAnimal(AnimalKind::Rabbit, {0, 0}, 100);
+        simulation.AddAnimal(AnimalKind::Rabbit, {0, 0}, 100);
+        for (int i = 0; i < 20 && simulation.Stats().Total(AnimalKind::Rabbit).births == 0; ++i) {
+            simulation.Step();
+        }
+        REQUIRE(simulation.Stats().Total(AnimalKind::Rabbit).births > 0);
+        for (const AnimalSnapshot& animal : simulation.Animals()) {
+            if (!animal.parentId) continue;
+            if (thirst == 0) REQUIRE_FALSE(animal.hydration.has_value());
+            else REQUIRE(*animal.hydration == Animal::NewbornHydration);
+        }
+        // Sans soif, les petits devenus adultes se reproduisent a leur tour.
+        if (thirst == 0) {
+            const std::size_t first = simulation.Stats().Total(AnimalKind::Rabbit).births;
+            bool grandchildren = false;
+            for (int i = 0; i < 40 && !grandchildren && !simulation.IsFinished(); ++i) {
+                simulation.Step();
+                const auto all = simulation.Animals();
+                std::set<std::uint64_t> born;
+                for (const AnimalSnapshot& animal : all) {
+                    if (animal.parentId) born.insert(animal.id);
+                }
+                grandchildren = std::ranges::any_of(all, [&born](const AnimalSnapshot& animal) {
+                    return animal.parentId && born.contains(*animal.parentId);
+                });
+            }
+            REQUIRE(first > 0);
+            REQUIRE(grandchildren);
+        }
+    }
+}
+
 TEST_CASE("La soif passe avant la nourriture, la chasse et la reproduction", "[thirst]") {
     World world = Strip(12);
     const WaterRoutes routes{world};

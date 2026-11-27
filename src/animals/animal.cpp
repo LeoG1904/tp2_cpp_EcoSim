@@ -132,7 +132,8 @@ namespace ecosim {
     void Animal::Die() { energy = 0; }
 
     bool Animal::CanReproduce() const {
-        return IsAlive() && age >= AdultAge && restLeft == 0 && energy >= traits.reproductionEnergy;
+        return IsAlive() && !IsThirsty() && age >= AdultAge && restLeft == 0
+               && energy >= traits.reproductionEnergy;
     }
 
     bool Animal::CanBreedWith(const Animal& other) const {

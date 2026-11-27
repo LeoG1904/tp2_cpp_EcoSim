@@ -36,7 +36,7 @@ Les boutons situés sous les colonnes remplacent tous les réglages. Chaque vale
 
 Ces résultats sont des tendances : la carte et les animaux restent tirés au hasard. Les cartes mesurées n'ont pas servi à choisir les valeurs des espèces.
 
-> **Ces résultats ne sont plus valables.** Ils ont été mesurés avant la [reproduction à deux](#reproduction), le [relief](#relief) et la [soif](#soif), tout comme ceux du tableau des tailles ci-dessous. L'équilibre reste à refaire : avec les valeurs actuelles, sur 100 cartes de 42 × 26 et 400 générations d'« Équilibre », les cerfs ont survécu dans 3 cas et les loups dans 4 ; les lapins dans 99 cas et les renards dans 35 (29 sans la soif). Sur ces cartes, « Famine » et « Invasion » ne laissent aucune espèce.
+> **Ces résultats ne sont plus valables.** Ils ont été mesurés avant la [reproduction à deux](#reproduction), le [relief](#relief) et la [soif](#soif), tout comme ceux du tableau des tailles ci-dessous. L'équilibre reste à refaire : avec les valeurs actuelles, sur 100 cartes de 42 × 26 et 400 générations d'« Équilibre », les cerfs ont survécu dans 4 cas et les loups dans 1 ; les lapins dans les 100 et les renards dans 31 (29 sans la soif). Sur ces cartes, « Famine » et « Invasion » ne laissent aucune espèce.
 
 **Les préréglages dépendent de la taille.** « Équilibre » a été réglé pour une carte d'environ 42 × 26 :
 
@@ -204,12 +204,13 @@ Chaque caractéristique fixe est écrite à un seul endroit, dans la classe de l
 
 ## Soif
 
-En plus de son énergie, chaque animal a de l'**eau**, de 0 à 100. Il en perd à chaque génération, selon son espèce ; **à 0, il meurt de soif**. Un animal placé au départ commence à **100**, un nouveau-né à **50** : il naît donc assoiffé et va d'abord boire.
+En plus de son énergie, chaque animal a de l'**eau**, de 0 à 100. Il en perd à chaque génération, selon son espèce ; **à 0, il meurt de soif**. Un animal placé au départ commence à **100**, un nouveau-né à **50** : il naît donc assoiffé et va d'abord boire. Quand la soif est coupée, il naît à 100.
 
 - **Avoir soif :** à 60 ou moins, il part boire. La **fuite passe avant** ; la soif passe avant la reproduction, la nourriture et la chasse. Un chasseur assoiffé capture tout de même une proie qui se trouve à portée.
+- **Pas de petits :** un animal assoiffé **ne se reproduit pas** : il ne cherche pas de partenaire et ne peut pas être choisi. La soif est jugée au moment où le couple se forme, comme l'âge et l'énergie.
 - **Boire :** il suffit de passer sur une **berge**, une prairie qui touche l'eau par un côté. La jauge revient aussitôt à 100.
 - **Trouver l'eau :** à la création de la simulation, le chemin vers la berge la plus proche est calculé depuis chaque prairie (`WaterRoutes`). Un animal assoiffé le suit : il connaît son territoire, même sans voir l'eau, et contourne les obstacles. Le terrain ne changeant pas, ce calcul n'a lieu qu'une fois.
-- **Sans eau accessible :** la soif reste active. Quand aucune prairie ne touche l'eau (par exemple avec 0 % d'eau), personne ne peut boire. Un animal placé au départ meurt au plus tard après 34 générations pour un cerf et 50 pour les autres ; un nouveau-né, après 17 et 25. Une espèce qui se reproduit vite peut malgré tout durer, car ses petits sont adultes à 5 générations : sur 100 cartes de 42 × 26 sans eau, avec les réglages de départ, des lapins sont encore présents sur les 100 à 400 générations, alors que les loups et les renards ont disparu partout à 200 générations et les cerfs à 100. Pour une carte sans eau où toutes les espèces vivent normalement, réglez la soif à 0.
+- **Sans eau accessible :** la soif reste active. Quand aucune prairie ne touche l'eau (par exemple avec 0 % d'eau), personne ne peut boire. Un animal placé au départ meurt au plus tard après 34 générations pour un cerf et 50 pour les autres. Il ne peut se reproduire que tant qu'il n'a pas soif (moins de 14 générations pour un cerf, 20 pour les autres), et ses petits, assoiffés de naissance, ne se reproduisent jamais. Toutes les espèces s'éteignent donc : sur 100 cartes de 42 × 26 sans eau, avec les réglages de départ, il ne restait aucun animal à la génération 50. Pour une carte sans eau où les animaux vivent normalement, réglez la soif à 0.
 - **Suivi :** le panneau d'une case donne l'eau de chaque animal, et les courbes comptent les **morts de soif**.
 
 Sur 100 cartes générées avec 10 % d'eau et 3 paliers, la moitié des prairies sont à 5 pas au plus d'une berge, 90 % à 13 pas au plus et 99 % à 22 pas au plus, quelle que soit la taille de la carte (42 × 26 à 200 × 200). Avec 3 % d'eau, ces distances passent à 9, 20 et 31 pas.
@@ -218,14 +219,14 @@ Sur 100 cartes générées avec 10 % d'eau et 3 paliers, la moitié des prairies
 
 | Espèce encore présente | Sans soif | Avec soif |
 | --- | --- | --- |
-| Cerfs | 2 | 29 |
-| Lapins | 85 | 75 |
-| Loups | 6 | 4 |
-| Renards | 42 | 26 |
+| Cerfs | 2 | 33 |
+| Lapins | 85 | 80 |
+| Loups | 6 | 5 |
+| Renards | 42 | 23 |
 
 ## Reproduction
 
-Il faut **une femelle et un mâle** de la même espèce. Les deux doivent être adultes (5 générations au moins), avoir assez d'énergie pour leur espèce et avoir fini leur repos. Un animal seul ne se reproduit jamais.
+Il faut **une femelle et un mâle** de la même espèce. Les deux doivent être adultes (5 générations au moins), avoir assez d'énergie pour leur espèce, avoir fini leur repos et ne pas avoir [soif](#soif). Un animal seul ne se reproduit jamais.
 
 1. **Se chercher :** un animal prêt repère à 6 cases un partenaire prêt et encore sans couple, et se dirige vers lui. La fuite d'un herbivore passe avant ; la recherche de nourriture et la chasse viennent après.
 2. **Former un couple :** après chaque petit pas, une femelle prête prend le mâle libre le plus proche, à 0,6 case au plus. Un couple vaut pour la génération en cours.

@@ -50,7 +50,7 @@ ecosim::Animal::ClimbPace, la moitié.
 
 Quand la soif est active (ecosim::Simulation::HasThirst), chaque animal a de l'eau, de 0 à
 ecosim::Animal::MaxHydration. Il en perd à chaque génération et meurt à 0. À
-ecosim::Animal::ThirstThreshold ou moins, il part boire. Passer sur une **berge**, une prairie
+ecosim::Animal::ThirstThreshold ou moins, il part boire et ne peut plus se reproduire. Passer sur une **berge**, une prairie
 qui touche l'eau, remplit la jauge.
 
 ```
@@ -182,6 +182,7 @@ La valeur 0 désactive l'instinct.
 | Règle | Valeur |
 | --- | --- |
 | Parents | une femelle et un mâle de la même espèce |
+| Soif | un animal assoiffé ne se reproduit pas |
 | Âge minimal pour se reproduire | 5 générations |
 | Énergie minimale pour se reproduire | fixée par l'espèce |
 | Distance pour repérer un partenaire | 6 cases |

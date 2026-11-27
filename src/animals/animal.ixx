@@ -253,7 +253,7 @@ export namespace ecosim {
         void LoseWater();
         /// @brief Tue l'animal.
         void Die();
-        /// @brief Vrai s'il est vivant, adulte, assez nourri et reposé depuis sa dernière portée.
+        /// @brief Vrai s'il est vivant, sans soif, adulte, assez nourri et reposé depuis sa dernière portée.
         bool CanReproduce() const;
         /// @brief Vrai si les deux sont de la même espèce, de sexes différents et prêts à se reproduire.
         bool CanBreedWith(const Animal& other) const;
