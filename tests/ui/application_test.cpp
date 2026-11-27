@@ -157,3 +157,23 @@ TEST_CASE("Une carte trop grande pour la memoire laisse sur l'accueil avec un me
     REQUIRE(application.Settings().mapWidth == 20);
     REQUIRE(application.Notice().empty());
 }
+
+TEST_CASE("Un animal s'ajoute pendant la pause sans faire avancer le temps", "[application]") {
+    Scenario scenario;
+    scenario.Frame(UiAction::StartOrRestart);
+    scenario.Frame(UiAction::TogglePause);
+    const auto before = scenario.application.CurrentSimulation();
+    const Position free = before->animals.front().position;
+
+    scenario.input.next.placement = AnimalPlacement{AnimalKind::Fox, free};
+    scenario.Frame(UiAction::AddAnimal, 5.0);
+    const auto after = scenario.application.CurrentSimulation();
+    REQUIRE(after->Count(AnimalKind::Fox) == before->Count(AnimalKind::Fox) + 1);
+    REQUIRE(after->animals.size() == before->animals.size() + 1);
+    REQUIRE(after->generation == before->generation);
+    REQUIRE(scenario.application.Clock().IsPaused());
+
+    // Sans animal indique, l'action ne fait rien.
+    scenario.Frame(UiAction::AddAnimal);
+    REQUIRE(scenario.application.CurrentSimulation()->animals.size() == after->animals.size());
+}

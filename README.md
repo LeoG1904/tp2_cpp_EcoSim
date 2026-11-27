@@ -70,6 +70,7 @@ Chaque espèce n'a que **trois réglages**. Ses autres caractéristiques sont fi
 | Mettre en pause ou reprendre | **Espace**, ou bouton **Pause** / **Reprendre** sur la carte et les courbes |
 | Avancer d'une génération | Flèche **droite** ou **haut**, ou bouton **Génération +1**, pendant la pause |
 | Voir le détail d'une case | Clic sur la case ; second clic ou bouton **X** pour fermer |
+| [Ajouter des animaux](#ajouter-des-animaux) | Bouton **+ Cerf**, **+ Lapin**, **+ Loup** ou **+ Renard**, puis clic sur une prairie |
 | Zoomer sur la carte 2D | **Molette**, vers l'endroit sous la souris |
 | Déplacer la carte 2D zoomée | Maintenir le **clic droit** et glisser |
 | Revoir toute la carte | Bouton **Recentrer** |
@@ -86,6 +87,22 @@ La touche `Échap` fige la simulation et affiche un choix : **Menu** revient à 
 Quand il ne reste plus aucun animal, la simulation s'arrête à la dernière génération. La carte et les courbes restent accessibles pour consulter le résultat final.
 
 Le bouton **Recommencer** repart à la génération 0, réinitialise la vitesse à x1 et affiche la nouvelle carte.
+
+### Ajouter des animaux
+
+Sur la carte, en 2D comme en 3D, quatre boutons placent des animaux pendant la simulation.
+
+1. Cliquez sur le bouton d'une espèce : il reste surligné et l'aide en haut de l'écran le rappelle.
+2. Chaque clic sur une prairie y place **un** animal, au centre de la case. L'eau et les obstacles sont ignorés.
+3. Recliquez sur le même bouton, ou appuyez sur `Échap`, pour terminer. Un autre bouton change d'espèce.
+
+- **Quel animal :** il est comme ceux du départ : âge 0 (il est donc jeune pendant 5 générations), 50 d'énergie, 100 d'eau et les réglages de son espèce choisis à l'accueil. Le sexe alterne d'un animal placé au suivant dans chaque espèce : deux ajouts donnent une femelle et un mâle.
+- **Quand :** pendant la marche ou la pause. Le temps n'avance pas pour autant. Pendant un long calcul, l'animal apparaît une fois la série en cours terminée.
+- **Après la fin :** on peut ajouter des animaux à une simulation qui n'en a plus : elle reprend.
+- **Courbes :** les effectifs en tiennent compte, mais un animal ajouté n'est pas compté comme une naissance.
+- **Panneau :** choisir une espèce ferme le panneau d'une case. Pour consulter une case, terminez d'abord l'ajout.
+
+Le déroulement n'est alors plus celui que la graine seule aurait donné.
 
 ## Taille de la carte
 

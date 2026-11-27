@@ -116,7 +116,7 @@ d.box("OrbitCamera", 490, 370, 160, ["vue 3D"])
 d.box("ChartSelection", 670, 370, 160, ["graphiques choisis"], "structure")
 d.box("Application", 450, 490, 240, ["RunFrame()", "applique les actions"])
 
-d.box("SimulationRunner", 450, 610, 240, ["thread de calcul", "Request(), State()"])
+d.box("SimulationRunner", 450, 610, 240, ["thread de calcul", "Request(), Add(), State()"])
 
 d.box("SimulationClock", 150, 750, 220, ["vitesse et pause"])
 d.box("Simulation", 450, 750, 240, ["Step() : une génération"])

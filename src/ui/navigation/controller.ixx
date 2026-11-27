@@ -19,10 +19,20 @@ export namespace ecosim {
         TogglePause, ///< Mettre en pause ou reprendre.
         NextGeneration, ///< Avancer d'une génération pendant la pause.
         CycleSpeed, ///< Passer à la vitesse suivante.
+        AddAnimal, ///< Ajouter un animal sur la carte (UiController::Placement).
         ResetSettings, ///< Rétablir les réglages d'origine.
         CancelExit, ///< Fermer la confirmation de sortie.
         ReturnHome, ///< Revenir à l'accueil.
         Quit ///< Fermer l'application.
+    };
+
+    /// @brief Un animal que l'utilisateur place sur la carte.
+    /// @ingroup interface
+    struct AnimalPlacement {
+        /// @brief Espèce choisie.
+        AnimalKind kind;
+        /// @brief Case cliquée.
+        Position cell;
     };
 
     /// @brief Une touche utile à la saisie d'un réglage.
@@ -115,6 +125,10 @@ export namespace ecosim {
         std::optional<PointerPosition> Pointer() const;
         /// @brief La case choisie, le cas échéant.
         std::optional<Position> SelectedCell() const;
+        /// @brief L'espèce en cours d'ajout : tant qu'elle est choisie, un clic sur une prairie y place un animal.
+        std::optional<AnimalKind> PlacingKind() const;
+        /// @brief L'animal demandé par le dernier clic, quand Handle a renvoyé UiAction::AddAnimal.
+        std::optional<AnimalPlacement> Placement() const;
         /// @brief Côté du panneau d'information, pour ne pas cacher la case choisie.
         bool IsCellPanelOnLeft() const;
 
@@ -133,8 +147,12 @@ export namespace ecosim {
         UiAction ClickSimulation(PointerPosition mouse, bool paused, const World* world);
         /// @brief Coche ou décoche les choix de l'écran des graphiques.
         void ClickStats(PointerPosition mouse);
-        /// @brief Change de vue, recentre la caméra ou choisit une case.
-        void ClickMap(PointerPosition mouse, const World* world);
+        /// @brief Change de vue, recentre la caméra, choisit une espèce à ajouter, puis place un animal ou choisit une case.
+        /// @return UiAction::AddAnimal si un animal doit être placé, UiAction::None sinon.
+        UiAction ClickMap(PointerPosition mouse, const World* world);
+        /// @brief Active ou arrête l'ajout si le clic porte sur un bouton d'ajout.
+        /// @return Vrai si le clic portait sur un de ces boutons.
+        bool ClickAddButton(PointerPosition mouse);
 
         /// @brief Largeur de l'écran, en pixels.
         int width;
@@ -160,6 +178,10 @@ export namespace ecosim {
         ChartSelection charts;
         /// @brief Case dont le panneau est ouvert.
         std::optional<Position> selectedCell;
+        /// @brief Espèce en cours d'ajout ; vide hors de ce mode.
+        std::optional<AnimalKind> placing;
+        /// @brief Animal demandé pendant cette image.
+        std::optional<AnimalPlacement> placement;
         /// @brief Dernière position connue de la souris.
         std::optional<PointerPosition> pointer;
         /// @brief Position précédente de la souris pendant un glissement au clic droit ; vide sinon.

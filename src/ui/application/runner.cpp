@@ -23,6 +23,16 @@ namespace ecosim {
         wake.notify_one();
     }
 
+    void SimulationRunner::Add(const AnimalKind kind, const Position cell) {
+        {
+            const std::lock_guard lock{mutex};
+            if (failed) return;
+            additions.push_back({kind, cell});
+            inserting = true;
+        }
+        wake.notify_one();
+    }
+
     RunnerState SimulationRunner::State() const {
         const std::lock_guard lock{mutex};
         return {latest, busy, failed};
@@ -30,16 +40,18 @@ namespace ecosim {
 
     void SimulationRunner::Wait() const {
         std::unique_lock lock{mutex};
-        idle.wait(lock, [this] { return !busy; });
+        idle.wait(lock, [this] { return !busy && !inserting; });
     }
 
     void SimulationRunner::Work(const std::stop_token stop) {
         std::unique_lock lock{mutex};
-        while (wake.wait(lock, stop, [this] { return requested > 0; })) {
+        while (wake.wait(lock, stop, [this] { return requested > 0 || !additions.empty(); })) {
             const int steps = std::exchange(requested, 0);
+            const std::vector<Addition> added = std::exchange(additions, {});
             lock.unlock();
             bool succeeded = true;
             try {
+                if (!added.empty()) Insert(added);
                 Compute(steps, stop);
             } catch (const std::exception&) {
                 // Une exception qui sortirait du thread fermerait l'application.
@@ -47,13 +59,27 @@ namespace ecosim {
             }
             lock.lock();
             failed = failed || !succeeded;
-            if (failed) requested = 0;
+            if (failed) {
+                requested = 0;
+                additions.clear();
+            }
             busy = requested > 0;
-            if (!busy) idle.notify_all();
+            inserting = !additions.empty();
+            if (!busy && !inserting) idle.notify_all();
         }
         // À l'arrêt, personne ne doit rester bloqué dans Wait.
         busy = false;
+        inserting = false;
         idle.notify_all();
+    }
+
+    void SimulationRunner::Insert(const std::vector<Addition>& animals) {
+        for (const Addition& animal : animals) {
+            const World& world = simulation.GetWorld();
+            if (!world.IsInside(animal.cell) || !world.GetCell(animal.cell).IsAccessible()) continue;
+            simulation.AddAnimal(animal.kind, animal.cell);
+        }
+        Publish();
     }
 
     void SimulationRunner::Compute(const int steps, const std::stop_token& stop) {

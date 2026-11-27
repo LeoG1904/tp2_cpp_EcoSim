@@ -37,6 +37,12 @@ export namespace ecosim {
     UiRect ViewButton(const int width) { return {width - 230, 192, 210, 36}; }
     /// @brief Bouton « Recentrer » de la carte, en 2D comme en 3D.
     UiRect RecenterButton(const int width) { return {width - 230, 238, 210, 36}; }
+    /// @brief Bouton d'ajout d'un animal, un par espèce : deux par ligne sous « Recentrer ».
+    ///
+    /// Ils tiennent au-dessus du panneau d'une case sur un écran de 720 pixels de haut.
+    UiRect AddAnimalButton(const int width, const int index) {
+        return {width - 230 + index % 2 * 108, 292 + index / 2 * 46, 102, 36};
+    }
     /// @brief Colonnes de l'accueil : le terrain, puis une par espèce.
     inline constexpr int SettingColumns{1 + static_cast<int>(SpeciesCount)};
     /// @brief Nombre de lignes de réglages.

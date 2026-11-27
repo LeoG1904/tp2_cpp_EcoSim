@@ -37,7 +37,7 @@ namespace ecosim {
                 DrawFlatMap(canvas, simulation, playback.progress, controller.SelectedCell(),
                             controller.Flat());
             }
-            DrawHud(canvas, simulation, playback, controller.IsShowing3D());
+            DrawHud(canvas, simulation, playback, controller.IsShowing3D(), controller.PlacingKind());
             DrawCellPanel(canvas, simulation, controller.SelectedCell(), controller.IsCellPanelOnLeft());
         }
         if (controller.IsExitDialogOpen()) DrawExitDialog(canvas);

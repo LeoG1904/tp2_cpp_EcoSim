@@ -32,6 +32,8 @@ namespace ecosim {
     const OrbitCamera& UiController::Camera() const { return camera; }
     std::optional<PointerPosition> UiController::Pointer() const { return pointer; }
     std::optional<Position> UiController::SelectedCell() const { return selectedCell; }
+    std::optional<AnimalKind> UiController::PlacingKind() const { return placing; }
+    std::optional<AnimalPlacement> UiController::Placement() const { return placement; }
 
     bool UiController::IsCellPanelOnLeft() const {
         if (!selectedCell) return false;
@@ -44,11 +46,17 @@ namespace ecosim {
     UiAction UiController::Handle(const RawInput& input, const bool isHomeScreen, const bool paused,
                                   SimulationSettings& settings, const World* world) {
         pointer = input.pointer;
+        placement.reset();
         if (isHomeScreen) Type(input.typed, settings);
         if (!isHomeScreen && !showingStats && !exitDialogOpen) MoveCamera(input);
         else dragOrigin.reset();
 
         if (input.escape) {
+            // Pendant un ajout sur la carte, Échap le termine au lieu d'ouvrir la confirmation.
+            if (!isHomeScreen && placing && !exitDialogOpen && !showingStats) {
+                placing.reset();
+                return UiAction::None;
+            }
             if (!isHomeScreen) {
                 exitDialogOpen = !exitDialogOpen;
                 return exitDialogOpen ? UiAction::None : UiAction::CancelExit;
@@ -128,6 +136,7 @@ namespace ecosim {
         }
         if (StartButton(width, height).Contains(mouse.x, mouse.y)) {
             selectedCell.reset();
+            placing.reset();
             PrepareViews(settings);
             return UiAction::StartOrRestart;
         }
@@ -140,6 +149,7 @@ namespace ecosim {
             exitDialogOpen = false;
             showingStats = false;
             selectedCell.reset();
+            placing.reset();
             return UiAction::ReturnHome;
         }
         if (ExitQuitButton(width, height).Contains(mouse.x, mouse.y)) return UiAction::Quit;
@@ -156,6 +166,7 @@ namespace ecosim {
         if (RestartButton(width).Contains(mouse.x, mouse.y)) {
             showingStats = false;
             selectedCell.reset();
+            placing.reset();
             return UiAction::StartOrRestart;
         }
         if (PauseButton(width, showingStats).Contains(mouse.x, mouse.y)) return UiAction::TogglePause;
@@ -164,7 +175,7 @@ namespace ecosim {
         }
         if (showingStats) ClickStats(mouse);
         else if (GraphButton(width).Contains(mouse.x, mouse.y)) showingStats = true;
-        else ClickMap(mouse, world);
+        else return ClickMap(mouse, world);
         return UiAction::None;
     }
 
@@ -183,30 +194,51 @@ namespace ecosim {
         if (CumulativeButton().Contains(mouse.x, mouse.y)) charts.cumulative = !charts.cumulative;
     }
 
-    void UiController::ClickMap(const PointerPosition mouse, const World* world) {
+    bool UiController::ClickAddButton(const PointerPosition mouse) {
+        for (const SpeciesInfo& species : SpeciesCatalog()) {
+            if (!AddAnimalButton(width, static_cast<int>(species.kind)).Contains(mouse.x, mouse.y)) continue;
+            // Un second clic sur le même bouton arrête l'ajout.
+            if (placing == species.kind) placing.reset();
+            else placing = species.kind;
+            // Le panneau d'une case gênerait les clics sur la carte.
+            selectedCell.reset();
+            return true;
+        }
+        return false;
+    }
+
+    UiAction UiController::ClickMap(const PointerPosition mouse, const World* world) {
         if (ViewButton(width).Contains(mouse.x, mouse.y)) {
             showing3D = !showing3D;
-            return;
+            return UiAction::None;
         }
         if (RecenterButton(width).Contains(mouse.x, mouse.y)) {
             if (showing3D) camera.Reset();
             else flat.Reset();
-            return;
+            return UiAction::None;
         }
         if (selectedCell) {
             const UiRect panel = CellPanel(width, height, IsCellPanelOnLeft());
             if (panel.Contains(mouse.x, mouse.y)) {
                 if (CellPanelClose(panel).Contains(mouse.x, mouse.y)) selectedCell.reset();
-                return;
+                return UiAction::None;
             }
         }
+        if (ClickAddButton(mouse)) return UiAction::None;
         // Les bandes autour de la carte ne contiennent pas de case.
         const std::optional<Position> cell = showing3D
             ? camera.PickCell({mouse.x, mouse.y}, {width, height}, world)
             : flat.PickCell({mouse.x, mouse.y});
-        if (!cell) return;
+        if (!cell) return UiAction::None;
+        if (placing) {
+            // Sur l'eau ou un obstacle, il ne se passe rien.
+            if (!world || !world->IsInside(*cell) || !world->GetCell(*cell).IsAccessible()) return UiAction::None;
+            placement = AnimalPlacement{*placing, *cell};
+            return UiAction::AddAnimal;
+        }
         // Un second clic sur la case choisie ferme le panneau.
         if (selectedCell == cell) selectedCell.reset();
         else selectedCell = cell;
+        return UiAction::None;
     }
 }

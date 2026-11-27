@@ -48,7 +48,7 @@ namespace ecosim {
         const FrameInput frame = input.Read(!runner, clock.IsPaused(), settings,
                                             shown ? &shown->world : nullptr);
         if (frame.action == UiAction::Quit) return false;
-        Apply(frame.action);
+        Apply(frame);
         if (runner && runner->State().failed) Abandon();
         if (!runner) {
             view.DrawHome(settings, notice);
@@ -64,8 +64,12 @@ namespace ecosim {
         return true;
     }
 
-    void Application::Apply(const UiAction action) {
-        if (action == UiAction::ResetSettings) {
+    void Application::Apply(const FrameInput& frame) {
+        const UiAction action = frame.action;
+        if (action == UiAction::AddAnimal) {
+            // Permis même après la fin : un ajout relance une simulation sans animal.
+            if (runner && frame.placement) runner->Add(frame.placement->kind, frame.placement->cell);
+        } else if (action == UiAction::ResetSettings) {
             settings = DefaultSettings(mapWidth, mapHeight);
             notice.clear();
         } else if (action == UiAction::ReturnHome) {

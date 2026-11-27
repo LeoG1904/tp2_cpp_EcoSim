@@ -19,6 +19,8 @@ export namespace ecosim {
         std::optional<int> speed;
         /// @brief Vrai tant que la confirmation de sortie est affichée.
         bool exitDialogOpen{false};
+        /// @brief Animal à placer, avec l'action UiAction::AddAnimal.
+        std::optional<AnimalPlacement> placement{};
     };
 
     /// @brief D'où viennent les commandes : le clavier et la souris, ou un scénario de test.
@@ -94,8 +96,8 @@ export namespace ecosim {
         const std::string& Notice() const;
 
     private:
-        /// @brief Exécute l'action demandée : démarrer, revenir au menu, pause, vitesse ou pas à pas.
-        void Apply(UiAction action);
+        /// @brief Exécute l'action demandée : démarrer, revenir au menu, pause, vitesse, pas à pas ou ajout d'un animal.
+        void Apply(const FrameInput& frame);
         /// @brief Crée et lance une simulation ; si la mémoire manque, reste sur l'accueil avec un message.
         void Start();
         /// @brief Remet l'horloge et l'animation à zéro.

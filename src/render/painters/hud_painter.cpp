@@ -10,7 +10,7 @@ import ecosim.species;
 
 namespace ecosim {
     void DrawHud(Canvas& canvas, const SimulationSnapshot& simulation, const PlaybackState& playback,
-                 const bool threeD) {
+                 const bool threeD, const std::optional<AnimalKind> placing) {
         const int width = canvas.Width();
         const std::string help = threeD
             ? "clic droit : tourner ; molette : zoom ; clic : détails d'une case"
@@ -23,6 +23,11 @@ namespace ecosim {
         } else {
             status = std::format("Vitesse x{}   (Tab ou touches 1 à 4 : x1 x2 x5 x10 ; {})",
                                  playback.speed, help);
+        }
+        if (placing) {
+            status = std::format("Ajout : {} — cliquez sur une prairie pour placer un animal "
+                                 "(Échap ou le même bouton pour terminer)",
+                                 SpeciesOf(*placing).name);
         }
         std::string counts = std::format("Génération {}", simulation.generation);
         for (const SpeciesInfo& species : SpeciesCatalog()) {
@@ -42,5 +47,9 @@ namespace ecosim {
         }
         button(ViewButton(width), threeD ? "Vue 2D" : "Vue 3D");
         button(RecenterButton(width), "Recentrer");
+        for (const SpeciesInfo& species : SpeciesCatalog()) {
+            canvas.Button(AddAnimalButton(width, static_cast<int>(species.kind)), "+ " + species.name,
+                          placing == species.kind ? ActiveColor : ButtonColor);
+        }
     }
 }

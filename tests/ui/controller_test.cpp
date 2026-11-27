@@ -223,3 +223,120 @@ TEST_CASE("Demarrer adapte les vues a la taille choisie", "[controller]") {
     controller.Handle(Click({1480, 1060, 1, 1}), false, false, settings);
     REQUIRE(controller.SelectedCell() == Position{26, 26});
 }
+
+namespace {
+    // Le centre d'une case en 2D, avec la vue de depart.
+    RawInput ClickCell(const UiController& controller, const Position cell) {
+        RawInput input;
+        input.click = PointerPosition{static_cast<int>(controller.Flat().ScreenX(cell.x + 0.5)),
+                                      static_cast<int>(controller.Flat().ScreenY(cell.y + 0.5))};
+        return input;
+    }
+}
+
+TEST_CASE("Un bouton d'ajout choisit l'espece, puis chaque clic sur une prairie en place une", "[controller]") {
+    UiController controller{Width, Height, CellSize};
+    SimulationSettings settings;
+    World world{Width / CellSize, Height / CellSize};
+    world.GetCell({3, 4}) = Cell{Terrain::Eau};
+    world.GetCell({4, 4}) = Cell{Terrain::Obstacle};
+    const auto click = [&](const RawInput& input) {
+        return controller.Handle(input, false, false, settings, &world);
+    };
+    for (const SpeciesInfo& species : SpeciesCatalog()) {
+        const int index = static_cast<int>(species.kind);
+        REQUIRE(click(Click(AddAnimalButton(Width, index))) == UiAction::None);
+        REQUIRE(controller.PlacingKind() == species.kind);
+        REQUIRE(click(ClickCell(controller, {10, 8})) == UiAction::AddAnimal);
+        REQUIRE(controller.Placement()->kind == species.kind);
+        REQUIRE(controller.Placement()->cell == Position{10, 8});
+        // On place sans ouvrir le panneau de la case, et la demande ne dure qu'une image.
+        REQUIRE_FALSE(controller.SelectedCell().has_value());
+        REQUIRE(click(RawInput{}) == UiAction::None);
+        REQUIRE_FALSE(controller.Placement().has_value());
+    }
+    // Ni l'eau ni un obstacle n'accueillent un animal, et l'ajout reste actif.
+    for (const Position closed : {Position{3, 4}, Position{4, 4}}) {
+        REQUIRE(click(ClickCell(controller, closed)) == UiAction::None);
+        REQUIRE_FALSE(controller.Placement().has_value());
+    }
+    REQUIRE(controller.PlacingKind().has_value());
+}
+
+TEST_CASE("Le meme bouton ou Echap termine l'ajout", "[controller]") {
+    UiController controller{Width, Height, CellSize};
+    SimulationSettings settings;
+    const World world{Width / CellSize, Height / CellSize};
+    const auto click = [&](const RawInput& input) {
+        return controller.Handle(input, false, false, settings, &world);
+    };
+    // Choisir une espece ferme le panneau ouvert.
+    click(ClickCell(controller, {5, 5}));
+    REQUIRE(controller.SelectedCell().has_value());
+    const UiRect wolf = AddAnimalButton(Width, static_cast<int>(AnimalKind::Wolf));
+    click(Click(wolf));
+    REQUIRE_FALSE(controller.SelectedCell().has_value());
+    click(Click(AddAnimalButton(Width, static_cast<int>(AnimalKind::Fox))));
+    REQUIRE(controller.PlacingKind() == AnimalKind::Fox);
+    click(Click(wolf));
+    click(Click(wolf));
+    REQUIRE_FALSE(controller.PlacingKind().has_value());
+    click(ClickCell(controller, {5, 5}));
+    REQUIRE(controller.SelectedCell() == Position{5, 5});
+
+    click(Click(wolf));
+    RawInput escape;
+    escape.escape = true;
+    REQUIRE(click(escape) == UiAction::None);
+    REQUIRE_FALSE(controller.PlacingKind().has_value());
+    REQUIRE_FALSE(controller.IsExitDialogOpen());
+    click(escape);
+    REQUIRE(controller.IsExitDialogOpen());
+}
+
+TEST_CASE("L'ajout s'arrete au redemarrage, et les courbes n'ajoutent rien", "[controller]") {
+    UiController controller{Width, Height, CellSize};
+    SimulationSettings settings;
+    const World world{Width / CellSize, Height / CellSize};
+    const auto click = [&](const RawInput& input) {
+        return controller.Handle(input, false, false, settings, &world);
+    };
+    click(Click(AddAnimalButton(Width, 0)));
+    click(Click(GraphButton(Width)));
+    REQUIRE(click(ClickCell(controller, {10, 8})) == UiAction::None);
+    REQUIRE_FALSE(controller.Placement().has_value());
+    REQUIRE(click(Click(RestartButton(Width))) == UiAction::StartOrRestart);
+    REQUIRE_FALSE(controller.PlacingKind().has_value());
+}
+
+TEST_CASE("En 3D aussi, un clic place l'animal sur la case visee, meme en hauteur", "[controller]") {
+    UiController controller{Width, Height, CellSize};
+    SimulationSettings settings;
+    World world{Width / CellSize, Height / CellSize};
+    const Position hill{20, 12};
+    world.GetCell(hill).SetElevation(3);
+    const auto click = [&](const RawInput& input) {
+        return controller.Handle(input, false, false, settings, &world);
+    };
+    click(Click(ViewButton(Width)));
+    click(Click(AddAnimalButton(Width, 1)));
+    const auto top = controller.Camera().Project({20.5, 3 * LevelHeight, 12.5}, {Width, Height});
+    REQUIRE(top.has_value());
+    RawInput input;
+    input.click = PointerPosition{top->x, top->y};
+    REQUIRE(click(input) == UiAction::AddAnimal);
+    REQUIRE(controller.Placement()->cell == hill);
+}
+
+TEST_CASE("Les boutons d'ajout tiennent au-dessus du panneau d'une case", "[controller]") {
+    for (const auto& [width, height] : {std::pair{1280, 720}, std::pair{1920, 1080}}) {
+        const UiRect panel = CellPanel(width, height, false);
+        const UiRect recenter = RecenterButton(width);
+        for (int i = 0; i < static_cast<int>(SpeciesCount); ++i) {
+            const UiRect button = AddAnimalButton(width, i);
+            REQUIRE(button.y >= recenter.y + recenter.height);
+            REQUIRE(button.y + button.height <= panel.y);
+            REQUIRE(button.x + button.width <= width);
+        }
+    }
+}

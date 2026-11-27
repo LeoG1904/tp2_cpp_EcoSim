@@ -121,9 +121,15 @@ namespace ecosim {
     void DrawOrbitMap(Canvas& canvas, const SimulationSnapshot& simulation, double progress,
                       std::optional<Position> selected, const OrbitCamera& camera);
     /// @brief Dessine les compteurs, l'aide et les boutons par-dessus la carte.
+    /// @param canvas Image à compléter.
+    /// @param simulation Photo de la simulation.
+    /// @param playback État de la lecture.
+    /// @param threeD Vrai pour la vue 3D.
+    /// @param placing Espèce en cours d'ajout : son bouton est surligné et l'aide l'explique.
     /// @ingroup affichage
     void DrawHud(Canvas& canvas, const SimulationSnapshot& simulation, const PlaybackState& playback,
-                 bool threeD);
+                 bool threeD,
+                 std::optional<AnimalKind> placing);
     /// @brief Dessine le panneau d'information de la case choisie.
     /// @ingroup affichage
     void DrawCellPanel(Canvas& canvas, const SimulationSnapshot& simulation, std::optional<Position> selected,

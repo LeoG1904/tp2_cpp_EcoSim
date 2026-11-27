@@ -36,7 +36,7 @@ namespace ecosim {
         std::optional<int> speed;
         const RawInput input = ReadRawInput(speed);
         const UiAction action = controller.Handle(input, isHomeScreen, paused, settings, world);
-        return {action, speed, controller.IsExitDialogOpen()};
+        return {action, speed, controller.IsExitDialogOpen(), controller.Placement()};
     }
 
     RawInput Win32Input::ReadRawInput(std::optional<int>& speed) {

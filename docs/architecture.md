@@ -35,9 +35,11 @@ simplement dix fois plus de générations par seconde.
 | De calcul | ecosim::SimulationRunner : fait avancer la simulation |
 
 - Après sa création, **seul le thread de calcul touche à ecosim::Simulation**.
+- Les autres lui **demandent** des générations (ecosim::SimulationRunner::Request) ou l'ajout
+  d'un animal (ecosim::SimulationRunner::Add), qu'il traite entre deux générations.
 - Il publie des **photos** (ecosim::SimulationSnapshot) : des copies qui ne changent plus. Le
   thread principal les lit sans risque pendant que le calcul continue.
-- Un `std::mutex` protège seulement l'échange : la demande de générations, le pointeur vers la
+- Un `std::mutex` protège seulement l'échange : les demandes, le pointeur vers la
   dernière photo et l'état du thread. La copie elle-même se fait hors du verrou.
 - Le thread dort tant que rien n'est demandé (`std::condition_variable_any`). C'est un
   `std::jthread` : sa destruction lui demande de s'arrêter et attend la fin de la génération en

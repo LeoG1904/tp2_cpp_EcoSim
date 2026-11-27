@@ -100,3 +100,32 @@ TEST_CASE("Detruire le pilote pendant un calcul l'arrete sans blocage", "[runner
     }
     SUCCEED();
 }
+
+TEST_CASE("Le thread ajoute les animaux demandes et ignore les cases fermees", "[runner]") {
+    World world{4, 1};
+    world.GetCell({3, 0}) = Cell{Terrain::Eau};
+    SimulationRunner runner{Simulation{std::move(world), std::mt19937{1}}};
+    const std::shared_ptr<const SimulationSnapshot> before = runner.State().snapshot;
+    REQUIRE(before->IsFinished());
+
+    runner.Add(AnimalKind::Deer, {0, 0});
+    runner.Add(AnimalKind::Deer, {1, 0});
+    runner.Add(AnimalKind::Wolf, {3, 0});
+    runner.Add(AnimalKind::Wolf, {9, 9});
+    // Un ajout n'interrompt pas l'animation : le thread ne se dit pas occupe.
+    REQUIRE_FALSE(runner.State().busy);
+    runner.Wait();
+    const RunnerState state = runner.State();
+    REQUIRE_FALSE(state.failed);
+    REQUIRE(state.snapshot->animals.size() == 2);
+    REQUIRE(state.snapshot->animals[0].position == Position{0, 0});
+    // Deux ajouts de la meme espece donnent une femelle et un male.
+    REQUIRE(state.snapshot->animals[0].sex != state.snapshot->animals[1].sex);
+    REQUIRE(state.snapshot->generation == 0);
+    REQUIRE(state.snapshot->history.back().species[AnimalKind::Deer].population == 2);
+    REQUIRE(before->animals.empty());
+
+    runner.Request(1);
+    runner.Wait();
+    REQUIRE(runner.State().snapshot->generation == 1);
+}
