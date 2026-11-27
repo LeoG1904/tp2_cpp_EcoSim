@@ -14,6 +14,8 @@ namespace ecosim {
     void Predator::BeginGeneration(std::mt19937&) { hasEaten = false; }
 
     Steering Predator::Steer(const Habitat& habitat, std::mt19937& rng) const {
+        // Assoiffé, il va boire avant tout le reste ; une proie à portée reste capturée au passage.
+        if (const std::optional<Steering> drinking = SeekWater(habitat)) return *drinking;
         // Assez nourri pour se reproduire, il cherche d'abord un partenaire.
         if (const std::optional<Steering> courtship = SeekMate(habitat)) return *courtship;
         // Repu, il flâne jusqu'à la génération suivante.

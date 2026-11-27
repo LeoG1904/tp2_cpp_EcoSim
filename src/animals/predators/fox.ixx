@@ -16,7 +16,7 @@ export namespace ecosim {
         static constexpr SpeciesTraits Traits{.energyLoss = 2, .maxAge = 140, .foodEnergy = 35,
                                               .reproductionEnergy = 70, .speed = 90,
                                               .bodyRadius = 0.16, .litterMin = 1, .litterMax = 3,
-                                              .breedingRest = 10};
+                                              .breedingRest = 10, .waterLoss = 2};
         /// @brief Chance de naissance, en %, proposée au départ.
         static constexpr int DefaultBirthPercent{8};
         /// @brief Distance de vue, en cases, avant le bonus de flair.

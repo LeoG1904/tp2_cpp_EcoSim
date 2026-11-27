@@ -47,9 +47,13 @@ namespace ecosim {
     const Path& Animal::GetPath() const { return path; }
     int Animal::GetAge() const { return age; }
     int Animal::GetEnergy() const { return energy; }
+    int Animal::GetHydration() const { return hydration; }
+    bool Animal::IsThirsty() const { return hydration <= ThirstThreshold; }
+    void Animal::Drink() { hydration = MaxHydration; }
+    void Animal::LoseWater() { hydration = std::max(0, hydration - traits.waterLoss); }
     const SpeciesTraits& Animal::GetTraits() const { return traits; }
     const AnimalOptions& Animal::GetOptions() const { return options; }
-    bool Animal::IsAlive() const { return energy > 0 && age < traits.maxAge; }
+    bool Animal::IsAlive() const { return energy > 0 && hydration > 0 && age < traits.maxAge; }
 
     void Animal::Place(const Point point, const double direction) {
         location = point;
@@ -154,6 +158,13 @@ namespace ecosim {
         return std::atan2(to.y - from.y, to.x - from.x);
     }
 
+    std::optional<Steering> Animal::SeekWater(const Habitat& habitat) const {
+        if (!IsThirsty()) return std::nullopt;
+        const std::optional<Point> next = habitat.TowardWater(location);
+        if (!next) return std::nullopt;
+        return Steering{HeadingTo(location, *next), 0.8};
+    }
+
     std::optional<Steering> Animal::SeekMate(const Habitat& habitat) const {
         if (partner || !CanReproduce()) return std::nullopt;
         const std::optional<Point> mate = habitat.NearestMate(*this, location, MateSight);
@@ -170,6 +181,7 @@ namespace ecosim {
                                                     const Sex childSex) const {
         auto child = MakeOffspring(childId);
         child->parentId = id;
+        child->hydration = NewbornHydration;
         child->sex = childSex;
         // Le nouveau-né apparaît auprès de sa mère ; ceux d'une portée partent de côtés différents.
         const double spread = 2.4 + static_cast<double>(childId % 8) * 0.8;

@@ -14,6 +14,7 @@ namespace {
             case ecosim::DeathCause::Starvation: return events.starved;
             case ecosim::DeathCause::OldAge: return events.diedOfAge;
             case ecosim::DeathCause::Predation: return events.eaten;
+            case ecosim::DeathCause::Thirst: return events.parched;
         }
         throw std::invalid_argument{"Cause de mort inconnue"};
     }

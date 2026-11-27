@@ -46,6 +46,26 @@ hauteur est celle de la case située sous lui. Elle ne joue que sur sa vitesse :
 haut à moins de ecosim::Animal::ClimbReach case devant lui ne lui en laisse que la part
 ecosim::Animal::ClimbPace, la moitié.
 
+## La soif
+
+Quand la soif est active (ecosim::Simulation::HasThirst), chaque animal a de l'eau, de 0 à
+ecosim::Animal::MaxHydration. Il en perd à chaque génération et meurt à 0. À
+ecosim::Animal::ThirstThreshold ou moins, il part boire. Passer sur une **berge**, une prairie
+qui touche l'eau, remplit la jauge.
+
+```
+  À la création : depuis toutes les berges à la fois, on compte les pas vers chaque prairie
+            |
+       3   2   1   0 | eau
+       4   #   2   1 | 0        # : obstacle
+            |
+  Un animal assoiffé vise la case voisine qui a un pas de moins
+```
+
+ecosim::WaterRoutes fait ce calcul **une seule fois**. La carte ne gardant qu'une zone de
+prairies reliées, il suffit d'une berge pour que tout le monde puisse boire. Sans aucune berge,
+la soif reste active : personne ne peut boire.
+
 ## Une génération
 
 ecosim::Simulation::Step() applique toujours les mêmes étapes, dans cet ordre.
@@ -58,11 +78,12 @@ ecosim::Simulation::Step() applique toujours les mêmes étapes, dans cet ordre.
      - les cerfs et les lapins avancent
      - puis les loups et les renards avancent et chassent
      (les herbivores mangent au dernier pas)
+     (un animal qui passe sur une berge boit)
      - les animaux qui se superposent sont écartés
      - enfin, les couples se forment
             |
   3. Métabolisme
-     chaque survivant vieillit et perd de l'énergie
+     chaque survivant vieillit, perd de l'énergie et, avec la soif, de l'eau
             |
   4. Reproduction
      les femelles en couple peuvent avoir une portée
@@ -96,6 +117,7 @@ ensuite de façon fluide.
 **Cerfs et lapins** (ecosim::Herbivore, la base commune des herbivores) :
 
 - s'il est sur ses gardes et qu'un chasseur **qui le mange** est à 2 cases ou moins, il **fuit** ;
+- sinon, s'il a soif, il **va boire** ;
 - sinon, s'il est prêt à se reproduire et repère un partenaire, il **le rejoint** ;
 - sinon, si l'herbe sous lui est suffisante, il **flâne** ;
 - sinon, il **cherche** une herbe plus riche autour de lui, avec un peu d'hésitation.
@@ -109,6 +131,7 @@ Les deux espèces d'herbivores partagent ces règles, mais pas leurs atouts.
 | Herbe mangée au maximum par génération | 12 | 5 |
 | Vitesse (% de case par génération) | 130 | 100 |
 | Énergie perdue par génération | 2 | 1 |
+| Eau perdue par génération | 3 | 2 |
 | Âge maximum | 80 | 70 |
 | Énergie pour se reproduire | 80 | 50 |
 | Repas offert au chasseur | entier | la moitié |
@@ -121,7 +144,8 @@ l'espèce. Les chasseurs ont aussi les leurs.
 
 **Loups et renards** (ecosim::Predator, la base commune des chasseurs) :
 
-- prêt à se reproduire et un partenaire en vue, il **le rejoint** ;
+- s'il a soif, il **va boire** ;
+- sinon, prêt à se reproduire et un partenaire en vue, il **le rejoint** ;
 - sinon, chacun **fonce** sur la proie la plus proche **parmi celles qu'il mange** ;
 - il capture une proie qu'il approche à moins de 0,45 case, **une fois par génération** au plus ;
 - sans proie en vue, il **erre**.
@@ -133,6 +157,7 @@ l'espèce. Les chasseurs ont aussi les leurs.
 | Vitesse (% de case par génération) | 80 | 90 |
 | Énergie par proie entière | 25 | 35 |
 | Énergie perdue par génération | 2 | 2 |
+| Eau perdue par génération | 2 | 2 |
 | Âge maximum | 80 | 140 |
 | Énergie pour se reproduire | 80 | 70 |
 | En groupe | peut chasser en meute | toujours seul |
@@ -165,7 +190,8 @@ La valeur 0 désactive l'instinct.
 | Repos après une portée | cerf 8, lapin 5, loup 12, renard 10 générations |
 | Coût d'une portée pour chaque parent | 20 |
 | Énergie du nouveau-né | 30 |
-| Causes de mort | faim (énergie à 0), vieillesse (âge maximum), capture |
+| Eau du nouveau-né | 50 (ecosim::Animal::NewbornHydration) : il naît assoiffé |
+| Causes de mort | faim (énergie à 0), soif (eau à 0), vieillesse (âge maximum), capture |
 
 À l'écran, le mâle est plus foncé et la femelle plus claire. Le cerf mâle porte des bois, le
 loup une crinière, le renard un bout de queue blanc ; les oreilles du lapin sont bleues, celles

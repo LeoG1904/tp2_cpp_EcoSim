@@ -20,12 +20,16 @@ namespace ecosim {
     }
 
     Simulation::Simulation(World world, std::mt19937 rng, const SimulationSettings& settings)
-        : world{std::move(world)}, settings{settings}, rng{std::move(rng)} {
+        // La carte est déjà rangée dans le membre : les chemins sont calculés sur elle.
+        : world{std::move(world)}, settings{settings}, water{this->world}, rng{std::move(rng)} {
         stats.RecordSample(Measure());
     }
 
+    bool Simulation::HasThirst() const { return settings.thirstEnabled != 0; }
+
     void Simulation::MoveAndInteract() {
-        GridHabitat habitat{world, animals, stats};
+        const bool thirst = HasThirst();
+        GridHabitat habitat{world, animals, stats, thirst ? &water : nullptr};
         for (auto& animal : animals) {
             animal->StartPath();
             animal->BeginGeneration(rng);
@@ -38,6 +42,8 @@ namespace ecosim {
                     const Position before = animal->GetPosition();
                     animal->Advance(world, animal->Steer(habitat, rng), tick);
                     habitat.Moved(*animal, before);
+                    // Passer sur une berge suffit pour boire.
+                    if (thirst && water.CanDrink(animal->GetPosition())) animal->Drink();
                     animal->Act(habitat, tick);
                 }
             }
@@ -65,6 +71,7 @@ namespace ecosim {
             // Les proies capturées sont déjà comptées parmi les morts.
             if (!animal->IsAlive()) continue;
             animal->SpendGeneration();
+            if (HasThirst()) animal->LoseWater();
             // La femelle d'un couple met la portée au monde, si son partenaire a survécu.
             Animal* const partner = animal->GetPartner();
             if (animal->GetSex() == Sex::Female && partner && partner->IsAlive() && animal->IsAlive()) {
@@ -76,9 +83,9 @@ namespace ecosim {
                 }
             }
             if (!animal->IsAlive()) {
-                // Un animal à la fois épuisé et âgé est compté comme mort de faim.
-                stats.RecordDeath(animal->GetKind(), animal->GetEnergy() <= 0
-                    ? DeathCause::Starvation : DeathCause::OldAge);
+                // Une seule cause est comptée : la faim, puis la soif, puis la vieillesse.
+                stats.RecordDeath(animal->GetKind(), animal->GetEnergy() <= 0 ? DeathCause::Starvation
+                    : animal->GetHydration() <= 0 ? DeathCause::Thirst : DeathCause::OldAge);
             }
         }
 

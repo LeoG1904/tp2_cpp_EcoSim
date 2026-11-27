@@ -53,6 +53,7 @@ namespace ecosim {
                                         animal.age < Animal::AdultAge ? "jeune " : "",
                                         animal.sex == Sex::Female ? "femelle" : "mâle", animal.id,
                                         animal.age, animal.energy));
+            if (animal.hydration) lines.back() += std::format(", eau {}", *animal.hydration);
         }
         if (present.size() > MaxListedAnimals) {
             lines.push_back(std::format("Autres animaux : {}", present.size() - MaxListedAnimals));

@@ -37,6 +37,9 @@ namespace ecosim {
             if (awayX != 0.0 || awayY != 0.0) return {std::atan2(awayY, awayX), 1.0};
         }
 
+        // La soif passe juste après la fuite.
+        if (const std::optional<Steering> drinking = SeekWater(habitat)) return *drinking;
+
         // Bien nourri, il part à la recherche d'un partenaire.
         if (const std::optional<Steering> courtship = SeekMate(habitat)) return *courtship;
 

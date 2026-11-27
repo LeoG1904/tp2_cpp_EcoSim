@@ -21,10 +21,12 @@ namespace ecosim {
     std::vector<AnimalSnapshot> Simulation::Animals() const {
         std::vector<AnimalSnapshot> result;
         result.reserve(animals.size());
+        const bool thirst = HasThirst();
         for (const auto& animal : animals) {
             result.push_back({animal->GetId(), animal->GetPosition(), animal->GetKind(),
                               animal->GetAge(), animal->GetEnergy(),
-                              animal->GetPath(), animal->GetParentId(), animal->GetSex()});
+                              animal->GetPath(), animal->GetParentId(), animal->GetSex(),
+                              thirst ? std::optional<int>{animal->GetHydration()} : std::nullopt});
         }
         return result;
     }

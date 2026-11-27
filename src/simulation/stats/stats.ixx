@@ -19,9 +19,11 @@ export namespace ecosim {
         std::size_t diedOfAge{0};
         /// @brief Animaux mangés.
         std::size_t eaten{0};
+        /// @brief Morts de soif.
+        std::size_t parched{0};
 
         /// @brief Total des morts.
-        std::size_t Deaths() const { return starved + diedOfAge + eaten; }
+        std::size_t Deaths() const { return starved + diedOfAge + eaten + parched; }
     };
 
     /// @brief Mesure d'une espèce à la fin d'une génération.
@@ -46,12 +48,13 @@ export namespace ecosim {
         PerSpecies<SpeciesSample> species{};
     };
 
-    /// @brief Les causes de mort : faim, vieillesse ou capture.
+    /// @brief Les causes de mort : faim, vieillesse, capture ou soif.
     /// @ingroup moteur
     enum class DeathCause {
         Starvation, ///< Plus d'énergie.
         OldAge, ///< Âge maximum atteint.
-        Predation ///< Capturé par un chasseur.
+        Predation, ///< Capturé par un chasseur.
+        Thirst ///< Plus d'eau.
     };
 
     /// @brief Conserve l'historique d'une simulation.

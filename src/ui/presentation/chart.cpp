@@ -41,6 +41,8 @@ namespace {
              [](const SpeciesSample& s) { return Number(s.events.births); }, nullptr},
             {"Morts de faim", "Morts de faim", true, false,
              [](const SpeciesSample& s) { return Number(s.events.starved); }, nullptr},
+            {"Morts de soif", "Morts de soif", true, false,
+             [](const SpeciesSample& s) { return Number(s.events.parched); }, nullptr},
             {"Vieillesse", "Morts de vieillesse", true, false,
              [](const SpeciesSample& s) { return Number(s.events.diedOfAge); }, nullptr},
             {"Mangés", "mangés", true, true,

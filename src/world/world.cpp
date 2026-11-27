@@ -250,6 +250,58 @@ namespace ecosim {
              + static_cast<std::size_t>(position.x);
     }
 
+    WaterRoutes::WaterRoutes(const World& world)
+        : width{world.GetWidth()}, height{world.GetHeight()},
+          steps(static_cast<std::size_t>(width) * height, Unreachable) {
+        const auto index = [this](const Position cell) {
+            return static_cast<std::size_t>(cell.y) * width + cell.x;
+        };
+        // Parcours en largeur parti de toutes les berges à la fois ; la liste sert de file d'attente.
+        std::vector<Position> queue;
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                if (!world.GetCell({x, y}).IsAccessible()) continue;
+                const bool bank = std::ranges::any_of(world.Neighbors({x, y}), [&world](const Position next) {
+                    return world.GetCell(next).GetTerrain() == Terrain::Eau;
+                });
+                if (!bank) continue;
+                steps[index({x, y})] = 0;
+                queue.push_back({x, y});
+            }
+        }
+        for (std::size_t head = 0; head < queue.size(); ++head) {
+            const Position cell = queue[head];
+            for (const Position next : world.Neighbors(cell)) {
+                if (!world.GetCell(next).IsAccessible() || steps[index(next)] != Unreachable) continue;
+                steps[index(next)] = steps[index(cell)] + 1;
+                queue.push_back(next);
+            }
+        }
+    }
+
+    bool WaterRoutes::CanDrink(const Position position) const { return At(position) == 0; }
+
+    std::optional<int> WaterRoutes::StepsToDrink(const Position position) const {
+        const int distance = At(position);
+        if (distance == Unreachable) return std::nullopt;
+        return distance;
+    }
+
+    std::optional<Point> WaterRoutes::NextStep(const Position position) const {
+        const int distance = At(position);
+        if (distance <= 0) return std::nullopt;
+        for (const Position offset : {Position{0, -1}, Position{0, 1}, Position{-1, 0}, Position{1, 0}}) {
+            const Position next{position.x + offset.x, position.y + offset.y};
+            if (At(next) == distance - 1) return CenterOf(next);
+        }
+        return std::nullopt;
+    }
+
+    int WaterRoutes::At(const Position position) const {
+        if (position.x < 0 || position.x >= width || position.y < 0 || position.y >= height) return Unreachable;
+        return steps[static_cast<std::size_t>(position.y) * width + position.x];
+    }
+
     World GenerateRandomWorld(const int width, const int height, std::mt19937& rng,
                               const int waterPercent, const int obstaclePercent,
                               const int reliefLevels) {

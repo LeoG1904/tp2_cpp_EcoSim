@@ -15,6 +15,7 @@ export namespace ecosim {
         Population, ///< Effectifs.
         Births, ///< Naissances.
         Starved, ///< Morts de faim.
+        Parched, ///< Morts de soif.
         OldAge, ///< Morts de vieillesse.
         Eaten, ///< Proies mangées.
         Energy, ///< Énergie moyenne.
@@ -22,7 +23,7 @@ export namespace ecosim {
     };
     /// @brief Nombre de statistiques.
     /// @ingroup interface
-    inline constexpr std::size_t MetricCount{7};
+    inline constexpr std::size_t MetricCount{8};
 
     /// @brief Les noms des boutons, dans l'ordre de ChartMetric.
     /// @ingroup interface
@@ -32,7 +33,7 @@ export namespace ecosim {
     /// @ingroup interface
     struct ChartSelection {
         /// @brief Graphiques affichés.
-        std::array<bool, MetricCount> metrics{true, true, true, true, true, true, true};
+        std::array<bool, MetricCount> metrics{true, true, true, true, true, true, true, true};
         /// @brief Espèces masquées.
         PerSpecies<bool> hidden{};
         /// @brief Naissances et morts : total depuis le début, ou par génération.

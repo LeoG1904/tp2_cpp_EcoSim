@@ -23,8 +23,9 @@ export namespace ecosim {
         /// @param world Carte, qui doit vivre aussi longtemps que l'habitat.
         /// @param animals Animaux à ranger, qui doivent vivre aussi longtemps que l'habitat.
         /// @param stats Statistiques où compter les captures.
+        /// @param water Chemins vers l'eau, qui doivent vivre aussi longtemps que l'habitat ; nul quand la soif est inactive.
         GridHabitat(World& world, const std::vector<std::unique_ptr<Animal>>& animals,
-                    SimulationStats& stats);
+                    SimulationStats& stats, const WaterRoutes* water = nullptr);
 
         /// @brief Change un animal de rangement après son déplacement.
         /// @param animal Animal déplacé.
@@ -53,6 +54,8 @@ export namespace ecosim {
         std::vector<Point> MatesNear(const Animal& animal, Point from, double radius) const override;
         /// @copydoc Habitat::NearestMate
         std::optional<Point> NearestMate(const Animal& seeker, Point from, double radius) const override;
+        /// @copydoc Habitat::TowardWater
+        std::optional<Point> TowardWater(Point from) const override;
         /// @brief Capture la proie à portée la plus proche et compte sa mort.
         std::optional<int> CatchPrey(const Animal& hunter, Point from, double reach) override;
         /// @brief Partage le repas avec les congénères à Wolf::SharingDistance au plus.
@@ -76,6 +79,8 @@ export namespace ecosim {
         World& world;
         /// @brief Statistiques où sont comptées les captures.
         SimulationStats& stats;
+        /// @brief Chemins vers l'eau (référence non possédée) ; nul quand la soif est inactive.
+        const WaterRoutes* water;
         /// @brief Pour chaque case, les animaux qui s'y trouvent (références non possédées).
         std::vector<std::vector<Animal*>> buckets;
     };

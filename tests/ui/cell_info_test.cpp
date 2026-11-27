@@ -21,13 +21,22 @@ TEST_CASE("Le panneau decrit le terrain et les animaux de la case", "[cell_info]
     REQUIRE(prairie[3].starts_with("Cerfs : 1"));
     // Un animal qui vient d'etre place est un jeune.
     REQUIRE(prairie[4].starts_with("Cerf jeune femelle "));
-    REQUIRE(prairie[4].ends_with("60"));
-    REQUIRE(prairie[5].ends_with("70"));
+    // La soif est active : le panneau donne aussi l'eau de chaque animal.
+    REQUIRE(prairie[4].ends_with("énergie 60, eau 100"));
+    REQUIRE(prairie[5].ends_with("énergie 70, eau 100"));
 
     const auto water = DescribeCell(simulation.Snapshot(), {1, 0});
     REQUIRE(water.size() == 4);
     REQUIRE(water[1] == "Terrain : Eau");
     REQUIRE(water[2] == "Inaccessible aux animaux");
+}
+
+TEST_CASE("Soif coupee, le panneau ne parle pas d'eau", "[cell_info]") {
+    SimulationSettings settings;
+    settings.thirstEnabled = 0;
+    Simulation simulation{World{1, 1}, std::mt19937{1}, settings};
+    simulation.AddAnimal(AnimalKind::Deer, {0, 0}, 60);
+    REQUIRE(DescribeCell(simulation.Snapshot(), {0, 0})[4].ends_with("énergie 60"));
 }
 
 TEST_CASE("Le panneau precise le palier au-dessus du sol", "[cell_info]") {

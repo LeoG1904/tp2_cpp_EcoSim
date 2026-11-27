@@ -45,6 +45,8 @@ TEST_CASE("La faim et la vieillesse sont distinguees", "[stats]") {
     // Un lapin sterile et bien nourri vit jusqu'a son age maximum.
     SimulationSettings settings;
     settings.vegetationGrowth = 20;
+    // Sans eau sur cette carte : la soif le tuerait avant la vieillesse.
+    settings.thirstEnabled = 0;
     settings.species[AnimalKind::Rabbit].options.birthPercent = 0;
     Simulation old{World{1, 1}, std::mt19937{4}, settings};
     old.AddAnimal(AnimalKind::Rabbit, {0, 0});

@@ -40,7 +40,7 @@ export namespace ecosim {
     /// @brief Colonnes de l'accueil : le terrain, puis une par espèce.
     inline constexpr int SettingColumns{1 + static_cast<int>(SpeciesCount)};
     /// @brief Nombre de lignes de réglages.
-    inline constexpr int SettingRows{6};
+    inline constexpr int SettingRows{7};
     /// @brief Hauteur d'une ligne de réglage.
     inline constexpr int SettingRowHeight{40};
     /// @brief Largeur d'une colonne de réglages.
@@ -55,7 +55,7 @@ export namespace ecosim {
     }
     /// @brief Position verticale de la première ligne.
     int SettingsTop(const int height) {
-        const int centered = height / 2 - 100;
+        const int centered = height / 2 - 140;
         return centered > 170 ? centered : 170;
     }
     /// @brief Case de saisie d'un réglage.
@@ -98,7 +98,7 @@ export namespace ecosim {
     }
     /// @brief Panneau d'information d'une case.
     UiRect CellPanel(const int width, const int height, const bool onLeft) {
-        return {onLeft ? 20 : width - 400, height - 330, 380, 310};
+        return {onLeft ? 20 : width - 480, height - 330, 460, 310};
     }
     /// @brief Bouton de fermeture du panneau.
     UiRect CellPanelClose(const UiRect panel) {

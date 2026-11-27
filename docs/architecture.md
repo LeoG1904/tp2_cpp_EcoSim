@@ -76,7 +76,9 @@ le scintillement.
 
 ecosim::Simulation possède la carte, les animaux et les statistiques. Les animaux ne la
 connaissent pas : ils perçoivent leur entourage par ecosim::Habitat, implémentée par
-ecosim::GridHabitat, que la simulation crée à chaque génération.
+ecosim::GridHabitat, que la simulation crée à chaque génération. Les chemins vers l'eau
+(ecosim::WaterRoutes) sont au contraire calculés une fois, à la création de la simulation, qui
+les prête à l'habitat quand la soif est active.
 
 Les espèces sont décrites dans un catalogue, ecosim::SpeciesCatalog() : une fiche
 ecosim::SpeciesInfo par espèce, avec son nom, ses valeurs de départ et la fonction

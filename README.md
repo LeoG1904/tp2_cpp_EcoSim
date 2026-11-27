@@ -36,7 +36,7 @@ Les boutons situés sous les colonnes remplacent tous les réglages. Chaque vale
 
 Ces résultats sont des tendances : la carte et les animaux restent tirés au hasard. Les cartes mesurées n'ont pas servi à choisir les valeurs des espèces.
 
-> **Ces résultats ne sont plus valables.** Ils ont été mesurés avant la [reproduction à deux](#reproduction), tout comme ceux du tableau des tailles ci-dessous. L'équilibre reste à refaire : avec les valeurs actuelles et le [relief](#relief) par défaut, sur 40 cartes de 42 × 26 et 400 générations d'« Équilibre », les cerfs et les loups ont disparu à chaque fois, les lapins ont survécu à chaque fois et les renards dans 11 cas (19 sur les mêmes graines en carte plate, 17 avec 4 paliers). Sur ces 40 cartes, « Famine » et « Invasion » ne laissaient toujours ni cerf ni lapin, quel que soit le relief.
+> **Ces résultats ne sont plus valables.** Ils ont été mesurés avant la [reproduction à deux](#reproduction), le [relief](#relief) et la [soif](#soif), tout comme ceux du tableau des tailles ci-dessous. L'équilibre reste à refaire : avec les valeurs actuelles, sur 100 cartes de 42 × 26 et 400 générations d'« Équilibre », les cerfs ont survécu dans 3 cas et les loups dans 4 ; les lapins dans 99 cas et les renards dans 35 (29 sans la soif). Sur ces cartes, « Famine » et « Invasion » ne laissent aucune espèce.
 
 **Les préréglages dépendent de la taille.** « Équilibre » a été réglé pour une carte d'environ 42 × 26 :
 
@@ -53,7 +53,7 @@ Ces résultats sont des tendances : la carte et les animaux restent tirés au ha
 
 | Colonne | Réglages |
 | --- | --- |
-| Terrain | Part de la carte couverte d'eau (0 à 50 %) et d'obstacles (0 à 40 %), [relief](#relief) (0 à 4 paliers, 3 au départ), repousse de la végétation par génération (0 à 20), largeur et hauteur (10 au minimum, voir [Taille de la carte](#taille-de-la-carte)) |
+| Terrain | Part de la carte couverte d'eau (0 à 50 %) et d'obstacles (0 à 40 %), [relief](#relief) (0 à 4 paliers, 3 au départ), repousse de la végétation par génération (0 à 20), [soif](#soif) (1 pour l'activer, 0 pour la couper), largeur et hauteur (10 au minimum, voir [Taille de la carte](#taille-de-la-carte)) |
 | Cerfs et lapins | Nombre au départ (0 à 999 999), chance de naissance (0 à 100 %), chance de fuir (0 à 100 %) |
 | Loups | Nombre au départ (0 à 999 999), chance de naissance (0 à 100 %), esprit de meute (0 à 4) |
 | Renards | Nombre au départ (0 à 999 999), chance de naissance (0 à 100 %), flair (0 à 4) |
@@ -79,7 +79,7 @@ Chaque espèce n'a que **trois réglages**. Ses autres caractéristiques sont fi
 | Revenir à l'accueil, quitter ou annuler | `Échap` pendant la simulation, puis choisir **Menu**, **Quitter** ou **Annuler** |
 | Quitter depuis l'accueil | `Échap` |
 
-L'application s'ouvre sur l'accueil ; aucune simulation ne démarre avant le clic sur **Démarrer**. La simulation continue pendant la consultation du graphique tant qu'elle n'est pas en pause. Pendant la pause, **Génération +1** fait avancer le monde et les courbes d'une seule génération. Sur la carte, chaque animal suit son trajet réel pendant la durée d'une génération, tourné dans le sens de sa marche. La pause fige le mouvement, et un pas manuel est animé en un quart de seconde. La case choisie est encadrée. Son panneau indique le terrain, la végétation et les animaux présents (espèce, sexe, numéro, âge et énergie, sept au maximum, les autres étant comptés). Il se met à jour à chaque génération et se place du côté opposé à la case. La sélection est conservée en passant par les courbes et effacée par **Recommencer** ou le retour au menu. Un animal est compté sur la case où il se trouvera à la fin du trajet affiché. L'écran **Courbes** présente chaque statistique dans son propre graphique, avec sa propre échelle : effectifs, naissances, morts de faim, morts de vieillesse, cerfs et lapins mangés, énergie moyenne et végétation des prairies. Les cases du haut affichent ou masquent chaque graphique ; les cases **Cerfs**, **Lapins**, **Loups** et **Renards** filtrent les courbes par espèce, et le bouton **Événements** passe du total depuis le début aux valeurs de chaque génération. La légende de chaque graphique donne la valeur actuelle ; en survolant un graphique, elle donne les valeurs de la génération pointée sur tous les graphiques. Les choix sont conservés après **Recommencer** et le retour au menu. La courbe jaune représente les cerfs, la blanche les lapins, la rouge les loups, la violette les renards et la verte la végétation. Sur un graphique étroit, la légende n'affiche que les valeurs, repérées par la couleur. La courbe d'énergie s'arrête quand une espèce n'a plus d'animaux. Un animal à la fois épuisé et trop âgé est compté comme mort de faim.
+L'application s'ouvre sur l'accueil ; aucune simulation ne démarre avant le clic sur **Démarrer**. La simulation continue pendant la consultation du graphique tant qu'elle n'est pas en pause. Pendant la pause, **Génération +1** fait avancer le monde et les courbes d'une seule génération. Sur la carte, chaque animal suit son trajet réel pendant la durée d'une génération, tourné dans le sens de sa marche. La pause fige le mouvement, et un pas manuel est animé en un quart de seconde. La case choisie est encadrée. Son panneau indique le terrain, la végétation et les animaux présents (espèce, sexe, numéro, âge, énergie et, quand la soif est active, eau ; sept au maximum, les autres étant comptés). Il se met à jour à chaque génération et se place du côté opposé à la case. La sélection est conservée en passant par les courbes et effacée par **Recommencer** ou le retour au menu. Un animal est compté sur la case où il se trouvera à la fin du trajet affiché. L'écran **Courbes** présente chaque statistique dans son propre graphique, avec sa propre échelle : effectifs, naissances, morts de faim, morts de vieillesse, cerfs et lapins mangés, énergie moyenne et végétation des prairies. Les cases du haut affichent ou masquent chaque graphique ; les cases **Cerfs**, **Lapins**, **Loups** et **Renards** filtrent les courbes par espèce, et le bouton **Événements** passe du total depuis le début aux valeurs de chaque génération. La légende de chaque graphique donne la valeur actuelle ; en survolant un graphique, elle donne les valeurs de la génération pointée sur tous les graphiques. Les choix sont conservés après **Recommencer** et le retour au menu. La courbe jaune représente les cerfs, la blanche les lapins, la rouge les loups, la violette les renards et la verte la végétation. Sur un graphique étroit, la légende n'affiche que les valeurs, repérées par la couleur. La courbe d'énergie s'arrête quand une espèce n'a plus d'animaux. Un animal à la fois épuisé et trop âgé est compté comme mort de faim.
 
 La touche `Échap` fige la simulation et affiche un choix : **Menu** revient à l'accueil, **Quitter** ferme l'application, **Annuler** reprend l'affichage. Un second appui sur `Échap` annule aussi le choix.
 
@@ -167,6 +167,7 @@ Une génération est découpée en **10 petits pas**. À chacun, un animal chois
 
 - il tourne **progressivement** vers cette direction (0,65 radian au plus par petit pas) ;
 - il avance selon sa **vitesse** : 100 correspond à une case par génération à pleine allure ;
+- quand il a [soif](#soif), il rejoint l'eau ;
 - il ralentit de moitié à l'approche d'un palier plus haut (voir [Relief](#relief)) ;
 - devant l'eau, un obstacle ou le bord, il essaie des directions de plus en plus écartées, et ne passe pas entre deux obstacles qui se touchent par un coin.
 
@@ -188,6 +189,7 @@ Le vieillissement, la perte d'énergie, les naissances et la repousse ont toujou
 | Énergie pour se reproduire | 80 | 50 | 80 | 70 |
 | Reste brouter sur une herbe d'au moins | 30 | 5 | | |
 | Herbe qu'il ne peut pas brouter | 5 | 0 | | |
+| Eau perdue par génération (sur 100) | 3 | 2 | 2 | 2 |
 | Repas offert au chasseur | 100 % | 50 % | | |
 | Distance de vue avant l'instinct (cases) | | | 3 | 1,5 |
 | Proies | | | cerfs et lapins | lapins |
@@ -199,6 +201,27 @@ Le vieillissement, la perte d'énergie, les naissances et la repousse ont toujou
 | Instinct | fuite 25 % | fuite 25 % | meute 2 | flair 1 |
 
 Chaque caractéristique fixe est écrite à un seul endroit, dans la classe de l'espèce (`Deer::Traits`, `Rabbit::Traits`, `Wolf::Traits`, `Fox::Traits`, le seuil d'herbe `GrazingThreshold`, la réserve `Deer::UngrazableVegetation`, la vue `Sight` et le régime `Eats`).
+
+## Soif
+
+En plus de son énergie, chaque animal a de l'**eau**, de 0 à 100. Il en perd à chaque génération, selon son espèce ; **à 0, il meurt de soif**. Un animal placé au départ commence à **100**, un nouveau-né à **50** : il naît donc assoiffé et va d'abord boire.
+
+- **Avoir soif :** à 60 ou moins, il part boire. La **fuite passe avant** ; la soif passe avant la reproduction, la nourriture et la chasse. Un chasseur assoiffé capture tout de même une proie qui se trouve à portée.
+- **Boire :** il suffit de passer sur une **berge**, une prairie qui touche l'eau par un côté. La jauge revient aussitôt à 100.
+- **Trouver l'eau :** à la création de la simulation, le chemin vers la berge la plus proche est calculé depuis chaque prairie (`WaterRoutes`). Un animal assoiffé le suit : il connaît son territoire, même sans voir l'eau, et contourne les obstacles. Le terrain ne changeant pas, ce calcul n'a lieu qu'une fois.
+- **Sans eau accessible :** la soif reste active. Quand aucune prairie ne touche l'eau (par exemple avec 0 % d'eau), personne ne peut boire. Un animal placé au départ meurt au plus tard après 34 générations pour un cerf et 50 pour les autres ; un nouveau-né, après 17 et 25. Une espèce qui se reproduit vite peut malgré tout durer, car ses petits sont adultes à 5 générations : sur 100 cartes de 42 × 26 sans eau, avec les réglages de départ, des lapins sont encore présents sur les 100 à 400 générations, alors que les loups et les renards ont disparu partout à 200 générations et les cerfs à 100. Pour une carte sans eau où toutes les espèces vivent normalement, réglez la soif à 0.
+- **Suivi :** le panneau d'une case donne l'eau de chaque animal, et les courbes comptent les **morts de soif**.
+
+Sur 100 cartes générées avec 10 % d'eau et 3 paliers, la moitié des prairies sont à 5 pas au plus d'une berge, 90 % à 13 pas au plus et 99 % à 22 pas au plus, quelle que soit la taille de la carte (42 × 26 à 200 × 200). Avec 3 % d'eau, ces distances passent à 9, 20 et 31 pas.
+
+**Effet observé** (100 cartes de 42 × 26, 400 générations, réglages de départ) : la soif cause moins de 1 % des morts, mais elle change le déroulement, car les animaux assoiffés quittent leur repas ou leur chasse et se retrouvent au bord de l'eau.
+
+| Espèce encore présente | Sans soif | Avec soif |
+| --- | --- | --- |
+| Cerfs | 2 | 29 |
+| Lapins | 85 | 75 |
+| Loups | 6 | 4 |
+| Renards | 42 | 26 |
 
 ## Reproduction
 
@@ -286,9 +309,9 @@ Limites de cette première version : le rendu est calculé par le processeur et 
 À chaque génération :
 
 1. La végétation repousse sur les prairies.
-2. Pendant 10 petits pas, les cerfs et les lapins, puis les loups et les renards, se déplacent ; les chasseurs capturent les proies qu'ils atteignent (au plus une chacun). Après chaque petit pas, les animaux qui se superposent sont écartés.
+2. Pendant 10 petits pas, les cerfs et les lapins, puis les loups et les renards, se déplacent ; ceux qui passent sur une berge boivent, et les chasseurs capturent les proies qu'ils atteignent (au plus une chacun). Après chaque petit pas, les animaux qui se superposent sont écartés.
 3. Les cerfs et les lapins encore vivants mangent la végétation de la case où ils se trouvent.
-4. Les survivants vieillissent et perdent de l'énergie. Les femelles qui ont trouvé un partenaire pendant la génération peuvent mettre bas.
+4. Les survivants vieillissent et perdent de l'énergie, ainsi que de l'eau si la soif est active. Les femelles qui ont trouvé un partenaire pendant la génération peuvent mettre bas.
 5. Les animaux morts sont retirés ; les effectifs, la végétation totale et les événements de la génération sont enregistrés par `SimulationStats`.
 
 Ce modèle s'écarte du sujet, qui prévoit le choix d'une cellule voisine à chaque génération.

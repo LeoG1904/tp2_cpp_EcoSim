@@ -56,6 +56,8 @@ namespace {
             return mealPercent;
         }
         int ShareMeal(const Animal&, const int energy) override { return energy; }
+        std::optional<Point> water;
+        std::optional<Point> TowardWater(Point) const override { return water; }
         std::optional<Point> NearestMate(const Animal&, const Point from,
                                          const double radius) const override {
             if (partner && Distance(from, *partner) <= radius) return partner;

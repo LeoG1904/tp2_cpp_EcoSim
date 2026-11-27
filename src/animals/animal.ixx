@@ -90,6 +90,8 @@ export namespace ecosim {
         int litterMax{1};
         /// @brief Générations d'attente après une portée, pour les deux parents.
         int breedingRest{0};
+        /// @brief Hydratation perdue à chaque génération, quand la soif est active.
+        int waterLoss{3};
 
         /// @brief Vrai si les deux valeurs sont identiques.
         bool operator==(const SpeciesTraits&) const = default;
@@ -146,6 +148,9 @@ export namespace ecosim {
         /// @param radius Rayon, en cases.
         virtual std::optional<Point> NearestMate(const Animal& seeker, Point from,
                                                  double radius) const = 0;
+        /// @brief Le prochain point à viser pour rejoindre l'eau ; vide si la soif est inactive, sur une berge ou sans chemin.
+        /// @param from Position de l'animal.
+        virtual std::optional<Point> TowardWater(Point from) const = 0;
         /// @brief Capture la proie à portée la plus proche parmi celles que ce chasseur mange.
         /// @return La taille du repas qu'offre la proie (SpeciesTraits::mealPercent), ou rien sans capture.
         virtual std::optional<int> CatchPrey(const Animal& hunter, Point from, double reach) = 0;
@@ -164,6 +169,12 @@ export namespace ecosim {
         static constexpr int MaxEnergy{100};
         /// @brief Énergie d'un animal placé au départ.
         static constexpr int StartingEnergy{50};
+        /// @brief Hydratation d'un animal qui vient de boire ou d'être placé au départ.
+        static constexpr int MaxHydration{100};
+        /// @brief Hydratation d'un nouveau-né : sous ThirstThreshold, il naît donc assoiffé.
+        static constexpr int NewbornHydration{50};
+        /// @brief Hydratation à partir de laquelle un animal a soif et va boire.
+        static constexpr int ThirstThreshold{60};
         /// @brief Âge à partir duquel un animal peut se reproduire.
         static constexpr int AdultAge{5};
         /// @brief Distance, en cases, à laquelle un animal prêt repère un partenaire.
@@ -207,11 +218,15 @@ export namespace ecosim {
         int GetAge() const;
         /// @brief Énergie restante.
         int GetEnergy() const;
+        /// @brief Hydratation restante, de 0 à MaxHydration ; elle ne baisse que si la soif est active.
+        int GetHydration() const;
+        /// @brief Vrai quand l'hydratation est tombée à ThirstThreshold ou moins.
+        bool IsThirsty() const;
         /// @brief Les caractéristiques de son espèce.
         const SpeciesTraits& GetTraits() const;
         /// @brief Les réglages de cet individu, transmis à ses petits.
         const AnimalOptions& GetOptions() const;
-        /// @brief Vrai s'il lui reste de l'énergie et qu'il n'a pas atteint l'âge maximum.
+        /// @brief Vrai s'il lui reste de l'énergie et de l'eau, et qu'il n'a pas atteint l'âge maximum.
         bool IsAlive() const;
 
         /// @brief Installe l'animal à un endroit, sans trajet.
@@ -232,6 +247,10 @@ export namespace ecosim {
         void Push(const World& world, Point offset, int tick);
         /// @brief Vieillit d'une génération et perd de l'énergie.
         void SpendGeneration();
+        /// @brief Boit : l'hydratation revient à MaxHydration.
+        void Drink();
+        /// @brief Perd l'eau d'une génération (SpeciesTraits::waterLoss).
+        void LoseWater();
         /// @brief Tue l'animal.
         void Die();
         /// @brief Vrai s'il est vivant, adulte, assez nourri et reposé depuis sa dernière portée.
@@ -269,6 +288,8 @@ export namespace ecosim {
                const AnimalOptions& options);
         /// @brief La direction qui mène d'un point à un autre, en radians.
         static double HeadingTo(Point from, Point to);
+        /// @brief La marche vers l'eau, si l'animal a soif et connaît un chemin.
+        std::optional<Steering> SeekWater(const Habitat& habitat) const;
         /// @brief La direction vers un partenaire, si l'animal est prêt, sans couple, et qu'il en repère un.
         std::optional<Steering> SeekMate(const Habitat& habitat) const;
         /// @brief Un écart aléatoire entre -spread et +spread radians.
@@ -300,6 +321,8 @@ export namespace ecosim {
         int age{0};
         /// @brief Énergie restante ; l'animal meurt à 0.
         int energy;
+        /// @brief Hydratation restante ; l'animal meurt de soif à 0.
+        int hydration{MaxHydration};
         /// @brief Caractéristiques fixes de l'espèce.
         SpeciesTraits traits;
         /// @brief Réglages propres à l'individu, transmis à ses petits.

@@ -48,6 +48,8 @@ export namespace ecosim {
         int reliefLevels{3};
         /// @brief Herbe gagnée par prairie à chaque génération.
         int vegetationGrowth{1};
+        /// @brief 1 pour que les animaux aient soif, 0 sinon ; sans eau accessible, ils finissent par mourir de soif.
+        int thirstEnabled{1};
         /// @brief Réglages de chaque espèce.
         PerSpecies<SpeciesSettings> species{DefaultSpeciesSettings()};
 

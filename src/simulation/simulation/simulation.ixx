@@ -37,6 +37,8 @@ export namespace ecosim {
         std::optional<std::uint64_t> parentId;
         /// @brief Sexe.
         Sex sex{Sex::Female};
+        /// @brief Hydratation restante ; vide quand la soif est inactive.
+        std::optional<int> hydration{};
     };
 
     /// @brief Une copie complète de ce qu'il faut afficher, à la fin d'une génération.
@@ -79,6 +81,8 @@ export namespace ecosim {
         std::size_t Count(AnimalKind kind) const;
         /// @brief Vrai quand il ne reste plus aucun animal.
         bool IsFinished() const;
+        /// @brief Vrai si le réglage de la soif est activé, même quand aucune eau n'est accessible.
+        bool HasThirst() const;
         /// @brief Une copie de l'état de tous les animaux.
         std::vector<AnimalSnapshot> Animals() const;
         /// @brief L'historique et les événements.
@@ -106,6 +110,8 @@ export namespace ecosim {
         World world;
         /// @brief Réglages fixés à la création.
         SimulationSettings settings;
+        /// @brief Chemins vers l'eau, calculés à la création.
+        WaterRoutes water;
         /// @brief Les animaux vivants, possédés par la simulation.
         std::vector<std::unique_ptr<Animal>> animals;
         /// @brief Générateur de hasard : il rend le déroulement reproductible.

@@ -16,7 +16,7 @@ export namespace ecosim {
         static constexpr SpeciesTraits Traits{.energyLoss = 1, .maxAge = 70, .foodEnergy = 5,
                                               .reproductionEnergy = 50, .speed = 100,
                                               .mealPercent = 50, .bodyRadius = 0.12,
-                                              .litterMin = 2, .litterMax = 5, .breedingRest = 5};
+                                              .litterMin = 2, .litterMax = 5, .breedingRest = 5, .waterLoss = 2};
         /// @brief Chance de naissance, en %, proposée au départ.
         static constexpr int DefaultBirthPercent{70};
         /// @brief À partir de cette quantité d'herbe sous lui, il reste brouter.

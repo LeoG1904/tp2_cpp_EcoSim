@@ -161,7 +161,7 @@ d.save("classes_application.svg")
 
 # ====================================================== 2. le moteur
 d = Diagram(1480, 1035, "Diagramme de classes : le moteur de simulation")
-d.box("SimulationSettings", 60, 40, 250, ["eau, obstacles, relief, repousse", "réglages de chaque espèce"], "structure")
+d.box("SimulationSettings", 60, 40, 250, ["eau, obstacles, relief, repousse, soif", "réglages de chaque espèce"], "structure")
 d.box("Simulation", 600, 40, 280, ["Step()", "AddAnimal(), Seed()", "Animals(), Count()"])
 d.box("SimulationStats", 1150, 40, 260, ["RecordBirth(), RecordDeath()", "History(), Total()"])
 
@@ -171,13 +171,14 @@ d.box("Animal", 560, 300, 310, ["identifiant, âge, énergie", "position, direct
 d.box("PopulationSample", 1150, 300, 260, ["effectifs, herbe", "énergie, événements"], "structure")
 
 d.box("Cell", 60, 560, 250, ["terrain, herbe de 0 à 100", "hauteur de 0 à 4"])
+d.box("WaterRoutes", 60, 690, 250, ["pas jusqu'à la berge", "CanDrink(), NextStep()"])
 d.box("Herbivore", 500, 560, 190, ["broute", "peut fuir"], "abstraite", "abstract")
 d.box("Deer", 500, 695, 90, ["herbe haute"])
 d.box("Rabbit", 600, 695, 90, ["herbe rase"])
 d.box("Predator", 740, 560, 190, ["poursuit", "capture une proie"], "abstraite", "abstract")
 d.box("Fox", 740, 695, 90, ["lapins"])
 d.box("Wolf", 840, 695, 90, ["meute"])
-d.box("Habitat", 1150, 560, 260, ["NearestPrey(), NearestMate()", "ThreatsNear(), MatesNear()", "CatchPrey(), ShareMeal()"], "interface", "interface")
+d.box("Habitat", 1150, 560, 260, ["NearestPrey(), NearestMate()", "ThreatsNear(), MatesNear()", "TowardWater()", "CatchPrey(), ShareMeal()"], "interface", "interface")
 
 d.box("SpeciesInfo", 500, 800, 430, ["nom, valeurs de départ, create()",
                                      "catalogue : SpeciesCatalog(), SpeciesOf()"], "structure")
@@ -197,11 +198,15 @@ d.edge("inherit", [(545, 695), (545, 674), (595, 674), (595, 650)])
 d.edge("inherit", [(645, 695), (645, 674), (595, 674), (595, 650)])
 d.edge("inherit", [(785, 695), (785, 674), (835, 674), (835, 650)])
 d.edge("inherit", [(885, 695), (885, 674), (835, 674), (835, 650)])
-d.edge("implement", [(1280, 800), (1280, 668)])
+d.edge("implement", [(1280, 800), (1280, 686)])
 # la simulation
 d.edge("depend", [(880, 122), (960, 122), (960, 240), (1200, 240), (1200, 300)], "mesure", (1040, 232))
 d.edge("depend", [(880, 98), (1100, 98), (1100, 815), (1150, 815)], "crée", (1108, 770))
 d.edge("depend", [(600, 108), (475, 108), (475, 815), (500, 815)], "consulte", (467, 775), "end")
+# les chemins vers l'eau
+d.edge("compose", [(610, 134), (610, 160), (488, 160), (488, 722), (310, 722)], "1", (320, 714))
+d.edge("depend", [(310, 748), (332, 748), (332, 370), (310, 370)], "mesure à la création", (326, 668), "end")
+d.edge("assoc", [(1240, 876), (1240, 912), (185, 912), (185, 766)], "suit les chemins", (195, 904))
 # les animaux et leur entourage
 d.edge("depend", [(560, 335), (310, 335)], "se déplace sur", (430, 327), "middle")
 d.edge("depend", [(870, 340), (945, 340), (945, 590), (1150, 590)], "perçoit par", (937, 505), "end")

@@ -133,6 +133,36 @@ export namespace ecosim {
         std::vector<Cell> cells;
     };
 
+    /// @brief Le chemin vers l'eau depuis chaque prairie, calculé une seule fois : le terrain ne change pas pendant une simulation.
+    ///
+    /// Un animal boit depuis une berge : une prairie qui touche l'eau par un côté. Le chemin passe de case en case, par les côtés, sans traverser d'obstacle.
+    /// @ingroup moteur
+    class WaterRoutes {
+    public:
+        /// @brief Mesure, depuis chaque prairie, le nombre de pas jusqu'à la berge la plus proche.
+        explicit WaterRoutes(const World& world);
+
+        /// @brief Vrai si la case est une berge.
+        bool CanDrink(Position position) const;
+        /// @brief Le nombre de pas jusqu'à la berge la plus proche ; vide hors des prairies ou sans chemin.
+        std::optional<int> StepsToDrink(Position position) const;
+        /// @brief Le centre de la case voisine qui rapproche d'une berge ; vide sur une berge ou sans chemin.
+        std::optional<Point> NextStep(Position position) const;
+
+    private:
+        /// @brief Distance d'une case sans chemin vers l'eau.
+        static constexpr int Unreachable{-1};
+        /// @brief La distance mémorisée d'une case, Unreachable hors de la carte.
+        int At(Position position) const;
+
+        /// @brief Nombre de colonnes.
+        int width;
+        /// @brief Nombre de lignes.
+        int height;
+        /// @brief Pas jusqu'à la berge, case par case, ligne par ligne.
+        std::vector<int> steps;
+    };
+
     /// @brief Crée une carte cohérente à partir de deux reliefs de bruit tirés au hasard.
     ///
     /// L'altitude place l'eau dans les creux et les obstacles sur les hauteurs, puis découpe la terre en paliers de surfaces égales ; l'eau reste au palier 0. L'humidité fixe l'herbe de départ. Les prairies restantes sont toutes reliées entre elles ; si une carte est trop morcelée, d'autres reliefs sont essayés.

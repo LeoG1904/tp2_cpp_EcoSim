@@ -9,12 +9,17 @@ import ecosim.wolf;
 
 namespace ecosim {
     GridHabitat::GridHabitat(World& world, const std::vector<std::unique_ptr<Animal>>& animals,
-                             SimulationStats& stats)
-        : world{world}, stats{stats},
+                             SimulationStats& stats, const WaterRoutes* water)
+        : world{world}, stats{stats}, water{water},
           buckets(static_cast<std::size_t>(world.GetWidth()) * world.GetHeight()) {
         for (const auto& animal : animals) {
             if (animal->IsAlive()) buckets[Index(animal->GetPosition())].push_back(animal.get());
         }
+    }
+
+    std::optional<Point> GridHabitat::TowardWater(const Point from) const {
+        if (!water) return std::nullopt;
+        return water->NextStep(CellAt(from));
     }
 
     void GridHabitat::Moved(Animal& animal, const Position from) {

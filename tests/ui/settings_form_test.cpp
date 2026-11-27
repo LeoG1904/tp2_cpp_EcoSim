@@ -69,11 +69,11 @@ TEST_CASE("La taille de la carte a un minimum de 10 et accepte de grandes valeur
         for (const char digit : digits) editor.Type(digit - '0');
         editor.Commit(settings);
     };
-    // Les champs 4 et 5 du terrain : largeur puis hauteur.
-    REQUIRE(SettingFields()[4].label == "Largeur (X)");
-    REQUIRE(SettingFields()[5].label == "Hauteur (Y)");
-    type(4, "5");
-    type(5, "2000");
+    // Les champs 5 et 6 du terrain : largeur puis hauteur.
+    REQUIRE(SettingFields()[5].label == "Largeur (X)");
+    REQUIRE(SettingFields()[6].label == "Hauteur (Y)");
+    type(5, "5");
+    type(6, "2000");
     REQUIRE(settings.mapWidth == MinMapSize);
     REQUIRE(settings.mapHeight == 2000);
     REQUIRE(settings.species[AnimalKind::Deer].initialCount == MinMapSize * 2000 / 15);
@@ -91,6 +91,21 @@ TEST_CASE("Le relief se regle de 0 a son palier le plus haut", "[settings]") {
     editor.Type(0);
     editor.Commit(settings);
     REQUIRE(settings.reliefLevels == 0);
+}
+
+TEST_CASE("La soif s'active et se coupe a l'accueil", "[settings]") {
+    SimulationSettings settings;
+    REQUIRE(settings.thirstEnabled == 1);
+    REQUIRE(SettingFields()[4].label == "Soif (0 ou 1)");
+    SettingEditor editor;
+    editor.Begin(4, settings);
+    editor.Type(0);
+    editor.Commit(settings);
+    REQUIRE(settings.thirstEnabled == 0);
+    editor.Begin(4, settings);
+    editor.Type(7);
+    editor.Commit(settings);
+    REQUIRE(settings.thirstEnabled == 1);
 }
 
 TEST_CASE("Seule une grande carte declenche un avertissement", "[settings]") {

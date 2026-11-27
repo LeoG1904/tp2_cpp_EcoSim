@@ -20,6 +20,8 @@ namespace {
              [](SimulationSettings& s) -> int& { return s.reliefLevels; }},
             {0, "Repousse végétation", 0, 20,
              [](SimulationSettings& s) -> int& { return s.vegetationGrowth; }},
+            {0, "Soif (0 ou 1)", 0, 1,
+             [](SimulationSettings& s) -> int& { return s.thirstEnabled; }},
             {0, "Largeur (X)", ecosim::MinMapSize, ecosim::InputLimit,
              [](SimulationSettings& s) -> int& { return s.mapWidth; },
              [](SimulationSettings& s, const int width) { ecosim::ResizeMap(s, width, s.mapHeight); }},
