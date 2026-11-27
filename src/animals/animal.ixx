@@ -20,6 +20,13 @@ export namespace ecosim {
     /// @ingroup moteur
     inline constexpr std::size_t SpeciesCount{4};
 
+    /// @brief Le sexe d'un animal : il faut un de chaque pour avoir des petits.
+    /// @ingroup moteur
+    enum class Sex {
+        Female, ///< Femelle : elle met les petits au monde.
+        Male ///< Mâle.
+    };
+
     /// @brief Une valeur pour chaque espèce, désignée par son nom plutôt que par un numéro.
     /// @tparam T Type de la valeur.
     /// @ingroup moteur
@@ -77,6 +84,12 @@ export namespace ecosim {
         int mealPercent{100};
         /// @brief Rayon du corps rond de l'animal, en cases, au plus MaxBodyRadius.
         double bodyRadius{0.15};
+        /// @brief Plus petit nombre de petits d'une portée.
+        int litterMin{1};
+        /// @brief Plus grand nombre de petits d'une portée.
+        int litterMax{1};
+        /// @brief Générations d'attente après une portée, pour les deux parents.
+        int breedingRest{0};
 
         /// @brief Vrai si les deux valeurs sont identiques.
         bool operator==(const SpeciesTraits&) const = default;
@@ -127,6 +140,12 @@ export namespace ecosim {
         /// @param radius Rayon, en cases.
         virtual std::vector<Point> MatesNear(const Animal& animal, Point from,
                                              double radius) const = 0;
+        /// @brief Le partenaire possible le plus proche (Animal::CanBreedWith) et encore sans couple, dans le rayon.
+        /// @param seeker Animal qui cherche.
+        /// @param from Centre de la recherche.
+        /// @param radius Rayon, en cases.
+        virtual std::optional<Point> NearestMate(const Animal& seeker, Point from,
+                                                 double radius) const = 0;
         /// @brief Capture la proie à portée la plus proche parmi celles que ce chasseur mange.
         /// @return La taille du repas qu'offre la proie (SpeciesTraits::mealPercent), ou rien sans capture.
         virtual std::optional<int> CatchPrey(const Animal& hunter, Point from, double reach) = 0;
@@ -145,6 +164,16 @@ export namespace ecosim {
         static constexpr int MaxEnergy{100};
         /// @brief Énergie d'un animal placé au départ.
         static constexpr int StartingEnergy{50};
+        /// @brief Âge à partir duquel un animal peut se reproduire.
+        static constexpr int AdultAge{5};
+        /// @brief Distance, en cases, à laquelle un animal prêt repère un partenaire.
+        static constexpr double MateSight{6.0};
+        /// @brief Distance à laquelle deux partenaires forment un couple.
+        static constexpr double MatingDistance{0.6};
+        /// @brief Énergie que chaque parent dépense pour une portée.
+        static constexpr int ReproductionCost{20};
+        /// @brief Énergie d'un nouveau-né.
+        static constexpr int NewbornEnergy{30};
         /// @brief Virage maximal par petit pas, en radians : les trajectoires restent courbes.
         static constexpr double MaxTurnPerTick{0.65};
 
@@ -154,8 +183,14 @@ export namespace ecosim {
 
         /// @brief Identifiant unique.
         std::uint64_t GetId() const;
-        /// @brief Identifiant du parent ; vide pour un animal placé au départ.
+        /// @brief Identifiant de la mère ; vide pour un animal placé au départ.
         std::optional<std::uint64_t> GetParentId() const;
+        /// @brief Le sexe.
+        Sex GetSex() const;
+        /// @brief Choisit le sexe, à la création de l'animal.
+        void SetSex(Sex value);
+        /// @brief Le partenaire trouvé pendant cette génération, ou nullptr. Il n'est pas possédé et ne vaut que jusqu'à la fin de la génération.
+        Animal* GetPartner() const;
         /// @brief Position libre actuelle.
         Point GetLocation() const;
         /// @brief Case située sous l'animal.
@@ -195,13 +230,18 @@ export namespace ecosim {
         void SpendGeneration();
         /// @brief Tue l'animal.
         void Die();
-        /// @brief Vrai s'il est vivant, âgé d'au moins 5 générations et assez nourri.
+        /// @brief Vrai s'il est vivant, adulte, assez nourri et reposé depuis sa dernière portée.
         bool CanReproduce() const;
-        /// @brief Retire les 30 points d'énergie que coûte une naissance.
+        /// @brief Vrai si les deux sont de la même espèce, de sexes différents et prêts à se reproduire.
+        bool CanBreedWith(const Animal& other) const;
+        /// @brief Forme un couple pour cette génération : chacun devient le partenaire de l'autre.
+        void PairWith(Animal& other);
+        /// @brief Dépense ReproductionCost et commence le temps de repos.
         void PayReproductionCost();
-        /// @brief Crée un petit auprès de cet animal.
+        /// @brief Crée un petit auprès de cet animal, sa mère.
         /// @param id Identifiant du nouveau-né.
-        std::unique_ptr<Animal> CreateOffspring(std::uint64_t id) const;
+        /// @param sex Sexe du nouveau-né.
+        std::unique_ptr<Animal> CreateOffspring(std::uint64_t id, Sex sex) const;
         /// @brief Gagne de l'énergie en mangeant, sans dépasser MaxEnergy.
         void ReceiveMeal(int energy);
 
@@ -225,6 +265,8 @@ export namespace ecosim {
                const AnimalOptions& options);
         /// @brief La direction qui mène d'un point à un autre, en radians.
         static double HeadingTo(Point from, Point to);
+        /// @brief La direction vers un partenaire, si l'animal est prêt, sans couple, et qu'il en repère un.
+        std::optional<Steering> SeekMate(const Habitat& habitat) const;
         /// @brief Un écart aléatoire entre -spread et +spread radians.
         static double Jitter(std::mt19937& rng, double spread);
         /// @brief Crée un petit de la même espèce.
@@ -236,8 +278,14 @@ export namespace ecosim {
 
         /// @brief Identifiant unique, attribué par la simulation.
         std::uint64_t id;
-        /// @brief Identifiant du parent ; vide pour un animal placé au départ.
+        /// @brief Identifiant de la mère ; vide pour un animal placé au départ.
         std::optional<std::uint64_t> parentId;
+        /// @brief Sexe ; par défaut d'après l'identifiant, la simulation le choisit ensuite.
+        Sex sex;
+        /// @brief Partenaire de la génération en cours (référence non possédée).
+        Animal* partner{nullptr};
+        /// @brief Générations d'attente avant de pouvoir se reproduire à nouveau.
+        int restLeft{0};
         /// @brief Position libre actuelle, en cases.
         Point location;
         /// @brief Direction actuelle, en radians.

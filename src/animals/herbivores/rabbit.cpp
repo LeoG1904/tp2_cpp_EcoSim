@@ -14,6 +14,6 @@ namespace ecosim {
     AnimalKind Rabbit::GetKind() const { return AnimalKind::Rabbit; }
 
     std::unique_ptr<Animal> Rabbit::MakeOffspring(const std::uint64_t id) const {
-        return std::make_unique<Rabbit>(id, GetPosition(), 30, GetOptions());
+        return std::make_unique<Rabbit>(id, GetPosition(), NewbornEnergy, GetOptions());
     }
 }

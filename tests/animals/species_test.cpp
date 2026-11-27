@@ -17,6 +17,7 @@ namespace {
         std::vector<Point> hunters;
         int captures{0};
         int mealPercent{100};
+        std::optional<Point> partner;
 
         World& GetWorld() override { return world; }
         const World& GetWorld() const override { return world; }
@@ -55,6 +56,11 @@ namespace {
             return mealPercent;
         }
         int ShareMeal(const Animal&, const int energy) override { return energy; }
+        std::optional<Point> NearestMate(const Animal&, const Point from,
+                                         const double radius) const override {
+            if (partner && Distance(from, *partner) <= radius) return partner;
+            return std::nullopt;
+        }
     };
 }
 
@@ -119,7 +125,7 @@ TEST_CASE("L'herbe au ras du sol reste aux lapins", "[species]") {
 
 TEST_CASE("Le petit d'un lapin est un lapin", "[species]") {
     const Rabbit parent{4, {0, 0}, 90};
-    const auto child = parent.CreateOffspring(5);
+    const auto child = parent.CreateOffspring(5, Sex::Male);
     REQUIRE(child->GetKind() == AnimalKind::Rabbit);
     REQUIRE(child->GetTraits() == Rabbit::Traits);
 }
@@ -139,7 +145,7 @@ TEST_CASE("Le loup mange cerfs et lapins, le renard seulement les lapins", "[spe
 
 TEST_CASE("Le petit d'un renard est un renard", "[species]") {
     const Fox parent{4, {0, 0}, 90};
-    const auto child = parent.CreateOffspring(5);
+    const auto child = parent.CreateOffspring(5, Sex::Female);
     REQUIRE(child->GetKind() == AnimalKind::Fox);
     REQUIRE(child->GetTraits() == Fox::Traits);
 }
@@ -157,7 +163,8 @@ TEST_CASE("Un descendant connait son parent et nait aupres de lui", "[species]")
     Deer parent{7, {0, 0}, 90};
     parent.Place({0.2, 0.8}, 1.0);
     REQUIRE_FALSE(parent.GetParentId().has_value());
-    const auto child = parent.CreateOffspring(8);
+    const auto child = parent.CreateOffspring(8, Sex::Male);
+    REQUIRE(child->GetSex() == Sex::Male);
     REQUIRE(child->GetParentId() == 7);
     REQUIRE(child->GetLocation() == parent.GetLocation());
 }

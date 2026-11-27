@@ -14,6 +14,7 @@ namespace {
         std::vector<Point> hunters;
         int captures{0};
         int mealPercent{100};
+        std::optional<Point> partner;
 
         World& GetWorld() override { return world; }
         const World& GetWorld() const override { return world; }
@@ -52,6 +53,11 @@ namespace {
             return mealPercent;
         }
         int ShareMeal(const Animal&, const int energy) override { return energy; }
+        std::optional<Point> NearestMate(const Animal&, const Point from,
+                                         const double radius) const override {
+            if (partner && Distance(from, *partner) <= radius) return partner;
+            return std::nullopt;
+        }
     };
 
     AnimalOptions Instinct(const int value) {

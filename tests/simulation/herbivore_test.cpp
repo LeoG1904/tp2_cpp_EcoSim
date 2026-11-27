@@ -58,21 +58,31 @@ TEST_CASE("La case doit être accessible même si plusieurs animaux peuvent l'oc
     REQUIRE_THROWS_AS(simulation.AddAnimal(AnimalKind::Deer, {2, 0}), std::invalid_argument);
 }
 
-TEST_CASE("La naissance crée un animal distinct qui attend la génération suivante", "[herbivore]") {
+TEST_CASE("La naissance cree des petits distincts qui attendent la generation suivante", "[herbivore]") {
     World world{1, 1};
     world.GetCell({0, 0}).SetVegetation(100);
-    Simulation simulation{std::move(world), std::mt19937{7}};
+    SimulationSettings settings;
+    settings.vegetationGrowth = 20;
+    settings.species[AnimalKind::Deer].options.birthPercent = 100;
+    Simulation simulation{std::move(world), std::mt19937{7}, settings};
+    simulation.AddAnimal(AnimalKind::Deer, {0, 0}, 95);
     simulation.AddAnimal(AnimalKind::Deer, {0, 0}, 95);
 
-    for (int i = 0; i < 30 && simulation.Count(AnimalKind::Deer) == 1; ++i) {
+    for (int i = 0; i < 30 && simulation.Count(AnimalKind::Deer) == 2; ++i) {
         simulation.Step();
     }
 
-    REQUIRE(simulation.Count(AnimalKind::Deer) > 1);
     const auto animals = simulation.Animals();
-    REQUIRE(animals[0].id != animals[1].id);
-    REQUIRE(animals[1].age == 0);
-    REQUIRE(animals[1].position == animals[0].position);
+    REQUIRE(animals.size() > 2);
+    std::set<std::uint64_t> ids;
+    for (const auto& animal : animals) ids.insert(animal.id);
+    REQUIRE(ids.size() == animals.size());
+    for (std::size_t i = 2; i < animals.size(); ++i) {
+        REQUIRE(animals[i].age == 0);
+        // La mere est la femelle placee en premier.
+        REQUIRE(animals[i].parentId == animals[0].id);
+        REQUIRE(animals[i].position == animals[0].position);
+    }
 }
 
 TEST_CASE("Le trajet d'une generation est continu et reste sur les prairies", "[herbivore]") {

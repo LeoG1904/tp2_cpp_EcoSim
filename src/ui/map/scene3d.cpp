@@ -197,19 +197,91 @@ namespace {
         }
     }
 
-    /// @brief Construit le corps et la tête d'un animal, orientés dans le sens de sa marche.
-    std::vector<Box> AnimalModel(const ecosim::AnimalKind kind, const double x, const double z,
-                                 const double heading) {
+    /// @brief Construit le modèle d'un animal, orienté dans le sens de sa marche, avec les détails de son sexe ou de son jeune âge.
+    std::vector<Box> AnimalModel(const ecosim::AnimalKind kind, const ecosim::Sex sex, const int age,
+                                 const double x, const double z, const double heading) {
         const ecosim::SpeciesStyle& style = ecosim::StyleOf(kind);
-        const double headX = x + std::cos(heading) * style.length * 0.55;
-        const double headZ = z + std::sin(heading) * style.length * 0.55;
-        const double head = std::min(0.08, style.thickness / 2.0);
-        return {
-            Box{x, z, style.length / 2.0, style.thickness / 2.0, 0.03, style.height, heading,
-                style.color, FaceKind::Animal, kind},
-            Box{headX, headZ, head, head, style.height - head, style.height + head * 1.25, heading,
-                Shade(style.color, 0.88), FaceKind::Animal, kind},
+        const ecosim::SexLook& look = ecosim::LookOf(kind, sex, age);
+        const bool young = ecosim::IsYoung(age);
+        const bool male = sex == ecosim::Sex::Male;
+        const double scale = young ? ecosim::YoungScale : 1.0;
+        // Un jeune a la tête grosse pour son corps.
+        const double head = std::min(0.08, style.thickness / 2.0) * (young ? 1.25 : 1.0);
+        const double headAt = style.length * 0.55;
+        const double headTop = style.height + head * 1.25;
+        std::vector<Box> boxes;
+        // Un bloc placé par rapport à l'animal : en avant de son centre, et sur le côté. Tout est réduit pour un jeune.
+        const auto part = [&](const double forward, const double side, const double halfAlong,
+                              const double halfAcross, const double bottom, const double top,
+                              const Color color) {
+            boxes.push_back({x + (std::cos(heading) * forward - std::sin(heading) * side) * scale,
+                             z + (std::sin(heading) * forward + std::cos(heading) * side) * scale,
+                             halfAlong * scale, halfAcross * scale, bottom * scale, top * scale, heading,
+                             color, FaceKind::Animal, kind});
         };
+        part(0.0, 0.0, style.length / 2.0, style.thickness / 2.0, 0.03, style.height, look.body);
+        part(headAt, 0.0, head, head, style.height - head, headTop, Shade(look.body, 0.88));
+
+        if (young) {
+            switch (kind) {
+                case ecosim::AnimalKind::Deer:
+                    // Le faon a le dos taché de blanc.
+                    for (const auto& [forward, side] : {std::pair{-0.07, -0.04}, std::pair{-0.02, 0.045},
+                                                        std::pair{0.05, -0.03}}) {
+                        part(forward, side, 0.022, 0.022, style.height, style.height + 0.012, look.accent);
+                    }
+                    break;
+                case ecosim::AnimalKind::Rabbit:
+                    // Le lapereau n'a que de courtes oreilles.
+                    for (const double side : {-1.0, 1.0}) {
+                        part(headAt - 0.03, side * 0.036, 0.016, 0.022, headTop, headTop + 0.05, look.accent);
+                    }
+                    break;
+                case ecosim::AnimalKind::Wolf:
+                    // Le louveteau a deux petites oreilles rondes.
+                    for (const double side : {-1.0, 1.0}) {
+                        part(headAt - 0.02, side * 0.07, 0.025, 0.028, headTop, headTop + 0.06, look.accent);
+                    }
+                    break;
+                case ecosim::AnimalKind::Fox:
+                    // Le renardeau a une queue courte.
+                    part(-style.length / 2.0 - 0.035, 0.0, 0.04, 0.032, 0.08, 0.15, look.body);
+                    break;
+            }
+            return boxes;
+        }
+        switch (kind) {
+            case ecosim::AnimalKind::Deer:
+                // Le cerf porte des bois : une perche et une branche de chaque côté.
+                if (!male) break;
+                for (const double side : {-1.0, 1.0}) {
+                    part(headAt, side * 0.05, 0.014, 0.014, headTop, headTop + 0.17, look.accent);
+                    part(headAt, side * 0.095, 0.014, 0.045, headTop + 0.09, headTop + 0.12, look.accent);
+                }
+                break;
+            case ecosim::AnimalKind::Rabbit:
+                // Les lapins ont de longues oreilles : bleues pour le mâle, roses pour la femelle.
+                for (const double side : {-1.0, 1.0}) {
+                    part(headAt - 0.03, side * 0.032, 0.014, 0.018, headTop, headTop + 0.13, look.accent);
+                }
+                break;
+            case ecosim::AnimalKind::Wolf:
+                // Le loup a une crinière sombre, la louve un museau clair.
+                if (male) {
+                    part(headAt * 0.55, 0.0, 0.055, style.thickness * 0.68, style.height * 0.55,
+                         style.height + 0.05, look.accent);
+                } else {
+                    part(headAt + head, 0.0, 0.035, head * 0.6, style.height - head * 0.6,
+                         style.height + head * 0.2, look.accent);
+                }
+                break;
+            case ecosim::AnimalKind::Fox:
+                // Les renards ont une longue queue ; celle du mâle a le bout blanc.
+                part(-style.length / 2.0 - 0.07, 0.0, 0.075, 0.032, 0.08, 0.15, look.body);
+                if (male) part(-style.length / 2.0 - 0.17, 0.0, 0.035, 0.034, 0.08, 0.155, look.accent);
+                break;
+        }
+        return boxes;
     }
 }
 
@@ -257,7 +329,7 @@ namespace ecosim {
         for (const AnimalSnapshot& animal : animals) {
             const Point point = PathPoint(animal.path, progress);
             objects.push_back({SquaredDistance(context.eye, {point.x, 0.15, point.y}),
-                               AnimalModel(animal.kind, point.x, point.y,
+                               AnimalModel(animal.kind, animal.sex, animal.age, point.x, point.y,
                                            PathHeading(animal.path, progress))});
         }
 

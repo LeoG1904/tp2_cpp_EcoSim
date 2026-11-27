@@ -26,7 +26,7 @@ namespace {
 namespace ecosim {
     Animal::Animal(const std::uint64_t id, const Position cell, const int energy,
                    const SpeciesTraits& traits, const AnimalOptions& options)
-        : id{id}, location{CenterOf(cell)},
+        : id{id}, sex{id % 2 == 1 ? Sex::Female : Sex::Male}, location{CenterOf(cell)},
           // Des directions de départ différentes sans consommer de hasard.
           heading{std::remainder(static_cast<double>(id) * 2.399963, 2.0 * std::numbers::pi)},
           energy{energy}, traits{traits}, options{options} {
@@ -38,6 +38,9 @@ namespace ecosim {
 
     std::uint64_t Animal::GetId() const { return id; }
     std::optional<std::uint64_t> Animal::GetParentId() const { return parentId; }
+    Sex Animal::GetSex() const { return sex; }
+    void Animal::SetSex(const Sex value) { sex = value; }
+    Animal* Animal::GetPartner() const { return partner; }
     Point Animal::GetLocation() const { return location; }
     Position Animal::GetPosition() const { return CellAt(location); }
     double Animal::GetHeading() const { return heading; }
@@ -54,7 +57,11 @@ namespace ecosim {
         path.fill(location);
     }
 
-    void Animal::StartPath() { path.fill(location); }
+    void Animal::StartPath() {
+        path.fill(location);
+        // Une nouvelle génération commence sans couple.
+        partner = nullptr;
+    }
 
     void Animal::Advance(const World& world, const Steering steering, const int tick) {
         const double turn = std::remainder(steering.heading - heading, 2.0 * std::numbers::pi);
@@ -109,11 +116,27 @@ namespace ecosim {
     void Animal::SpendGeneration() {
         ++age;
         energy = std::max(0, energy - traits.energyLoss);
+        if (restLeft > 0) --restLeft;
     }
     void Animal::Die() { energy = 0; }
 
-    bool Animal::CanReproduce() const { return IsAlive() && age >= 5 && energy >= traits.reproductionEnergy; }
-    void Animal::PayReproductionCost() { energy -= 30; }
+    bool Animal::CanReproduce() const {
+        return IsAlive() && age >= AdultAge && restLeft == 0 && energy >= traits.reproductionEnergy;
+    }
+
+    bool Animal::CanBreedWith(const Animal& other) const {
+        return GetKind() == other.GetKind() && sex != other.sex && CanReproduce() && other.CanReproduce();
+    }
+
+    void Animal::PairWith(Animal& other) {
+        partner = &other;
+        other.partner = this;
+    }
+
+    void Animal::PayReproductionCost() {
+        energy = std::max(0, energy - ReproductionCost);
+        restLeft = traits.breedingRest;
+    }
     void Animal::ReceiveMeal(const int amount) { energy = std::min(MaxEnergy, energy + amount); }
 
     bool Animal::IsPrey() const { return false; }
@@ -124,16 +147,26 @@ namespace ecosim {
         return std::atan2(to.y - from.y, to.x - from.x);
     }
 
+    std::optional<Steering> Animal::SeekMate(const Habitat& habitat) const {
+        if (partner || !CanReproduce()) return std::nullopt;
+        const std::optional<Point> mate = habitat.NearestMate(*this, location, MateSight);
+        if (!mate) return std::nullopt;
+        return Steering{HeadingTo(location, *mate), 0.8};
+    }
+
     double Animal::Jitter(std::mt19937& rng, const double spread) {
         std::uniform_real_distribution<double> angle{-spread, spread};
         return angle(rng);
     }
 
-    std::unique_ptr<Animal> Animal::CreateOffspring(const std::uint64_t childId) const {
+    std::unique_ptr<Animal> Animal::CreateOffspring(const std::uint64_t childId,
+                                                    const Sex childSex) const {
         auto child = MakeOffspring(childId);
         child->parentId = id;
-        // Le nouveau-né apparaît auprès de son parent et part d'un autre côté.
-        child->Place(location, std::remainder(heading + 2.4, 2.0 * std::numbers::pi));
+        child->sex = childSex;
+        // Le nouveau-né apparaît auprès de sa mère ; ceux d'une portée partent de côtés différents.
+        const double spread = 2.4 + static_cast<double>(childId % 8) * 0.8;
+        child->Place(location, std::remainder(heading + spread, 2.0 * std::numbers::pi));
         return child;
     }
 }

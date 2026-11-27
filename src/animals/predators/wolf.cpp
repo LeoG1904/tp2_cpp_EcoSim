@@ -56,6 +56,6 @@ namespace ecosim {
     }
 
     std::unique_ptr<Animal> Wolf::MakeOffspring(const std::uint64_t id) const {
-        return std::make_unique<Wolf>(id, GetPosition(), 30, GetOptions());
+        return std::make_unique<Wolf>(id, GetPosition(), NewbornEnergy, GetOptions());
     }
 }

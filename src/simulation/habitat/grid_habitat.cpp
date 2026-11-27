@@ -140,6 +140,39 @@ namespace ecosim {
         return result;
     }
 
+    Animal* GridHabitat::ClosestMate(const Animal& seeker, const Point from,
+                                     const double radius) const {
+        Animal* closest = nullptr;
+        double best = std::numeric_limits<double>::infinity();
+        ForEachNear(from, radius, [&](Animal& other, const double distance) {
+            if (distance < best && !other.GetPartner() && seeker.CanBreedWith(other)) {
+                closest = &other;
+                best = distance;
+            }
+        });
+        return closest;
+    }
+
+    std::optional<Point> GridHabitat::NearestMate(const Animal& seeker, const Point from,
+                                                  const double radius) const {
+        const Animal* mate = ClosestMate(seeker, from, radius);
+        if (!mate) return std::nullopt;
+        return mate->GetLocation();
+    }
+
+    void GridHabitat::FormCouples() {
+        for (const std::vector<Animal*>& bucket : buckets) {
+            for (Animal* female : bucket) {
+                if (female->GetSex() != Sex::Female || female->GetPartner() || !female->CanReproduce()) {
+                    continue;
+                }
+                if (Animal* male = ClosestMate(*female, female->GetLocation(), Animal::MatingDistance)) {
+                    female->PairWith(*male);
+                }
+            }
+        }
+    }
+
     std::optional<int> GridHabitat::CatchPrey(const Animal& hunter, const Point from,
                                               const double reach) {
         Animal* prey = ClosestPrey(hunter, from, reach);

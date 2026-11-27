@@ -69,7 +69,7 @@ namespace ecosim {
 
     std::string PresetDescription(const Preset preset) {
         switch (preset) {
-            case Preset::Balance: return "Les quatre espèces coexistent le plus souvent longtemps.";
+            case Preset::Balance: return "Équilibre à refaire depuis la reproduction à deux.";
             case Preset::Famine: return "La végétation ne repousse plus : les herbivores meurent de faim.";
             case Preset::Invasion: return "Des meutes massives prennent les herbivores par surprise et les déciment.";
         }

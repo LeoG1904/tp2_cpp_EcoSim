@@ -15,6 +15,6 @@ namespace ecosim {
     bool Fox::Eats(const AnimalKind kind) const { return kind == AnimalKind::Rabbit; }
 
     std::unique_ptr<Animal> Fox::MakeOffspring(const std::uint64_t id) const {
-        return std::make_unique<Fox>(id, GetPosition(), 30, GetOptions());
+        return std::make_unique<Fox>(id, GetPosition(), NewbornEnergy, GetOptions());
     }
 }

@@ -48,6 +48,77 @@ TEST_CASE("Chaque animal a son modele, meme sur une case partagee", "[scene3d]")
     REQUIRE(count(9, 0).size() > count(4, 0).size());
 }
 
+TEST_CASE("Males et femelles ont des modeles differents dans chaque espece", "[scene3d]") {
+    const World world{4, 4};
+    const auto faces = [&world](const AnimalKind kind, const Sex sex) {
+        Path path;
+        path.fill({2.0, 2.0});
+        const std::vector<AnimalSnapshot> animals{
+            {1, {2, 2}, kind, Animal::AdultAge, 50, path, std::nullopt, sex}};
+        std::vector<Face> result = BuildScene(world, animals, 1.0, OrbitCamera{4, 4}, Screen, std::nullopt);
+        std::erase_if(result, [](const Face& face) { return face.kind != FaceKind::Animal; });
+        return result;
+    };
+    for (const SpeciesInfo& species : SpeciesCatalog()) {
+        CAPTURE(species.name);
+        const auto female = faces(species.kind, Sex::Female);
+        const auto male = faces(species.kind, Sex::Male);
+        // La forme ou au moins la couleur change.
+        const bool sameColors = female.size() == male.size()
+            && std::ranges::equal(female, male, [](const Face& a, const Face& b) {
+                   return a.color.red == b.color.red && a.color.green == b.color.green
+                          && a.color.blue == b.color.blue;
+               });
+        REQUIRE_FALSE(sameColors);
+    }
+    // Seul le cerf male porte des bois.
+    REQUIRE(faces(AnimalKind::Deer, Sex::Male).size() > faces(AnimalKind::Deer, Sex::Female).size());
+}
+
+TEST_CASE("Chaque espece distingue la femelle du male par la couleur du corps", "[scene3d]") {
+    const auto brightness = [](const Color color) { return color.red + color.green + color.blue; };
+    for (const SpeciesInfo& species : SpeciesCatalog()) {
+        CAPTURE(species.name);
+        REQUIRE(brightness(LookOf(species.kind, Sex::Female, Animal::AdultAge).body)
+                > brightness(LookOf(species.kind, Sex::Male, Animal::AdultAge).body));
+    }
+}
+
+TEST_CASE("Un jeune est plus petit qu'un adulte, et les deux sexes s'y ressemblent", "[scene3d]") {
+    const World world{4, 4};
+    // Largeur et hauteur a l'ecran de tout le modele, et nombre de faces.
+    const auto shape = [&world](const AnimalKind kind, const Sex sex, const int age) {
+        Path path;
+        path.fill({2.0, 2.0});
+        const std::vector<AnimalSnapshot> animals{{1, {2, 2}, kind, age, 50, path, std::nullopt, sex}};
+        int left = Screen.width, right = 0, top = Screen.height, bottom = 0, count = 0;
+        for (const Face& face : BuildScene(world, animals, 1.0, OrbitCamera{4, 4}, Screen, std::nullopt)) {
+            if (face.kind != FaceKind::Animal) continue;
+            ++count;
+            for (std::size_t i = 0; i < face.pointCount; ++i) {
+                left = std::min(left, face.points[i].x);
+                right = std::max(right, face.points[i].x);
+                top = std::min(top, face.points[i].y);
+                bottom = std::max(bottom, face.points[i].y);
+            }
+        }
+        return std::array<int, 3>{right - left, bottom - top, count};
+    };
+    for (const SpeciesInfo& species : SpeciesCatalog()) {
+        CAPTURE(species.name);
+        const auto child = shape(species.kind, Sex::Female, 0);
+        REQUIRE(child == shape(species.kind, Sex::Male, Animal::AdultAge - 1));
+        for (const Sex sex : {Sex::Female, Sex::Male}) {
+            const auto adult = shape(species.kind, sex, Animal::AdultAge);
+            REQUIRE(child[0] < adult[0]);
+            REQUIRE(child[1] < adult[1]);
+        }
+        const Color young = LookOf(species.kind, Sex::Female, 0).body;
+        const Color grown = LookOf(species.kind, Sex::Female, Animal::AdultAge).body;
+        REQUIRE((young.red != grown.red || young.green != grown.green || young.blue != grown.blue));
+    }
+}
+
 TEST_CASE("Un animal glisse entre deux cases en 3D", "[scene3d]") {
     const World world{8, 3};
     Path path;

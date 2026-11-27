@@ -48,13 +48,14 @@ ecosim::Simulation::Step() applique toujours les mêmes étapes, dans cet ordre.
      - les cerfs et les lapins avancent
      - puis les loups et les renards avancent et chassent
      (les herbivores mangent au dernier pas)
-     - enfin, les animaux qui se superposent sont écartés
+     - les animaux qui se superposent sont écartés
+     - enfin, les couples se forment
             |
   3. Métabolisme
      chaque survivant vieillit et perd de l'énergie
             |
   4. Reproduction
-     les animaux âgés et nourris peuvent avoir un petit
+     les femelles en couple peuvent avoir une portée
             |
   5. Statistiques
      effectifs, herbe, naissances et morts
@@ -85,6 +86,7 @@ ensuite de façon fluide.
 **Cerfs et lapins** (ecosim::Herbivore, la base commune des herbivores) :
 
 - s'il est sur ses gardes et qu'un chasseur **qui le mange** est à 2 cases ou moins, il **fuit** ;
+- sinon, s'il est prêt à se reproduire et repère un partenaire, il **le rejoint** ;
 - sinon, si l'herbe sous lui est suffisante, il **flâne** ;
 - sinon, il **cherche** une herbe plus riche autour de lui, avec un peu d'hésitation.
 
@@ -109,7 +111,8 @@ l'espèce. Les chasseurs ont aussi les leurs.
 
 **Loups et renards** (ecosim::Predator, la base commune des chasseurs) :
 
-- chacun **fonce** sur la proie la plus proche **parmi celles qu'il mange** ;
+- prêt à se reproduire et un partenaire en vue, il **le rejoint** ;
+- sinon, chacun **fonce** sur la proie la plus proche **parmi celles qu'il mange** ;
 - il capture une proie qu'il approche à moins de 0,45 case, **une fois par génération** au plus ;
 - sans proie en vue, il **erre**.
 
@@ -143,11 +146,24 @@ La valeur 0 désactive l'instinct.
 
 | Règle | Valeur |
 | --- | --- |
+| Parents | une femelle et un mâle de la même espèce |
 | Âge minimal pour se reproduire | 5 générations |
 | Énergie minimale pour se reproduire | fixée par l'espèce |
-| Coût d'une naissance pour le parent | 30 |
+| Distance pour repérer un partenaire | 6 cases |
+| Distance pour former un couple | 0,6 case |
+| Petits par portée | cerf 1 à 2, lapin 2 à 5, loup 2 à 4, renard 1 à 3 |
+| Repos après une portée | cerf 8, lapin 5, loup 12, renard 10 générations |
+| Coût d'une portée pour chaque parent | 20 |
 | Énergie du nouveau-né | 30 |
 | Causes de mort | faim (énergie à 0), vieillesse (âge maximum), capture |
+
+À l'écran, le mâle est plus foncé et la femelle plus claire. Le cerf mâle porte des bois, le
+loup une crinière, le renard un bout de queue blanc ; les oreilles du lapin sont bleues, celles
+de la lapine roses.
+
+Avant 5 générations, un animal est dessiné **jeune** : plus petit, avec une grosse tête, et le
+même aspect pour les deux sexes (faon tacheté, lapereau et louveteau à petites oreilles,
+renardeau à queue courte). Seul le dessin change : son corps compte autant dans les collisions.
 
 ## Pourquoi les résultats changent-ils ?
 

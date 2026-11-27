@@ -24,7 +24,7 @@ namespace ecosim {
         for (const auto& animal : animals) {
             result.push_back({animal->GetId(), animal->GetPosition(), animal->GetKind(),
                               animal->GetAge(), animal->GetEnergy(),
-                              animal->GetPath(), animal->GetParentId()});
+                              animal->GetPath(), animal->GetParentId(), animal->GetSex()});
         }
         return result;
     }
@@ -74,6 +74,7 @@ namespace ecosim {
         animals.push_back(SpeciesOf(kind).create(nextId, position,
                                                  energy.value_or(Animal::StartingEnergy),
                                                  settings.species[kind].options));
+        animals.back()->SetSex(placed[kind]++ % 2 == 0 ? Sex::Female : Sex::Male);
         ++nextId;
     }
 

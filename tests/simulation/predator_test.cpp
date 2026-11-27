@@ -79,14 +79,17 @@ TEST_CASE("Un descendant prédateur est un individu distinct", "[predator]") {
     for (int i = 0; i < 5; ++i) adult.SpendGeneration();
 
     REQUIRE(adult.CanReproduce());
-    auto offspring = adult.CreateOffspring(2);
+    auto offspring = adult.CreateOffspring(2, Sex::Male);
     adult.PayReproductionCost();
 
     REQUIRE(offspring->GetId() == 2);
     REQUIRE(offspring->GetKind() == AnimalKind::Wolf);
     REQUIRE(offspring->GetAge() == 0);
     REQUIRE(offspring->GetEnergy() == 30);
-    REQUIRE(adult.GetEnergy() == 50);
+    // 90, moins 5 générations à 2, moins le coût d'une portée.
+    REQUIRE(adult.GetEnergy() == 90 - 5 * Wolf::Traits.energyLoss - Animal::ReproductionCost);
+    // Après une portée, il faut se reposer.
+    REQUIRE_FALSE(adult.CanReproduce());
 }
 
 TEST_CASE("Un renard ne capture pas un cerf, mais un lapin", "[predator]") {

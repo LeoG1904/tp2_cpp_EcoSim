@@ -36,6 +36,8 @@ Les boutons situés sous les colonnes remplacent tous les réglages. Chaque vale
 
 Ces résultats sont des tendances : la carte et les animaux restent tirés au hasard. Les cartes mesurées n'ont pas servi à choisir les valeurs des espèces.
 
+> **Ces résultats ne sont plus valables.** Ils ont été mesurés avant la [reproduction à deux](#reproduction), tout comme ceux du tableau des tailles ci-dessous. L'équilibre reste à refaire : avec les valeurs actuelles, sur 40 cartes de 42 × 26 et 400 générations d'« Équilibre », les cerfs et les loups ont disparu à chaque fois, les lapins ont survécu à chaque fois et les renards dans 12 cas. Sur ces 40 cartes, « Famine » et « Invasion » ne laissaient toujours ni cerf ni lapin.
+
 **Les préréglages dépendent de la taille.** « Équilibre » a été réglé pour une carte d'environ 42 × 26 :
 
 | Taille | Les quatre espèces à 400 générations | Plus aucun cerf ni lapin |
@@ -56,7 +58,7 @@ Ces résultats sont des tendances : la carte et les animaux restent tirés au ha
 | Loups | Nombre au départ (0 à 999 999), chance de naissance (0 à 100 %), esprit de meute (0 à 4) |
 | Renards | Nombre au départ (0 à 999 999), chance de naissance (0 à 100 %), flair (0 à 4) |
 
-Chaque espèce n'a que **trois réglages**. Ses autres caractéristiques sont fixes (voir [Les quatre espèces](#les-quatre-espèces)) : ce sont elles qui la définissent. Tous les animaux placés au départ ont 50 d'énergie. Les nouveau-nés en ont 30, la reproduction coûte 30 et demande un âge d'au moins 5 générations. Le nombre d'animaux au départ dépend par défaut de la taille de l'écran. Les bornes sont définies dans `src/ui/presentation/settings_form.cpp` et, pour ce qui dépend de l'espèce, dans `src/ui/presentation/species_style.cpp`.
+Chaque espèce n'a que **trois réglages**. Ses autres caractéristiques sont fixes (voir [Les quatre espèces](#les-quatre-espèces)) : ce sont elles qui la définissent. Tous les animaux placés au départ ont 50 d'énergie. Les nouveau-nés en ont 30 (voir [Reproduction](#reproduction)). Le nombre d'animaux au départ dépend par défaut de la taille de l'écran. Les bornes sont définies dans `src/ui/presentation/settings_form.cpp` et, pour ce qui dépend de l'espèce, dans `src/ui/presentation/species_style.cpp`.
 
 ## Utilisation
 
@@ -77,7 +79,7 @@ Chaque espèce n'a que **trois réglages**. Ses autres caractéristiques sont fi
 | Revenir à l'accueil, quitter ou annuler | `Échap` pendant la simulation, puis choisir **Menu**, **Quitter** ou **Annuler** |
 | Quitter depuis l'accueil | `Échap` |
 
-L'application s'ouvre sur l'accueil ; aucune simulation ne démarre avant le clic sur **Démarrer**. La simulation continue pendant la consultation du graphique tant qu'elle n'est pas en pause. Pendant la pause, **Génération +1** fait avancer le monde et les courbes d'une seule génération. Sur la carte, chaque animal suit son trajet réel pendant la durée d'une génération, tourné dans le sens de sa marche. La pause fige le mouvement, et un pas manuel est animé en un quart de seconde. La case choisie est encadrée. Son panneau indique le terrain, la végétation et les animaux présents (espèce, numéro, âge et énergie, sept au maximum, les autres étant comptés). Il se met à jour à chaque génération et se place du côté opposé à la case. La sélection est conservée en passant par les courbes et effacée par **Recommencer** ou le retour au menu. Un animal est compté sur la case où il se trouvera à la fin du trajet affiché. L'écran **Courbes** présente chaque statistique dans son propre graphique, avec sa propre échelle : effectifs, naissances, morts de faim, morts de vieillesse, cerfs et lapins mangés, énergie moyenne et végétation des prairies. Les cases du haut affichent ou masquent chaque graphique ; les cases **Cerfs**, **Lapins**, **Loups** et **Renards** filtrent les courbes par espèce, et le bouton **Événements** passe du total depuis le début aux valeurs de chaque génération. La légende de chaque graphique donne la valeur actuelle ; en survolant un graphique, elle donne les valeurs de la génération pointée sur tous les graphiques. Les choix sont conservés après **Recommencer** et le retour au menu. La courbe jaune représente les cerfs, la blanche les lapins, la rouge les loups, la violette les renards et la verte la végétation. Sur un graphique étroit, la légende n'affiche que les valeurs, repérées par la couleur. La courbe d'énergie s'arrête quand une espèce n'a plus d'animaux. Un animal à la fois épuisé et trop âgé est compté comme mort de faim.
+L'application s'ouvre sur l'accueil ; aucune simulation ne démarre avant le clic sur **Démarrer**. La simulation continue pendant la consultation du graphique tant qu'elle n'est pas en pause. Pendant la pause, **Génération +1** fait avancer le monde et les courbes d'une seule génération. Sur la carte, chaque animal suit son trajet réel pendant la durée d'une génération, tourné dans le sens de sa marche. La pause fige le mouvement, et un pas manuel est animé en un quart de seconde. La case choisie est encadrée. Son panneau indique le terrain, la végétation et les animaux présents (espèce, sexe, numéro, âge et énergie, sept au maximum, les autres étant comptés). Il se met à jour à chaque génération et se place du côté opposé à la case. La sélection est conservée en passant par les courbes et effacée par **Recommencer** ou le retour au menu. Un animal est compté sur la case où il se trouvera à la fin du trajet affiché. L'écran **Courbes** présente chaque statistique dans son propre graphique, avec sa propre échelle : effectifs, naissances, morts de faim, morts de vieillesse, cerfs et lapins mangés, énergie moyenne et végétation des prairies. Les cases du haut affichent ou masquent chaque graphique ; les cases **Cerfs**, **Lapins**, **Loups** et **Renards** filtrent les courbes par espèce, et le bouton **Événements** passe du total depuis le début aux valeurs de chaque génération. La légende de chaque graphique donne la valeur actuelle ; en survolant un graphique, elle donne les valeurs de la génération pointée sur tous les graphiques. Les choix sont conservés après **Recommencer** et le retour au menu. La courbe jaune représente les cerfs, la blanche les lapins, la rouge les loups, la violette les renards et la verte la végétation. Sur un graphique étroit, la légende n'affiche que les valeurs, repérées par la couleur. La courbe d'énergie s'arrête quand une espèce n'a plus d'animaux. Un animal à la fois épuisé et trop âgé est compté comme mort de faim.
 
 La touche `Échap` fige la simulation et affiche un choix : **Menu** revient à l'accueil, **Quitter** ferme l'application, **Annuler** reprend l'affichage. Un second appui sur `Échap` annule aussi le choix.
 
@@ -181,6 +183,48 @@ Le vieillissement, la perte d'énergie, les naissances et la repousse ont toujou
 
 Chaque caractéristique fixe est écrite à un seul endroit, dans la classe de l'espèce (`Deer::Traits`, `Rabbit::Traits`, `Wolf::Traits`, `Fox::Traits`, le seuil d'herbe `GrazingThreshold`, la réserve `Deer::UngrazableVegetation`, la vue `Sight` et le régime `Eats`).
 
+## Reproduction
+
+Il faut **une femelle et un mâle** de la même espèce. Les deux doivent être adultes (5 générations au moins), avoir assez d'énergie pour leur espèce et avoir fini leur repos. Un animal seul ne se reproduit jamais.
+
+1. **Se chercher :** un animal prêt repère à 6 cases un partenaire prêt et encore sans couple, et se dirige vers lui. La fuite d'un herbivore passe avant ; la recherche de nourriture et la chasse viennent après.
+2. **Former un couple :** après chaque petit pas, une femelle prête prend le mâle libre le plus proche, à 0,6 case au plus. Un couple vaut pour la génération en cours.
+3. **La portée :** à la fin de la génération, si les deux sont encore en vie, la **chance de naissance** réglée à l'accueil décide s'il y a une portée. Les petits apparaissent près de leur mère.
+4. **Après :** chaque parent dépense 20 points d'énergie et se repose.
+
+| | Cerf | Lapin | Loup | Renard |
+| --- | --- | --- | --- | --- |
+| Petits par portée | 1 à 2 | 2 à 5 | 2 à 4 | 1 à 3 |
+| Repos après une portée (générations) | 8 | 5 | 12 | 10 |
+
+Les animaux placés au départ alternent femelle et mâle, pour que chaque espèce ait les deux. Le sexe d'un nouveau-né est tiré au sort.
+
+## Mâles et femelles à l'écran
+
+Le **mâle est plus foncé**, la **femelle plus claire**, et un détail propre à l'espèce les distingue.
+
+| Espèce | Femelle | Mâle |
+| --- | --- | --- |
+| Cerf | sans bois | **bois** de chaque côté de la tête |
+| Lapin | oreilles **roses** | oreilles **bleues** |
+| Loup | **museau pâle** | **crinière** sombre |
+| Renard | queue unie | queue au **bout blanc** |
+
+### Les jeunes
+
+Avant 5 générations, un animal est **jeune** : il ne peut pas encore se reproduire. Il est dessiné à 65 % de la taille d'un adulte, avec une **grosse tête** et une teinte à part. Les deux sexes se ressemblent à cet âge.
+
+| Jeune | Son détail |
+| --- | --- |
+| Faon | des **taches blanches** sur le dos |
+| Lapereau | de **courtes oreilles** grises |
+| Louveteau | deux petites **oreilles rondes** |
+| Renardeau | une **queue courte** |
+
+À 5 générations, il prend l'apparence de son sexe. Les animaux placés au départ ont l'âge 0 : ils apparaissent donc jeunes pendant les 5 premières générations. La taille réduite ne concerne que le dessin : **les collisions utilisent le même corps à tout âge**, deux jeunes peuvent donc sembler se pousser sans se toucher. Le panneau d'une case précise « jeune ».
+
+En 2D, les détails sont dessinés à partir d'un corps de 3 pixels de rayon ; plus petit, seules la taille et la teinte restent. La 3D ajoute les mêmes détails aux modèles. Les titres de l'accueil et les courbes gardent une couleur par espèce.
+
 ## Collisions
 
 Chaque animal a un **corps rond**, dont le rayon est fixé par son espèce. Après chaque petit pas, ceux qui se superposent sont **écartés** : ce sont des collisions souples.
@@ -216,7 +260,7 @@ Sur la carte, le bouton **Vue 3D** change l'affichage sans toucher à la simulat
 | Revenir à la vue d'ensemble | Bouton **Recentrer** |
 | Voir le détail d'une case | **Clic gauche** sur le sol de la case |
 
-Les obstacles sont des blocs, les cerfs des modèles jaunes, les lapins de petits modèles blancs les loups des modèles rouges plus hauts et les renards de petits modèles violets, orientés dans le sens du déplacement. La couleur des prairies suit la végétation. Des touffes d'herbe y poussent : une case rase (végétation inférieure à 5) n'en a pas, puis leur nombre (jusqu'à cinq) et leur hauteur augmentent avec la végétation. Elles raccourcissent quand un cerf ou un lapin broute et repoussent au fil des générations. Avec la repousse par défaut de 1 par génération, la croissance est progressive ; le réglage **Repousse végétation** l'accélère. La vue choisie est conservée après **Recommencer** et le retour au menu ; la position de la caméra aussi, tant que la taille de la carte ne change pas.
+Les obstacles sont des blocs, les cerfs des modèles jaunes, les lapins de petits modèles clairs, les loups des modèles rouges plus hauts et les renards de petits modèles violets (avec des détails selon le [sexe](#mâles-et-femelles-à-lécran)), orientés dans le sens du déplacement. La couleur des prairies suit la végétation. Des touffes d'herbe y poussent : une case rase (végétation inférieure à 5) n'en a pas, puis leur nombre (jusqu'à cinq) et leur hauteur augmentent avec la végétation. Elles raccourcissent quand un cerf ou un lapin broute et repoussent au fil des générations. Avec la repousse par défaut de 1 par génération, la croissance est progressive ; le réglage **Repousse végétation** l'accélère. La vue choisie est conservée après **Recommencer** et le retour au menu ; la position de la caméra aussi, tant que la taille de la carte ne change pas.
 
 Limites de cette première version : le rendu est calculé par le processeur et dessiné avec Win32/GDI, sans carte graphique, textures ni éclairage dynamique. En 3D, les modèles d'animaux proches peuvent encore se chevaucher ; le panneau d'une case donne les effectifs réels. La caméra vise toujours le centre de la carte. La sélection vise le sol : cliquer sur le haut d'un obstacle peut choisir la case située derrière.
 
@@ -227,7 +271,7 @@ Limites de cette première version : le rendu est calculé par le processeur et 
 1. La végétation repousse sur les prairies.
 2. Pendant 10 petits pas, les cerfs et les lapins, puis les loups et les renards, se déplacent ; les chasseurs capturent les proies qu'ils atteignent (au plus une chacun). Après chaque petit pas, les animaux qui se superposent sont écartés.
 3. Les cerfs et les lapins encore vivants mangent la végétation de la case où ils se trouvent.
-4. Les survivants vieillissent et perdent de l'énergie. Les individus suffisamment âgés et nourris peuvent se reproduire.
+4. Les survivants vieillissent et perdent de l'énergie. Les femelles qui ont trouvé un partenaire pendant la génération peuvent mettre bas.
 5. Les animaux morts sont retirés ; les effectifs, la végétation totale et les événements de la génération sont enregistrés par `SimulationStats`.
 
 Ce modèle s'écarte du sujet, qui prévoit le choix d'une cellule voisine à chaque génération.
@@ -274,7 +318,7 @@ Le découpage privilégie la **simplicité** : `UiController` regroupe la naviga
 
 ### Ajouter une espèce
 
-1. Créer une classe dérivée de `Herbivore` si elle broute, de `Predator` si elle chasse (en précisant son régime avec `Eats`), ou d'`Animal` sinon, avec ses caractéristiques fixes (`SpeciesTraits`) et sa chance de naissance de départ.
+1. Créer une classe dérivée de `Herbivore` si elle broute, de `Predator` si elle chasse (en précisant son régime avec `Eats`), ou d'`Animal` sinon, avec ses caractéristiques fixes (`SpeciesTraits`, portée et repos compris), sa chance de naissance de départ et, dans `species_style.cpp` et le dessin, l'apparence de chaque sexe.
 2. Ajouter sa valeur à `AnimalKind` et augmenter `SpeciesCount` (`animal.ixx`).
 3. Ajouter son entrée au catalogue (`src/animals/species.cpp`) : noms, population de départ, réglages proposés et classe.
 4. Ajouter son apparence (`src/ui/presentation/species_style.cpp`) : couleur, silhouette, nom de l'instinct et limites de saisie.

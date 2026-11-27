@@ -56,7 +56,7 @@ export namespace ecosim {
     /// @brief Scénarios prêts à l'emploi : équilibre, famine et invasion.
     /// @ingroup moteur
     enum class Preset {
-        Balance, ///< Les quatre espèces coexistent le plus souvent longtemps.
+        Balance, ///< Vise la coexistence des espèces ; à régler de nouveau depuis la reproduction à deux.
         Famine, ///< L'herbe ne repousse plus.
         Invasion ///< Les loups arrivent en masse.
     };

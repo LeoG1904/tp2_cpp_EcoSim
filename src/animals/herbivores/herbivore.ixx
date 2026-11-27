@@ -23,7 +23,7 @@ export namespace ecosim {
         bool IsPrey() const override;
         /// @brief Tire au sort s'il sera sur ses gardes pendant cette génération.
         void BeginGeneration(std::mt19937& rng) override;
-        /// @brief Fuit un chasseur qui le mange s'il est sur ses gardes, sinon broute ou cherche de l'herbe.
+        /// @brief Fuit un chasseur qui le mange s'il est sur ses gardes ; sinon rejoint un partenaire, broute ou cherche de l'herbe.
         Steering Steer(const Habitat& habitat, std::mt19937& rng) const override;
         /// @brief Mange une fois par génération, au dernier petit pas, là où il se trouve, sans toucher à l'herbe hors de sa portée.
         void Act(Habitat& habitat, int tick) override;

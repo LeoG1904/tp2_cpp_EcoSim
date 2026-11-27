@@ -14,6 +14,6 @@ namespace ecosim {
     AnimalKind Deer::GetKind() const { return AnimalKind::Deer; }
 
     std::unique_ptr<Animal> Deer::MakeOffspring(const std::uint64_t id) const {
-        return std::make_unique<Deer>(id, GetPosition(), 30, GetOptions());
+        return std::make_unique<Deer>(id, GetPosition(), NewbornEnergy, GetOptions());
     }
 }

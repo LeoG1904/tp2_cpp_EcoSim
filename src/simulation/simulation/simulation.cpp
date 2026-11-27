@@ -43,6 +43,19 @@ namespace ecosim {
             }
             // Les captures sont déjà faites : une collision ne sauve pas une proie atteinte.
             habitat.Separate(tick);
+            habitat.FormCouples();
+        }
+    }
+
+    void Simulation::GiveBirth(const Animal& mother, std::vector<std::unique_ptr<Animal>>& newborns) {
+        const SpeciesTraits& traits = mother.GetTraits();
+        std::uniform_int_distribution<int> litter{traits.litterMin, traits.litterMax};
+        std::bernoulli_distribution female{0.5};
+        const int size = litter(rng);
+        for (int i = 0; i < size; ++i) {
+            const Sex sex = female(rng) ? Sex::Female : Sex::Male;
+            newborns.push_back(mother.CreateOffspring(nextId++, sex));
+            stats.RecordBirth(mother.GetKind());
         }
     }
 
@@ -52,11 +65,15 @@ namespace ecosim {
             // Les proies capturées sont déjà comptées parmi les morts.
             if (!animal->IsAlive()) continue;
             animal->SpendGeneration();
-            std::bernoulli_distribution birth{animal->GetOptions().birthPercent / 100.0};
-            if (animal->CanReproduce() && birth(rng)) {
-                newborns.push_back(animal->CreateOffspring(nextId++));
-                animal->PayReproductionCost();
-                stats.RecordBirth(animal->GetKind());
+            // La femelle d'un couple met la portée au monde, si son partenaire a survécu.
+            Animal* const partner = animal->GetPartner();
+            if (animal->GetSex() == Sex::Female && partner && partner->IsAlive() && animal->IsAlive()) {
+                std::bernoulli_distribution birth{animal->GetOptions().birthPercent / 100.0};
+                if (birth(rng)) {
+                    GiveBirth(*animal, newborns);
+                    animal->PayReproductionCost();
+                    partner->PayReproductionCost();
+                }
             }
             if (!animal->IsAlive()) {
                 // Un animal à la fois épuisé et âgé est compté comme mort de faim.

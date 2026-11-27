@@ -44,21 +44,22 @@ TEST_CASE("Chaque proie nourrit le predateur selon sa taille", "[settings]") {
 }
 
 TEST_CASE("La chance de naissance peut etre nulle ou certaine, et s'herite", "[settings]") {
-    SimulationSettings settings;
-    settings.species[AnimalKind::Deer].options.birthPercent = 0;
-    Simulation sterile{World{1, 1}, std::mt19937{5}, settings};
-    sterile.AddAnimal(AnimalKind::Deer, {0, 0}, 100);
-    for (int i = 0; i < 8; ++i) sterile.Step();
-    REQUIRE(sterile.Count(AnimalKind::Deer) == 1);
+    const auto after = [](const int percent) {
+        SimulationSettings settings;
+        settings.species[AnimalKind::Deer].options.birthPercent = percent;
+        Simulation simulation{World{1, 1}, std::mt19937{5}, settings};
+        // Deux cerfs places a la suite sont une femelle et un male.
+        simulation.AddAnimal(AnimalKind::Deer, {0, 0}, 100);
+        simulation.AddAnimal(AnimalKind::Deer, {0, 0}, 100);
+        for (int i = 0; i < Animal::AdultAge + 2; ++i) simulation.Step();
+        return simulation.Count(AnimalKind::Deer);
+    };
+    REQUIRE(after(0) == 2);
+    REQUIRE(after(100) >= 2 + Deer::Traits.litterMin);
+    REQUIRE(after(100) <= 2 + Deer::Traits.litterMax);
 
-    settings.species[AnimalKind::Deer].options.birthPercent = 100;
-    Simulation fertile{World{1, 1}, std::mt19937{5}, settings};
-    fertile.AddAnimal(AnimalKind::Deer, {0, 0}, 100);
-    for (int i = 0; i < 5; ++i) fertile.Step();
-    REQUIRE(fertile.Count(AnimalKind::Deer) == 2);
-
-    const Deer parent{1, {0, 0}, 90, settings.species[AnimalKind::Deer].options};
-    REQUIRE(parent.CreateOffspring(2)->GetOptions().birthPercent == 100);
+    const Deer parent{1, {0, 0}, 90, {.birthPercent = 100}};
+    REQUIRE(parent.CreateOffspring(2, Sex::Female)->GetOptions().birthPercent == 100);
 }
 
 TEST_CASE("Changer la taille adapte les populations et garde les autres reglages", "[settings]") {

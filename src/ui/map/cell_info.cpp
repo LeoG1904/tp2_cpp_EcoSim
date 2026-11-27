@@ -46,8 +46,10 @@ namespace ecosim {
         };
         for (std::size_t i = 0; i < std::min(present.size(), MaxListedAnimals); ++i) {
             const AnimalSnapshot& animal = present[i];
-            lines.push_back(std::format("{} n°{} : âge {}, énergie {}", SpeciesOf(animal.kind).name,
-                                        animal.id, animal.age, animal.energy));
+            lines.push_back(std::format("{} {}{} n°{} : âge {}, énergie {}", SpeciesOf(animal.kind).name,
+                                        animal.age < Animal::AdultAge ? "jeune " : "",
+                                        animal.sex == Sex::Female ? "femelle" : "mâle", animal.id,
+                                        animal.age, animal.energy));
         }
         if (present.size() > MaxListedAnimals) {
             lines.push_back(std::format("Autres animaux : {}", present.size() - MaxListedAnimals));

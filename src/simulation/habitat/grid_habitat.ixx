@@ -37,6 +37,9 @@ export namespace ecosim {
         /// @param tick Numéro du petit pas qui vient d'être joué.
         void Separate(int tick);
 
+        /// @brief Forme les couples : chaque femelle prête et libre prend le mâle libre le plus proche, à Animal::MatingDistance au plus.
+        void FormCouples();
+
         /// @brief La carte, modifiable.
         World& GetWorld() override;
         /// @brief La carte, en lecture.
@@ -48,6 +51,8 @@ export namespace ecosim {
         std::vector<Point> ThreatsNear(const Animal& prey, Point from, double radius) const override;
         /// @copydoc Habitat::MatesNear
         std::vector<Point> MatesNear(const Animal& animal, Point from, double radius) const override;
+        /// @copydoc Habitat::NearestMate
+        std::optional<Point> NearestMate(const Animal& seeker, Point from, double radius) const override;
         /// @brief Capture la proie à portée la plus proche et compte sa mort.
         std::optional<int> CatchPrey(const Animal& hunter, Point from, double reach) override;
         /// @brief Partage le repas avec les congénères à Wolf::SharingDistance au plus.
@@ -62,6 +67,8 @@ export namespace ecosim {
         void ForEachNear(Point from, double radius, const Visit& visit) const;
         /// @brief La poussée que les voisins exercent sur un animal, limitée à MaxPushPerTick.
         Point PushOn(const Animal& animal) const;
+        /// @brief Le partenaire possible et libre le plus proche dans le rayon, ou nullptr.
+        Animal* ClosestMate(const Animal& seeker, Point from, double radius) const;
         /// @brief La proie la plus proche dans le rayon parmi celles que le chasseur mange, ou nullptr.
         Animal* ClosestPrey(const Animal& hunter, Point from, double radius) const;
 

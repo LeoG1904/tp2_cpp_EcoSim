@@ -29,6 +29,118 @@ namespace {
         return {static_cast<int>(150 - ratio * 90), static_cast<int>(110 + ratio * 90), 70};
     }
 
+    /// @brief Rayon, en pixels, à partir duquel les détails d'un animal sont dessinés.
+    constexpr double SmallestDetailedRadius{3.0};
+
+    /// @brief Convertit une couleur du projet en couleur Windows.
+    COLORREF Paint(const ecosim::Color color) { return RGB(color.red, color.green, color.blue); }
+
+    /// @brief Dessine des disques et des traits placés par rapport à un animal, en unités de son rayon.
+    struct AnimalBrush {
+        /// @brief Surface de dessin, avec le pinceau système sélectionné.
+        HDC dc;
+        /// @brief Centre de l'animal, en pixels.
+        double x;
+        /// @brief Centre de l'animal, en pixels.
+        double y;
+        /// @brief Rayon du corps, en pixels.
+        double radius;
+        /// @brief Direction de la marche, en radians.
+        double heading;
+
+        /// @brief Le point situé en avant du centre et sur le côté.
+        POINT At(const double forward, const double side) const {
+            return {std::lround(x + (std::cos(heading) * forward - std::sin(heading) * side) * radius),
+                    std::lround(y + (std::sin(heading) * forward + std::cos(heading) * side) * radius)};
+        }
+
+        /// @brief Un disque.
+        void Disc(const double forward, const double side, const double size, const ecosim::Color color) const {
+            const POINT center = At(forward, side);
+            const int half = std::max(1, static_cast<int>(std::lround(size * radius)));
+            SetDCBrushColor(dc, Paint(color));
+            Ellipse(dc, center.x - half, center.y - half, center.x + half + 1, center.y + half + 1);
+        }
+
+        /// @brief Un trait épais aux bouts ronds, d'un point à un autre ; le stylo donne sa couleur et son épaisseur.
+        void Stroke(const HPEN pen, const POINT from, const POINT to) const {
+            const HGDIOBJ previous = SelectObject(dc, pen);
+            MoveToEx(dc, from.x, from.y, nullptr);
+            LineTo(dc, to.x, to.y);
+            SelectObject(dc, previous);
+        }
+
+        /// @brief Un stylo dont l'épaisseur suit la taille de l'animal. L'appelant doit le détruire.
+        HPEN Pen(const double width, const ecosim::Color color) const {
+            return CreatePen(PS_SOLID, std::max(1, static_cast<int>(std::lround(width * radius))), Paint(color));
+        }
+    };
+
+    /// @brief Les détails des jeunes : taches du faon, oreilles courtes du lapereau et du louveteau.
+    void DrawYoungDetails(const AnimalBrush& brush, const ecosim::AnimalKind kind, const ecosim::SexLook& look) {
+        if (kind == ecosim::AnimalKind::Deer) {
+            brush.Disc(-0.45, -0.4, 0.2, look.accent);
+            brush.Disc(-0.5, 0.35, 0.2, look.accent);
+            brush.Disc(0.05, 0.0, 0.2, look.accent);
+        } else if (kind == ecosim::AnimalKind::Rabbit) {
+            const HPEN ear = brush.Pen(0.5, look.accent);
+            for (const double side : {-1.0, 1.0}) {
+                brush.Stroke(ear, brush.At(0.75, side * 0.45), brush.At(0.35, side * 0.95));
+            }
+            DeleteObject(ear);
+        } else if (kind == ecosim::AnimalKind::Wolf) {
+            brush.Disc(0.7, -0.75, 0.33, look.accent);
+            brush.Disc(0.7, 0.75, 0.33, look.accent);
+        }
+    }
+
+    /// @brief Dessine un animal : corps, tête et, s'il est assez grand, les détails de son âge ou de son sexe.
+    void DrawAnimal(const AnimalBrush& brush, const ecosim::AnimalKind kind, const ecosim::Sex sex,
+                    const int age) {
+        const ecosim::SexLook& look = ecosim::LookOf(kind, sex, age);
+        const bool young = ecosim::IsYoung(age);
+        const bool male = sex == ecosim::Sex::Male;
+        const bool detailed = brush.radius >= SmallestDetailedRadius;
+        const ecosim::Color headColor{look.body.red * 7 / 10, look.body.green * 7 / 10,
+                                      look.body.blue * 7 / 10};
+        // La queue passe sous le corps.
+        if (detailed && kind == ecosim::AnimalKind::Fox) {
+            // La queue d'un renardeau est courte.
+            const HPEN tail = brush.Pen(0.55, look.body);
+            brush.Stroke(tail, brush.At(-0.7, 0.0), brush.At(young ? -1.3 : -1.75, 0.0));
+            DeleteObject(tail);
+            if (male && !young) brush.Disc(-1.8, 0.0, 0.34, look.accent);
+        }
+        brush.Disc(0.0, 0.0, 1.0, look.body);
+        if (detailed && kind == ecosim::AnimalKind::Wolf && male && !young) brush.Disc(0.45, 0.0, 0.8, look.accent);
+        // Un jeune a la tête grosse pour son corps.
+        brush.Disc(0.85, 0.0, young ? 0.72 : 0.55, headColor);
+        if (!detailed) return;
+        if (young) {
+            DrawYoungDetails(brush, kind, look);
+            return;
+        }
+
+        if (kind == ecosim::AnimalKind::Wolf && !male) brush.Disc(1.25, 0.0, 0.3, look.accent);
+        if (kind == ecosim::AnimalKind::Rabbit) {
+            // Deux longues oreilles couchées vers l'arrière.
+            const HPEN ear = brush.Pen(0.42, look.accent);
+            for (const double side : {-1.0, 1.0}) {
+                brush.Stroke(ear, brush.At(0.65, side * 0.35), brush.At(-1.05, side * 0.95));
+            }
+            DeleteObject(ear);
+        }
+        if (kind == ecosim::AnimalKind::Deer && male) {
+            // Des bois à deux pointes de chaque côté de la tête.
+            const HPEN antler = brush.Pen(0.24, look.accent);
+            for (const double side : {-1.0, 1.0}) {
+                brush.Stroke(antler, brush.At(0.9, side * 0.3), brush.At(1.45, side * 1.15));
+                brush.Stroke(antler, brush.At(1.15, side * 0.7), brush.At(1.85, side * 0.6));
+            }
+            DeleteObject(antler);
+        }
+    }
+
     /// @brief En dessous de cette taille de case, en pixels, le sol est dessiné pixel par pixel.
     constexpr double SmallestDrawnCell{4.0};
 
@@ -91,23 +203,14 @@ namespace ecosim {
         canvas.Fill({0, 0, canvas.Width(), canvas.Height()}, {30, 30, 30});
         DrawGround(canvas, world, view);
 
-        // Chaque animal est dessiné là où il se trouve : un corps, et une tête vers l'avant.
+        // Chaque animal est dessiné là où il se trouve. L'ordre des espèces garde les chasseurs au-dessus.
         const double cellSize = view.CellSize();
         const HGDIOBJ previousPen = SelectObject(buffer, GetStockObject(NULL_PEN));
-        const auto disc = [buffer](const double x, const double y, const double radius) {
-            Ellipse(buffer, static_cast<int>(std::lround(x - radius)),
-                    static_cast<int>(std::lround(y - radius)),
-                    static_cast<int>(std::lround(x + radius)) + 1,
-                    static_cast<int>(std::lround(y + radius)) + 1);
-        };
+        // Le pinceau système change de couleur sans créer un objet par disque.
+        const HGDIOBJ previousBrush = SelectObject(buffer, GetStockObject(DC_BRUSH));
         for (const SpeciesInfo& species : SpeciesCatalog()) {
-            const SpeciesStyle& style = StyleOf(species.kind);
-            const HBRUSH body = CreateSolidBrush(RGB(style.color.red, style.color.green, style.color.blue));
-            const HBRUSH head = CreateSolidBrush(RGB(style.color.red * 7 / 10, style.color.green * 7 / 10,
-                                                     style.color.blue * 7 / 10));
-            // Le disque a la taille du corps utilisée par les collisions.
-            const double radius = cellSize * species.bodyRadius;
-            const HGDIOBJ previousBrush = SelectObject(buffer, body);
+            // Le disque d'un adulte a la taille du corps utilisée par les collisions.
+            const double adultRadius = cellSize * species.bodyRadius;
             for (const AnimalSnapshot& animal : animals) {
                 if (animal.kind != species.kind) continue;
                 const Point point = PathPoint(animal.path, progress);
@@ -117,22 +220,18 @@ namespace ecosim {
                     || y > canvas.Height() + cellSize) {
                     continue;
                 }
+                const double radius = adultRadius * (IsYoung(animal.age) ? YoungScale : 1.0);
                 // Vu de très loin, un animal reste un point de deux pixels.
                 if (radius < 1.5) {
-                    canvas.Fill({static_cast<int>(x), static_cast<int>(y), 2, 2}, style.color);
+                    canvas.Fill({static_cast<int>(x), static_cast<int>(y), 2, 2},
+                                LookOf(animal.kind, animal.sex, animal.age).body);
                     continue;
                 }
-                const double angle = PathHeading(animal.path, progress);
-                SelectObject(buffer, body);
-                disc(x, y, radius);
-                SelectObject(buffer, head);
-                disc(x + std::cos(angle) * radius * 0.85, y + std::sin(angle) * radius * 0.85,
-                     radius * 0.55);
+                DrawAnimal({buffer, x, y, radius, PathHeading(animal.path, progress)}, animal.kind,
+                           animal.sex, animal.age);
             }
-            SelectObject(buffer, previousBrush);
-            DeleteObject(body);
-            DeleteObject(head);
         }
+        SelectObject(buffer, previousBrush);
         SelectObject(buffer, previousPen);
 
         // Cadre autour de la case choisie, assez grand pour rester visible de loin.

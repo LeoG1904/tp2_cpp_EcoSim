@@ -19,7 +19,7 @@ export namespace ecosim {
 
         /// @brief Redevient affamé.
         void BeginGeneration(std::mt19937& rng) override;
-        /// @brief Flâne s'il a mangé ; sinon poursuit une proie en vue, ou en cherche une.
+        /// @brief Rejoint un partenaire s'il est prêt ; sinon flâne s'il a mangé, poursuit une proie en vue ou en cherche une.
         Steering Steer(const Habitat& habitat, std::mt19937& rng) const override;
         /// @brief Capture une proie à portée s'il n'a pas encore mangé.
         void Act(Habitat& habitat, int tick) override;

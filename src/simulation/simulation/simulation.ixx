@@ -33,8 +33,10 @@ export namespace ecosim {
         int energy;
         /// @brief Trajet de la dernière génération ; le dernier point est la position actuelle.
         Path path;
-        /// @brief Identifiant du parent, s'il est né pendant la simulation.
+        /// @brief Identifiant de la mère, s'il est né pendant la simulation.
         std::optional<std::uint64_t> parentId;
+        /// @brief Sexe.
+        Sex sex{Sex::Female};
     };
 
     /// @brief Une copie complète de ce qu'il faut afficher, à la fin d'une génération.
@@ -108,6 +110,8 @@ export namespace ecosim {
         std::vector<std::unique_ptr<Animal>> animals;
         /// @brief Générateur de hasard : il rend le déroulement reproductible.
         std::mt19937 rng;
+        /// @brief Animaux placés par espèce : ils alternent femelle et mâle pour que chaque espèce ait les deux.
+        PerSpecies<std::size_t> placed{};
         /// @brief Identifiant du prochain animal créé.
         std::uint64_t nextId{1};
         /// @brief Numéro de la dernière génération calculée.
@@ -120,6 +124,8 @@ export namespace ecosim {
         void Spawn(AnimalKind kind, Position position, std::optional<int> energy);
         /// @brief Joue les petits pas d'une génération : se déplacer, manger et chasser.
         void MoveAndInteract();
+        /// @brief Ajoute aux nouveau-nés la portée d'une mère, de sexes tirés au sort, et compte les naissances.
+        void GiveBirth(const Animal& mother, std::vector<std::unique_ptr<Animal>>& newborns);
         /// @brief Fait vieillir les animaux, gère les naissances, puis retire les morts.
         void LiveAndReproduce();
         /// @brief Mesure les effectifs, l'énergie moyenne et l'herbe à cet instant.

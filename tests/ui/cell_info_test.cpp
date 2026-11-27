@@ -19,7 +19,8 @@ TEST_CASE("Le panneau decrit le terrain et les animaux de la case", "[cell_info]
     REQUIRE(prairie[1] == "Terrain : Prairie");
     REQUIRE(prairie[2].ends_with("42 / 100"));
     REQUIRE(prairie[3].starts_with("Cerfs : 1"));
-    REQUIRE(prairie[4].starts_with("Cerf "));
+    // Un animal qui vient d'etre place est un jeune.
+    REQUIRE(prairie[4].starts_with("Cerf jeune femelle "));
     REQUIRE(prairie[4].ends_with("60"));
     REQUIRE(prairie[5].ends_with("70"));
 
